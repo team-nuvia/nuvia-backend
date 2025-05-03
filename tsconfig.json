@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "CommonJS",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "esModuleInterop": true,
+    "strict": true,
+    "target": "ESNext",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -14,8 +16,21 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@util/*": ["src/util/*"],
+      "@logger/*": ["src/logger/*"],
+      "@database/*": ["src/database/*"],
+      "@config/*": ["src/config/*"],
+      "@common/*": ["src/common/*"],
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", "lib", "test"],
+  "ts-node": {
+    "files": true,
+    "require": ["tsconfig-paths/register"]
   }
 }
