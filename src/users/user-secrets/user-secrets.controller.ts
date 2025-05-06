@@ -1,34 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { LoginUser } from '@common/decorator/login-user.param.decorator';
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Body, Controller, Put } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserSecretsService } from './user-secrets.service';
-import { CreateUserSecretDto } from './dto/create-user-secret.dto';
-import { UpdateUserSecretDto } from './dto/update-user-secret.dto';
 
-@Controller('user-secrets')
+@ApiTags('사용자 보안')
+@RequiredLogin()
+@Controller('secrets')
 export class UserSecretsController {
   constructor(private readonly userSecretsService: UserSecretsService) {}
 
-  @Post()
-  create(@Body() createUserSecretDto: CreateUserSecretDto) {
-    return this.userSecretsService.create(createUserSecretDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.userSecretsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userSecretsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserSecretDto: UpdateUserSecretDto) {
-    return this.userSecretsService.update(+id, updateUserSecretDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userSecretsService.remove(+id);
+  @Put()
+  changePassword(
+    @LoginUser() user: LoginUserData,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.userSecretsService.changePassword(user.id, changePasswordDto);
   }
 }

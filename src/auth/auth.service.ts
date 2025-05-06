@@ -1,41 +1,59 @@
-import { Injectable } from '@nestjs/common';
-import { ChangePasswordDto } from './dto/change-password.tto';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import crypto from 'crypto';
+import { User } from '@/users/entities/user.entity';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { isNil } from '@util/isNil';
+import { UtilService } from '@util/util.service';
+import { Repository } from 'typeorm';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  hashPassword(password: string) {
-    const salt = crypto.randomBytes(64).toString('base64');
-    const min = 50_000;
-    const max = 100_000;
-    /* min ~ max 범위 */
-    const iteration = Math.floor(Math.random() * (max - min + 1)) + min;
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly utilService: UtilService,
+  ) {}
 
-    const keyLength = 64;
-    const digest = 'sha512';
+  async login({ email, password }: LoginDto) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: { userSecret: true },
+      select: {
+        userSecret: {
+          salt: true,
+          password: true,
+          iteration: true,
+        },
+      },
+    });
 
-    const hashedPassword = crypto
-      .pbkdf2Sync(password, salt, iteration, keyLength, digest)
-      .toString('base64');
+    if (isNil(user)) {
+      throw new NotFoundException(email);
+    }
 
-    return {
-      salt,
-      iteration,
-      hashedPassword: `${salt}:${hashedPassword}`,
+    const payload: LoginUserData = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      nickname: user.nickname,
+      role: user.role,
     };
+    const isSame = this.utilService.verifyPassword(password, {
+      iteration: user.userSecret.iteration,
+      salt: user.userSecret.salt,
+      password: user.userSecret.password,
+    });
+    if (!isSame) {
+      throw new BadRequestException();
+    }
+    return this.utilService.createJWT(payload);
   }
 
-  verifyToken() {
-    throw new Error('Method not implemented.');
-  }
-  sendVerificationEmail(email: string) {
-    throw new Error('Method not implemented.');
-  }
-  changePassword(changePasswordDto: ChangePasswordDto) {
-    throw new Error('Method not implemented.');
-  }
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  verifyToken(token: string) {
+    return this.utilService.verifyJWT(token);
   }
 }

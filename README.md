@@ -110,3 +110,54 @@ npm i --save-dev @swc/cli @swc/core
 ```bash
 npm i --save-dev vitest unplugin-swc @swc/core @vitest/coverage-v8
 ```
+
+## Template Base Features
+
+- [x] 전역 타입 지정
+  - [x] 공통 타입 작성
+- [x] 테스트 환경 구축
+  - [x] E2E 종단간 테스트 초안 작성
+- [ ] 환경변수
+  - [ ] 공통
+    - [x] 서버 버저닝
+    - [x] api prefix
+    - [x] 서버 정보
+    - [ ] 로그
+      - [x] 레벨
+      - [x] 활성화
+      - [ ] 저장 활성화
+      - [x] 로그 저장 경로
+      - [x] 로그 확장자
+  - [x] 개발용
+    - [x] 데이터베이스
+    - [x] 비밀키
+  - [x] 운영용
+    - [x] 데이터베이스
+    - [x] 비밀키
+- [x] 데이터베이스 연동
+  - [x] TypeORM 연동
+    - [x] 옵션 설정
+    - [x] DataSource 설정
+- [ ] 필수 미들웨어 개발
+  - [ ] 로거
+    - [x] 시스템 로그
+    - [ ] 로그 파일 저장
+  - [x] 검증
+    - [x] JWT 토큰
+    - [x] 사용자 권한
+  - [x] 파싱
+    - [x] Authorization 헤더 JWT 토큰
+  - [x] 데코레이터
+    - [x] 권한 검증
+  - [x] 가드
+    - [x] 로그인 요구
+    - [x] 공개 처리
+  - [x] 필터
+    - [x] 공통 예외처리 필터 개발
+  - [x] 스웨거
+    - [x] 스웨거 초안 작성
+    - [x] ok response 스키마 제작
+    - [x] error response 스키마 제작작
+- [ ] ORM 처리
+  - [x] 예외 처리
+  - [ ] 트랜젝션 처리 (2가지 이상 CUD 사용 시)

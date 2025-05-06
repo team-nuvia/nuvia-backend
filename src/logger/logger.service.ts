@@ -1,3 +1,4 @@
+import { CommonService } from '@common/common.service';
 import { LogLevel, LogLevels } from '@common/variable/enums';
 import { LOG_DIR, LOG_EXT } from '@common/variable/environment';
 import { Injectable } from '@nestjs/common';
@@ -7,12 +8,18 @@ import path from 'path';
 
 @Injectable()
 export class LoggerService {
-  levels = LogLevels;
-  icons = ['📄', '✨', '🐛', '📢', '❌'] as const;
+  private readonly levels = LogLevels;
+  private readonly icons = ['📄', '✨', '🐛', '📢', '❌'] as const;
+  private readonly logActivate: boolean;
+  private readonly logSaveActivate: boolean;
+
   context!: string;
 
-  constructor() {
-    this.setContext('Server');
+  constructor(private readonly commonService: CommonService) {
+    const commonConfig = this.commonService.getConfig('common');
+    this.logActivate = commonConfig.logActivate;
+    this.logSaveActivate = commonConfig.logSaveActivate;
+    this.setContext('server');
   }
 
   setContext(context: string) {
@@ -36,11 +43,18 @@ export class LoggerService {
             : ''
         }`;
 
-        // 콘솔 출력
-        console[level](formatted);
-
         // 로그 파일 저장
-        this.saveLog(level, formatted);
+        if (this.logSaveActivate) {
+          this.saveLog('all', formatted);
+          this.saveLog(level, formatted);
+        }
+
+        // 콘솔 출력
+        if (this.logActivate) {
+          this[level] = console[level].bind(this, formatted);
+        } else {
+          this[level] = () => {};
+        }
       };
     }
   }
@@ -49,7 +63,7 @@ export class LoggerService {
     return dayjs().format('YYYY-MM-DD HH:mm:ss.SSS');
   }
 
-  private saveLog(type: LogLevel, message: string) {
+  private saveLog(type: 'all' | LogLevel, message: string) {
     const today = dayjs().format('YYYY-MM-DD');
     const logDirPath = path.resolve(LOG_DIR);
 

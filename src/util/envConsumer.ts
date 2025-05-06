@@ -15,10 +15,15 @@ export const envConsumer = (envs: NodeJS.ProcessEnv) => {
   >(
     type: Type,
     propertyName: string,
+    defaultValue?: Return,
   ): Return => {
     const value = envs[propertyName];
 
     if (isNil(value)) {
+      if (defaultValue) {
+        return defaultValue;
+      }
+
       throw new Error(`"${propertyName}" 환경 변수가 정의되지 않았습니다.`);
     }
 
