@@ -1,0 +1,3 @@
+#! /usr/bin/env bash
+
+docker exec -it mysql mysql -u$DB_USERNAME -p$DB_PASSWORD -e "create schema if not exists \`test_$DB_NAME\`"

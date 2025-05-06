@@ -17,6 +17,8 @@
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
@@ -28,7 +30,7 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "lib", "test"],
+  "include": ["src/**/*", "lib/**/*", "test/**/*"],
   "ts-node": {
     "files": true,
     "require": ["tsconfig-paths/register"]
