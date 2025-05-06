@@ -1,10 +1,10 @@
-import { User } from '@/users/entities/user.entity';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';

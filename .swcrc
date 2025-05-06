@@ -1,17 +1,16 @@
 {
-  "$schema": "https://swc.rs/schema.json",
-  "sourceMaps": true,
   "jsc": {
+    "target": "es2021",
     "parser": {
       "syntax": "typescript",
-      "decorators": true,
-      "dynamicImport": true
+      "tsx": false
     },
     "transform": {
-      "legacyDecorator": true,
-      "decoratorMetadata": true
-    },
-    "baseUrl": "./"
+      "decoratorMetadata": true,
+      "legacyDecorator": true
+    }
   },
-  "minify": false
+  "module": {
+    "type": "commonjs" // 또는 esnext
+  }
 }

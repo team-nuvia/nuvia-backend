@@ -1,3 +1,4 @@
+console.log(__dirname);
 import { DEPLOY_VERSION, SERVER_VERSION } from '@common/variable/environment';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';

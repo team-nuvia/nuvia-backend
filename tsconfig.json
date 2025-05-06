@@ -23,14 +23,17 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@util/*": ["src/util/*"],
+      "@users/*": ["src/users/*"],
+      "@types/*": ["src/types/*"],
       "@logger/*": ["src/logger/*"],
       "@database/*": ["src/database/*"],
       "@config/*": ["src/config/*"],
       "@common/*": ["src/common/*"],
+      "@auth/*": ["src/auth/*"],
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "lib/**/*", "test/**/*"],
+  "include": ["src", "lib", "test"],
   "ts-node": {
     "files": true,
     "require": ["tsconfig-paths/register"]

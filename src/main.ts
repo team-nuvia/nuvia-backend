@@ -27,8 +27,8 @@ async function bootstrap() {
   });
 
   const utilService = app.get(UtilService);
-  const loggerService = app.get(LoggerService);
   const commonService = app.get(CommonService);
+  const loggerService = app.get(LoggerService);
   const commonConfig = commonService.getConfig('common');
 
   /* 재시작 구분선 */
