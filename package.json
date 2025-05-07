@@ -24,7 +24,7 @@
     "init:db": "dotenv -e .env.test.local -- sh scripts/test_db_initialize",
     "previtest:e2e": "npm run init:db",
     "jest:e2e": "cross-env NODE_ENV=test RUN_ON=local jest -c ./test/jest-e2e.json --detectOpenHandles",
-    "vitest:e2e": "cross-env NODE_ENV=development RUN_ON=local vitest --config ./test/vitest.config.mjs"
+    "vitest:e2e": "cross-env NODE_ENV=development vitest -c ./test/vitest.config.mjs"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",

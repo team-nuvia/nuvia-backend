@@ -67,7 +67,6 @@ export class UsersController {
   )
   @RequiredLogin()
   findMe(@LoginUser() user: LoginUserData): Promise<User | null> {
-    console.log('🚀 ~ UsersController ~ findMe ~ user:', user);
     return this.usersService.findMe(user.id);
   }
 

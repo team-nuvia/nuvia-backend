@@ -41,7 +41,7 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 /* Test Values */
-export const sample = {
+export const Sample = {
   username: {
     first: [
       '유별난',
@@ -75,4 +75,5 @@ export const sample = {
       '화통',
     ],
   },
-};
+} as const;
+export type Sample = (typeof Sample)[keyof typeof Sample];

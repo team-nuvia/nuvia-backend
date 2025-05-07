@@ -1,3 +1,8 @@
+import { Sample, UserRole } from '@common/variable/enums';
+import { fakerKO as faker } from '@faker-js/faker';
+import { ApiProperty } from '@nestjs/swagger';
+import { UserSecret } from '@user-secrets/entities/user-secret.entity';
+import dayjs from 'dayjs';
 import {
   Column,
   CreateDateColumn,
@@ -8,11 +13,6 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserSecret } from '../user-secrets/entities/user-secret.entity';
-import { sample, UserRole } from '@common/variable/enums';
-import { ApiProperty } from '@nestjs/swagger';
-import { fakerKO as faker } from '@faker-js/faker';
-import dayjs from 'dayjs';
 
 @Entity()
 export class User {
@@ -41,8 +41,8 @@ export class User {
     name: 'nickname',
     type: String,
     example: faker.helpers.mustache('{{first}}{{last}}', {
-      first: faker.helpers.arrayElement(sample.username.first),
-      last: faker.helpers.arrayElement(sample.username.last),
+      first: faker.helpers.arrayElement(Sample.username.first),
+      last: faker.helpers.arrayElement(Sample.username.last),
     }),
   })
   nickname!: string;

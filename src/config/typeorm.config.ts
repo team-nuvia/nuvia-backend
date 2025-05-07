@@ -9,10 +9,12 @@ import {
   IS_TEST,
 } from '@common/variable/environment';
 import { registerAs } from '@nestjs/config';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import path from 'path';
 import { DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-export const typeormOptions: DataSourceOptions = {
+export const datasourceOptions: DataSourceOptions = {
   type: 'mysql',
   host: DB_HOST,
   port: DB_PORT,
@@ -27,7 +29,10 @@ export const typeormOptions: DataSourceOptions = {
       : ['error']
     : false,
   poolSize: 20,
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  entities: [
+    // path.join(path.resolve(), '/src/../**/*.entity.{js,ts}'),
+    __dirname + '/../*.entity.{js,ts}'
+  ],
   namingStrategy: new SnakeNamingStrategy(),
   dropSchema: IS_DEV,
   synchronize: IS_DEV,
@@ -35,4 +40,7 @@ export const typeormOptions: DataSourceOptions = {
   // migrationsRun: IS_TEST,
 };
 
-export const typeormConfig = registerAs('database', () => typeormOptions);
+export const typeormConfig = registerAs(
+  'database',
+  () => ({ ...datasourceOptions, autoLoadEntities: true }) as TypeOrmModuleOptions,
+);

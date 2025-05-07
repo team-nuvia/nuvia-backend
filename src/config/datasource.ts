@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
-import { typeormOptions } from './typeorm.config';
+import { datasourceOptions } from './typeorm.config';
 
-const datasource = new DataSource(typeormOptions);
+const datasource = new DataSource(datasourceOptions);
 
 export default datasource;

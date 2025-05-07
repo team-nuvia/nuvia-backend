@@ -1,4 +1,4 @@
-import { sample, UserRole } from '@common/variable/enums';
+import { Sample, UserRole } from '@common/variable/enums';
 import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsStrongPassword } from 'class-validator';
@@ -28,8 +28,8 @@ export class CreateUserDto {
     name: 'nickname',
     type: String,
     example: faker.helpers.mustache('{{first}}{{last}}', {
-      first: faker.helpers.arrayElement(sample.username.first),
-      last: faker.helpers.arrayElement(sample.username.last),
+      first: faker.helpers.arrayElement(Sample.username.first),
+      last: faker.helpers.arrayElement(Sample.username.last),
     }),
   })
   @IsEmail()

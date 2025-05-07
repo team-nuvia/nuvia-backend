@@ -16,8 +16,6 @@ export class LoggerService {
   context!: string;
 
   constructor(private readonly commonService: CommonService) {
-    console.log('🧪 commonService injected:', commonService);
-
     const commonConfig = this.commonService.getConfig('common');
     this.logActivate = commonConfig.logActivate;
     this.logSaveActivate = commonConfig.logSaveActivate;
