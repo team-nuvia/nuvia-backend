@@ -10,7 +10,6 @@ import {
 } from '@common/variable/environment';
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import path from 'path';
 import { DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
@@ -31,7 +30,7 @@ export const datasourceOptions: DataSourceOptions = {
   poolSize: 20,
   entities: [
     // path.join(path.resolve(), '/src/../**/*.entity.{js,ts}'),
-    __dirname + '/../*.entity.{js,ts}'
+    __dirname + '/../*.entity.{js,ts}',
   ],
   namingStrategy: new SnakeNamingStrategy(),
   dropSchema: IS_DEV,
@@ -42,5 +41,6 @@ export const datasourceOptions: DataSourceOptions = {
 
 export const typeormConfig = registerAs(
   'database',
-  () => ({ ...datasourceOptions, autoLoadEntities: true }) as TypeOrmModuleOptions,
+  () =>
+    ({ ...datasourceOptions, autoLoadEntities: true }) as TypeOrmModuleOptions,
 );
