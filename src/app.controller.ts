@@ -11,4 +11,9 @@ export class AppController {
   getVersion(): string {
     return this.appService.getVersion();
   }
+
+  @Get('worker')
+  worker(): string {
+    return this.appService.getHello();
+  }
 }
