@@ -1,3 +1,4 @@
+import { LoggerService } from '@logger/logger.service';
 import {
   CallHandler,
   ExecutionContext,
@@ -12,25 +13,30 @@ import { RequestMethod } from './variable/enums';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
+  constructor(private readonly loggerService: LoggerService) {}
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const http = context.switchToHttp();
-    const request = http.getRequest<Request>();
-    const response = http.getResponse<Response>();
-    const status = response.statusCode;
-    const path = request.originalUrl;
-    const method = request.method as RequestMethod;
+    const req = http.getRequest<Request>();
+    const res = http.getResponse<Response>();
+    const status = res.statusCode;
+    const path = req.originalUrl;
+    const method = req.method as RequestMethod;
+
+    console.log('🚀 ~ ResponseInterceptor ~ intercept ~ req.body:', req.body);
 
     return next.handle().pipe(
-      map(
-        (data) =>
-          new OkResponseDto({
-            ok: [HttpStatus.OK, HttpStatus.CREATED].includes(status),
-            status,
-            path,
-            method,
-            payload: data,
-          }),
-      ),
+      map((data) => {
+        this.loggerService.log(`⬅️ RES. [${method}] ${path} ---`, data);
+
+        return new OkResponseDto({
+          ok: [HttpStatus.OK, HttpStatus.CREATED].includes(status),
+          status,
+          path,
+          method,
+          payload: data,
+        });
+      }),
     );
   }
 }

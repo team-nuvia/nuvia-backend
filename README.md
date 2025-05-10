@@ -34,7 +34,8 @@ SWC를 적용하여 보다 빠른 개발 환경을 구축합니다.
 - [x] typeorm
 - [x] mysql2
 - [x] typeorm-extension
-- [ ] sharp
+- [x] sharp
+- [x] image-size
 
 ### 개발
 
@@ -46,7 +47,7 @@ SWC를 적용하여 보다 빠른 개발 환경을 구축합니다.
 - [x] @types/multer
 - [ ] @types/passport-local
 - [ ] @types/passport-jwt
-- [ ] @types/sharp
+- [x] @types/sharp
 - [ ] @compodoc/compodoc
 
 ## 필수 의존 설치
@@ -89,6 +90,7 @@ npm i jsonwebtoken # JWT
 npm i -D @types/jsonwebtoken
 
 npm i sharp # 이미지 상세 처리
+npm i image-size # 이미지 크기 처리
 npm i -D @types/sharp
 
 # TypeORM (최근 데이터 손실 문제 등으로 비전에 대해 말이 많음)
@@ -110,6 +112,10 @@ npm i --save-dev @swc/cli @swc/core
 ```bash
 npm i --save-dev vitest unplugin-swc @swc/core @vitest/coverage-v8
 ```
+
+## Vitest 실행 시 import 어쩌고 에러 뜰 때
+
+원인은 typeorm에서 entities나 migrations 경로가 잘못되어서 그런거임
 
 ## Template Base Features
 

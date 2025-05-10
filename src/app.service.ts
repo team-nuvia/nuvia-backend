@@ -7,7 +7,6 @@ import { Worker } from 'worker_threads';
 export class AppService {
   getVersion(): string {
     const version = [SERVER_VERSION, DEPLOY_VERSION].join('.');
-    console.log('this is', process.pid);
     return `V${version}`;
   }
 

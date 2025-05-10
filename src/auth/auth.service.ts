@@ -47,9 +47,11 @@ export class AuthService {
       salt: user.userSecret.salt,
       password: user.userSecret.password,
     });
+
     if (!isSame) {
       throw new BadRequestException();
     }
+
     return this.utilService.createJWT(payload);
   }
 

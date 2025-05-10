@@ -50,8 +50,8 @@ async function bootstrap() {
 
   app.useGlobalGuards(new JwtGuard(utilService));
   app.setGlobalPrefix('api');
-  app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor(loggerService));
+  app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
   app.enableVersioning({ type: VersioningType.URI });
   app.enableCors({

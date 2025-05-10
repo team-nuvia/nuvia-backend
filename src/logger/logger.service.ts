@@ -39,7 +39,7 @@ export class LoggerService {
         const tag = `[${level.toUpperCase()}] [${this.context.toUpperCase()}] [${timestamp}]`;
         const formatted = `${icon} ${tag} --- ${message} ${
           optionalParams.length
-            ? optionalParams.map((p) => JSON.stringify(p)).join(' ')
+            ? optionalParams.map((p) => JSON.stringify(p, null, 2)).join(' ')
             : ''
         }`;
 
