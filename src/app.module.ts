@@ -12,6 +12,7 @@ import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './logger/logger.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
+import { StaticModule } from './static/static.module';
 
 @Module({
   imports: [
@@ -19,12 +20,13 @@ import { UtilModule } from './util/util.module';
       isGlobal: true,
       load: [commonConfig, typeormConfig, secretConfig],
     }),
+    AuthModule,
+    UtilModule,
+    UsersModule,
     CommonModule,
     LoggerModule,
-    UtilModule,
     DatabaseModule,
-    AuthModule,
-    UsersModule,
+    StaticModule,
   ],
   controllers: [AppController],
   providers: [AppService],

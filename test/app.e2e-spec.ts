@@ -8,16 +8,44 @@ import {
 } from '@common/variable/environment';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { User } from '@users/entities/user.entity';
 import { execSync } from 'child_process';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from './../src/app.module';
+
+const dbName = 'test_' + DB_NAME;
+
+function clearTables() {
+  const result = execSync(
+    `docker exec mysql mysql -u${DB_USERNAME} -p${DB_PASSWORD} -e "SELECT TABLE_NAME tbname FROM information_schema.tables WHERE table_schema = '${dbName}'"`,
+  );
+  const content = result.toString('utf-8');
+  const lines = content.split('\n').slice(1, -1);
+
+  for (const line of lines) {
+    execSync(
+      `docker exec mysql mysql -u${DB_USERNAME} -p${DB_PASSWORD} -e "DELETE FROM ${dbName}.\`${line}\`"`,
+    );
+  }
+}
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  const createUserDto = {
+    email: 'test@example.com',
+    username: '테스트 사용자',
+    nickname: '테스터',
+    password: 'qweQQ!!1',
+    role: UserRole.User,
+  };
+  const version = [SERVER_VERSION, DEPLOY_VERSION].join('.');
+  const users = new Map();
 
   beforeEach(async () => {
+    clearTables();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -26,32 +54,15 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  afterAll(async () => {
-    /* 자동으로 테스트 데이터베이스 제거 */
-    execSync(
-      `docker exec mysql mysql -u${DB_USERNAME} -p${DB_PASSWORD} -e "drop schema if exists \`test_${DB_NAME}\`"`,
-      { stdio: 'pipe' },
-    );
-  });
-
   it('/version (GET)', () => {
-    const version = [SERVER_VERSION, DEPLOY_VERSION].join('.');
-    return request(app.getHttpServer())
+    request(app.getHttpServer())
       .get('/version')
       .expect(200)
       .expect(`V${version}`);
   });
 
   it('/users (POST)', () => {
-    const createUserDto = {
-      email: 'test@example.com',
-      username: '테스트 사용자',
-      nickname: '테스터',
-      password: 'qweQQ!!1',
-      role: UserRole.User,
-    };
-
-    return request(app.getHttpServer())
+    request(app.getHttpServer())
       .post('/users')
       .send(createUserDto)
       .expect(201)

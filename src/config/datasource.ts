@@ -1,6 +1,13 @@
 import { DataSource } from 'typeorm';
 import { datasourceOptions } from './typeorm.config';
 
-const datasource = new DataSource(datasourceOptions);
-
-export default datasource;
+const AppDataSource = new DataSource(datasourceOptions);
+AppDataSource
+  .initialize()
+  .then(() => {
+    console.log('✅ DataSource initialized');
+  })
+  .catch((err) => {
+    console.error('❌ DataSource intiialization failed', err);
+  });
+export default AppDataSource;

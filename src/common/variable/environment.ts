@@ -30,8 +30,10 @@ const getEnvAs = envConsumer(process.env);
 export const IS_DEV = RUN_MODE === RunMode.Development;
 export const IS_TEST = RUN_MODE === RunMode.Test;
 
+export const SERVE_HOST = getEnvAs(String, 'SERVE_HOST', 'localhost');
 export const HOST = getEnvAs(String, 'HOST');
 export const PORT = getEnvAs(Number, 'PORT');
+export const SERVER_URL = `http://${SERVE_HOST}:${PORT}`;
 
 export const DB_USERNAME = getEnvAs(String, 'DB_USERNAME');
 export const DB_PASSWORD = getEnvAs(String, 'DB_PASSWORD');

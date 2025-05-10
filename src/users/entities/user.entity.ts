@@ -2,6 +2,7 @@ import { Sample, UserRole } from '@common/variable/enums';
 import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
+import { Profile } from '@users/profiles/entities/profile.entity';
 import dayjs from 'dayjs';
 import {
   Column,
@@ -16,40 +17,35 @@ import {
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
   @ApiProperty({ name: 'id', type: Number, example: 1 })
+  @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
 
-  @Column({ type: 'varchar', length: 50, unique: true })
   @ApiProperty({
-    name: 'email',
     type: String,
     example: faker.internet.email({ provider: 'example.com' }),
   })
+  @Column('varchar', { length: 50, unique: true, comment: '이메일' })
   email!: string;
 
-  @Column({ type: 'varchar', length: 50 })
   @ApiProperty({
-    name: 'username',
     type: String,
     example: faker.person.fullName(),
   })
+  @Column('varchar', { length: 50 })
   username!: string;
 
-  @Column({ type: 'varchar', length: 50 })
   @ApiProperty({
-    name: 'nickname',
     type: String,
     example: faker.helpers.mustache('{{first}}{{last}}', {
       first: faker.helpers.arrayElement(Sample.username.first),
       last: faker.helpers.arrayElement(Sample.username.last),
     }),
   })
+  @Column('varchar', { length: 50 })
   nickname!: string;
 
-  @Column({ type: 'varchar', length: 50 })
   @ApiProperty({
-    name: 'role',
     enum: UserRole,
     type: () => UserRole,
     example: UserRole.User,
@@ -57,46 +53,45 @@ export class User {
       .map(([role, value]) => `${role}: ${value}`)
       .join('<br>')}`,
   })
+  @Column('varchar', { length: 50 })
   role!: UserRole;
 
-  @CreateDateColumn({
-    type: 'datetime',
-    comment: '생성일시',
-  })
   @ApiProperty({
-    name: 'createdAt',
     type: Date,
+    description: '생성일시',
     example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
+  })
+  @CreateDateColumn({
+    comment: '생성일시',
   })
   createdAt!: Date;
 
-  @UpdateDateColumn({
-    type: 'datetime',
-    comment: '수정일시',
-  })
   @ApiProperty({
-    name: 'updatedAt',
     type: Date,
+    description: '수정일시',
     example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
+  })
+  @UpdateDateColumn({
+    comment: '수정일시',
   })
   updatedAt!: Date;
 
-  @DeleteDateColumn({
-    type: 'datetime',
-    nullable: true,
-    comment: '삭제일시',
-    select: false,
-  })
   @ApiProperty({
-    name: 'deletedAt',
     type: Date,
+    description: '삭제일시',
     example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
     nullable: true,
   })
+  @DeleteDateColumn({
+    select: false,
+    nullable: true,
+    comment: '삭제일시',
+  })
   deletedAt!: Date | null;
 
-  @OneToOne(() => UserSecret, (userSecret) => userSecret.user, {
-    cascade: true,
-  })
+  @OneToOne(() => Profile, (profile) => profile.user)
+  profile!: Relation<Profile>;
+
+  @OneToOne(() => UserSecret, (userSecret) => userSecret.user)
   userSecret!: Relation<UserSecret>;
 }

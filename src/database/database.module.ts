@@ -9,6 +9,6 @@ import { DatabaseService } from './database.service';
       useClass: DatabaseService,
     }),
   ],
-  providers: [],
+  exports: [TypeOrmModule],
 })
 export class DatabaseModule {}
