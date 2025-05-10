@@ -10,6 +10,7 @@ import {
 } from '@common/variable/environment';
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import cluster from 'cluster';
 import { DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
@@ -33,8 +34,8 @@ export const datasourceOptions: DataSourceOptions = {
     __dirname + '/../*.entity.{js,ts}',
   ],
   namingStrategy: new SnakeNamingStrategy(),
-  dropSchema: IS_DEV,
-  synchronize: IS_DEV,
+  dropSchema: cluster.isPrimary && IS_DEV,
+  synchronize: cluster.isPrimary && IS_DEV,
   // migrations: [Migrations1746530610706],
   // migrationsRun: IS_TEST,
 };

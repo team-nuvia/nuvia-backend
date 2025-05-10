@@ -16,10 +16,13 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UtilService } from '@util/util.service';
 import { useContainer } from 'class-validator';
+import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/jwt.guard';
+
+cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
