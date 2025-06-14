@@ -2,10 +2,13 @@ import { CommonService } from '@common/common.service';
 import {
   BadRequestResponseDto,
   CommonResponseDto,
+  ErrorResponseDto,
+  ForbiddenResponseDto,
+  InternalServerErrorResponseDto,
   NotFoundResponseDto,
-  OkResponseDto,
+  SuccessResponseDto,
   UnauthorizedResponseDto,
-} from '@common/dto/response.dto';
+} from '@common/dto/global-response.dto';
 import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
 import { ResponseInterceptor } from '@common/response.interceptor';
 import { RunMode } from '@common/variable/enums';
@@ -67,11 +70,14 @@ async function bootstrap() {
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
       extraModels: [
+        ErrorResponseDto,
         CommonResponseDto,
-        OkResponseDto,
+        SuccessResponseDto,
         NotFoundResponseDto,
+        ForbiddenResponseDto,
         BadRequestResponseDto,
         UnauthorizedResponseDto,
+        InternalServerErrorResponseDto,
       ],
     });
   SwaggerModule.setup('api-docs', app, documentFactory, {

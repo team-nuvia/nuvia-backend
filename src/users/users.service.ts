@@ -1,4 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Conflict } from '@common/dto/exception-response.dto';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UtilService } from '@util/util.service';
 import { FindOptionsWhere, Repository } from 'typeorm';
@@ -17,9 +18,11 @@ export class UsersService {
     const alreadyExistUser = await this.isExistUserBy({
       email: createUserDto.email,
     });
+
     if (alreadyExistUser) {
-      throw new ConflictException('이미 존재하는 사용자입니다.');
+      throw new Conflict('이미 존재하는 사용자입니다.', createUserDto.email);
     }
+
     const user = this.userRepository.create();
     Object.assign(user, createUserDto);
     const { hashedPassword, ...userSecret } =

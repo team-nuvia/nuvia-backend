@@ -1,8 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequest, NotFound } from '@common/dto/exception-response.dto';
+import { LoginTokenDto } from '@common/dto/dsl-login';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
@@ -18,7 +16,7 @@ export class AuthService {
     private readonly utilService: UtilService,
   ) {}
 
-  async login({ email, password }: LoginDto) {
+  async login({ email, password }: LoginDto): Promise<LoginTokenDto> {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: { userSecret: true },
@@ -32,7 +30,7 @@ export class AuthService {
     });
 
     if (isNil(user)) {
-      throw new NotFoundException(email);
+      throw new NotFound('해당 이메일을 찾을 수 없습니다.', email);
     }
 
     const payload: LoginUserData = {
@@ -49,7 +47,7 @@ export class AuthService {
     });
 
     if (!isSame) {
-      throw new BadRequestException();
+      throw new BadRequest('정보를 다시 확인 해주세요.');
     }
 
     return this.utilService.createJWT(payload);

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { map, Observable } from 'rxjs';
-import { OkResponseDto } from './dto/response.dto';
+import { SuccessResponseDto } from './dto/global-response.dto';
 import { RequestMethod } from './variable/enums';
 
 @Injectable()
@@ -23,18 +23,25 @@ export class ResponseInterceptor implements NestInterceptor {
     const path = req.originalUrl;
     const method = req.method as RequestMethod;
 
-    console.log('🚀 ~ ResponseInterceptor ~ intercept ~ req.body:', req.body);
-
     return next.handle().pipe(
       map((data) => {
-        this.loggerService.log(`⬅️ RES. [${method}] ${path} ---`, data);
+        this.loggerService.log(
+          `⬅️ RES. [${method}] ${path} ${status} ---`,
+          data,
+        );
+        this.loggerService.log(
+          `⬅️ RES.BODY. [${method}] ${path} ${status} ---`,
+          JSON.stringify(req.body, null),
+        );
 
-        return new OkResponseDto({
+        return new SuccessResponseDto({
           ok: [HttpStatus.OK, HttpStatus.CREATED].includes(status),
           status,
           path,
           method,
+          timestamp: Date.now(),
           payload: data,
+          message: data.message ?? null,
         });
       }),
     );

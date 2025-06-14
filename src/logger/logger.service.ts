@@ -51,9 +51,7 @@ export class LoggerService {
 
         // 콘솔 출력
         if (this.logActivate) {
-          this[level] = console[level].bind(this, formatted);
-        } else {
-          this[level] = () => {};
+          console[level](formatted);
         }
       };
     }

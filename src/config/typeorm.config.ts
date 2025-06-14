@@ -39,7 +39,7 @@ export const datasourceOptions: DataSourceOptions = {
   migrations: [path.join(__dirname + '/../migrations/*.ts')],
   migrationsTableName: 'migrations',
   migrationsTransactionMode: 'all',
-  // migrationsRun: false,
+  migrationsRun: true,
 };
 
 export const typeormConfig = registerAs(

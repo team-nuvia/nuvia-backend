@@ -13,6 +13,7 @@ import { LoggerModule } from './logger/logger.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
 import { StaticModule } from './static/static.module';
+import { ErrorCodeModule } from './error-code/error-code.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { StaticModule } from './static/static.module';
     LoggerModule,
     DatabaseModule,
     StaticModule,
+    ErrorCodeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

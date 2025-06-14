@@ -1,0 +1,23 @@
+#! /usr/bin/env bash
+
+DEPLOY_VERSION=$(grep DEPLOY_VERSION .env)
+
+# PAD_START는 DEPLOY_VERSION의 세 번째 필드의 길이를 구합니다.
+PAD_START=$(awk '{print length($3)}' <<<"$DEPLOY_VERSION")
+# VERSION은 DEPLOY_VERSION의 세 번째 필드를 추출합니다.
+VERSION=$(awk '{printf $3}' <<<"$DEPLOY_VERSION")
+# NEXT_VERSION은 VERSION에 1을 더합니다.
+NEXT_VERSION=0
+
+# VERSION_LENGTH는 NEXT_VERSION의 문자열 길이를 구합니다.
+# ${#NEXT_VERSION}는 NEXT_VERSION의 문자열 길이를 직접 구하는 방법입니다.
+# 여기서는 NEXT_VERSION의 길이에서 1을 뺀 값을 사용합니다.
+# 이유는 NEXT_VERSION이 VERSION보다 항상 1 더 큰 값이므로, VERSION의 길이와 동일하거나 1 더 큰 길이를 가질 수 있습니다.
+# 이를 고려하여 PAD_LENGTH를 계산할 때, VERSION_LENGTH를 VERSION의 길이와 동일하게 설정합니다.
+VERSION_LENGTH=$((${#NEXT_VERSION} - 1))
+PAD_LENGTH=$((PAD_START - VERSION_LENGTH))
+NEXT_VERSION_PADDED=$(printf "%0${PAD_LENGTH}d" "$NEXT_VERSION")
+
+sed -i "s/DEPLOY_VERSION = .*$/DEPLOY_VERSION = $NEXT_VERSION_PADDED/" .env
+
+cat .env

@@ -15,6 +15,7 @@ export declare global {
     path: string;
     status: HttpStatus;
     method: RequestMethod;
+    timestamp: number;
   }
 
   export interface CommonResponseData<T extends any>
@@ -29,13 +30,13 @@ export declare global {
 
   export interface WithMessageCommonResponseData<T extends any>
     extends DefaultResponseData {
-    message?: string;
-    payload: T;
+    message?: string | null;
+    payload: T | null;
   }
 
   export interface WithMessageResponseData extends DefaultResponseData {
-    message: string;
-    detail?: string;
+    message?: string;
+    reason?: string;
   }
 
   export interface ApiMetadata {
@@ -44,7 +45,7 @@ export declare global {
     path: string;
     description: string;
     message?: string;
-    detail?: string;
+    reason?: string;
   }
 }
 

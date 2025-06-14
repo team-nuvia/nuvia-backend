@@ -199,9 +199,9 @@ export const ApiErrorResponses = <T extends new (...args: any[]) => any>(
               example: apiMetadata.message ?? '<error_message>',
               nullable: true,
             },
-            detail: {
+            reason: {
               type: 'string',
-              example: apiMetadata.detail ?? '<message_detail>',
+              example: apiMetadata.reason ?? '<message_reason>',
               nullable: true,
             },
           },

@@ -48,13 +48,13 @@ export class UtilService {
 
   createJWT<Payload extends object>(payload: Payload) {
     const secretConfig = this.commonService.getConfig('secret');
-    const token = jwt.sign(payload, secretConfig.jwt, {
+    const accessToken = jwt.sign(payload, secretConfig.jwt, {
       expiresIn: secretConfig.tokenExpireTime,
     });
-    const refresh = jwt.sign(payload, secretConfig.jwt, {
+    const refreshToken = jwt.sign(payload, secretConfig.jwt, {
       expiresIn: secretConfig.refreshExpireTime,
     });
-    return { token, refresh };
+    return { accessToken, refreshToken };
   }
 
   decodeJWT(token: string) {
