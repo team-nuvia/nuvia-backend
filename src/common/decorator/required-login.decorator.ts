@@ -1,11 +1,12 @@
+import { ApiDocs } from '@common/variable/dsl';
 import { LoggerService } from '@logger/logger.service';
 import {
   applyDecorators,
   CanActivate,
   ExecutionContext,
+  HttpStatus,
   Inject,
   SetMetadata,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -16,6 +17,7 @@ import { Observable } from 'rxjs';
 import { RoleGuard } from '../role.guard';
 import { UserRole } from '../variable/enums';
 import { ROLES_KEY } from '../variable/globals';
+import { CombineResponses } from './combine-responses.decorator';
 import { PUBLIC_KEY } from './public.decorator';
 
 export class RequiredLoginConstraint implements CanActivate {
@@ -45,7 +47,7 @@ export class RequiredLoginConstraint implements CanActivate {
     const bearerToken = request.headers.authorization;
 
     if (!bearerToken || !bearerToken?.startsWith('Bearer')) {
-      throw new UnauthorizedException();
+      throw new ApiDocs.DslUnauthorized();
     }
 
     const token = bearerToken.slice(7);
@@ -64,4 +66,5 @@ export const RequiredLogin = (...roles: UserRole[]) =>
     ApiBearerAuth(),
     SetMetadata(ROLES_KEY, roles),
     UseGuards(RequiredLoginConstraint, RoleGuard),
+    CombineResponses(HttpStatus.UNAUTHORIZED, ApiDocs.DslUnauthorized),
   );

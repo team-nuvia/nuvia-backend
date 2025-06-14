@@ -1,6 +1,6 @@
 {
   "name": "seed-template-nestjs-typeorm",
-  "version": "0.0.1",
+  "version": "0.0.1.000001",
   "description": "",
   "author": "",
   "private": true,
@@ -36,7 +36,9 @@
     "init:db": "dotenv -e .env.test.local -- sh scripts/test_db_initialize",
     "previtest:e2e": "npm run init:db",
     "jest:e2e": "cross-env NODE_ENV=test RUN_ON=local jest -c ./test/jest-e2e.json --detectOpenHandles",
-    "vitest:e2e": "cross-env NODE_ENV=test vitest -c ./test/vitest.config.mjs"
+    "vitest:e2e": "cross-env NODE_ENV=test vitest -c ./test/vitest.config.mjs",
+    "version:deploy:up": "sh scripts/deploy_version_up",
+    "version:deploy:init": "sh scripts/deploy_version_init"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",

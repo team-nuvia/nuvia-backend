@@ -1,6 +1,9 @@
 #! /usr/bin/env bash
 
+SERVER_VERSION=$(grep SERVER_VERSION .env)
 DEPLOY_VERSION=$(grep DEPLOY_VERSION .env)
+
+SERVER_VERSION=$(awk '{print $3}' <<<"$SERVER_VERSION")
 
 # PAD_START는 DEPLOY_VERSION의 세 번째 필드의 길이를 구합니다.
 PAD_START=$(awk '{print length($3)}' <<<"$DEPLOY_VERSION")
@@ -20,4 +23,9 @@ NEXT_VERSION_PADDED=$(printf "%0${PAD_LENGTH}d" "$NEXT_VERSION")
 
 sed -i "s/DEPLOY_VERSION = .*$/DEPLOY_VERSION = $NEXT_VERSION_PADDED/" .env
 
+VERSION_UPDATED=$(echo "$SERVER_VERSION.$NEXT_VERSION_PADDED")
+
+sed -i "s/\"version\": .*$/\"version\": \"$VERSION_UPDATED\",/" package.json
+
 cat .env
+cat package.json

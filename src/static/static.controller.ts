@@ -1,43 +1,30 @@
-import {
-  Controller,
-  Get,
-  Optional,
-  Param,
-  ParseIntPipe,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { ApiDocs } from '@common/variable/dsl';
+import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { AvailableFormatInfo, FormatEnum } from 'sharp';
-import { DimensionParsePipe } from './pipe/dimension-parse.pipe';
-import { NumberRangeParsePipe } from './pipe/number-range-parse.pipe';
-import { ResponseTypeParsePipe } from './pipe/response-type-parse.pipe';
-import { TypeParsePipe } from './pipe/type-parse.pipe';
+import { QueryGetProfileImageDto } from './dto/query-get-profile-image.dto';
 import { StaticService } from './static.service';
 
+@ApiTags('정적 리소스')
 @Controller('static')
 export class StaticController {
   constructor(private readonly staticService: StaticService) {}
 
+  @ApiOperation({ summary: '프로필 이미지 조회' })
+  @CombineResponses(HttpStatus.OK, ApiDocs.DslGetProfileImage)
+  @CombineResponses(HttpStatus.NOT_FOUND, ApiDocs.DslNotFoundProfileImage)
   @Get('image/:profileFilename')
   async findAll(
     @Res() res: Response,
-    @Query('t', TypeParsePipe) type: string,
-    @Query('q', ParseIntPipe, NumberRangeParsePipe) quality: number,
-    @Optional()
-    @Query('d', DimensionParsePipe)
-    dimension: { width: number; height: number } | null,
-    @Query('rs', ResponseTypeParsePipe)
-    responseType: keyof FormatEnum | AvailableFormatInfo,
+    @Query() query: QueryGetProfileImageDto,
     @Param('profileFilename') profileFilename: string,
   ) {
-    const touchedBuffer = await this.staticService.findOneByFilename(res, {
-      type,
-      dimension,
-      quality,
-      responseType,
+    const touchedBuffer = await this.staticService.findOneByFilename(
+      res,
+      query,
       profileFilename,
-    });
+    );
 
     res.send(Buffer.from(touchedBuffer));
   }

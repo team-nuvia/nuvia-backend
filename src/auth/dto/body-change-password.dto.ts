@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ChangePasswordDto {
+export class BodyChangePasswordDto {
   @ApiProperty({ name: 'token', type: String, required: true })
   token!: string;
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ErrorResponseDto } from './global-response.dto';
+import { ErrorResponseDto } from '../global-response.dto';
 
-export class NotFoundEmailResponseDto extends ErrorResponseDto {
+export class NotFoundResponseEmailDto extends ErrorResponseDto {
   @ApiProperty({
     description: '이메일을 찾지 못했습니다.',
     type: String,

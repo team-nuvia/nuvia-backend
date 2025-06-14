@@ -7,8 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { isNil } from '@util/isNil';
 import { Response } from 'express';
-import sharp, { AvailableFormatInfo, FormatEnum } from 'sharp';
+import sharp from 'sharp';
 import { Repository } from 'typeorm';
+import { QueryGetProfileImageDto } from './dto/query-get-profile-image.dto';
 
 @Injectable()
 export class StaticService {
@@ -19,20 +20,11 @@ export class StaticService {
 
   async findOneByFilename(
     res: Response,
-    {
-      type,
-      dimension,
-      quality,
-      responseType,
-      profileFilename,
-    }: {
-      type: string;
-      dimension: { width: number; height: number } | null;
-      quality: number;
-      responseType: keyof FormatEnum | AvailableFormatInfo;
-      profileFilename: string;
-    },
+    query: QueryGetProfileImageDto,
+    profileFilename: string,
   ) {
+    const { type, quality, dimension, responseType } = query;
+
     const profile = await this.profileRepository.findOne({
       where: { filename: profileFilename },
     });

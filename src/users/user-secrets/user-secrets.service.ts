@@ -1,13 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequest } from '@common/dto/exception-response.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { BodyChangePasswordDto } from './dto/body-change-password.dto';
 import { UserSecret } from './entities/user-secret.entity';
 
 @Injectable()
@@ -20,7 +17,10 @@ export class UserSecretsService {
     private readonly utilService: UtilService,
   ) {}
 
-  async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    userId: number,
+    changePasswordDto: BodyChangePasswordDto,
+  ) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: { userSecret: true },
@@ -46,11 +46,13 @@ export class UserSecretsService {
     );
 
     if (!isSamePassword) {
-      throw new BadRequestException();
+      throw new BadRequest('비밀번호가 일치하지 않습니다.');
     }
 
-    return await this.userSecretRepository.update(user.id, {
+    const updatedUserSecret = await this.userSecretRepository.update(user.id, {
       password: changePasswordDto.newPassword,
     });
+
+    return updatedUserSecret.generatedMaps[0].id;
   }
 }

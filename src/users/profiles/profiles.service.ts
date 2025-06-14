@@ -1,5 +1,6 @@
 import { CommonService } from '@common/common.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ApiDocs } from '@common/variable/dsl';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
 import crypto from 'crypto';
@@ -65,7 +66,7 @@ export class ProfilesService {
         },
       };
     } catch (error) {
-      throw new NotFoundException('profile');
+      throw new ApiDocs.DslNotFoundProfile();
     }
   }
 
@@ -75,7 +76,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundException('profile');
+      throw new ApiDocs.DslNotFoundProfile();
     }
 
     const originalname = file.originalname;
@@ -102,7 +103,15 @@ export class ProfilesService {
     );
   }
 
-  remove(userId: number) {
+  async remove(userId: number) {
+    const profile = await this.profileRepository.findOne({
+      where: { userId },
+    });
+
+    if (isNil(profile)) {
+      throw new ApiDocs.DslNotFoundProfile();
+    }
+
     return this.profileRepository.delete({ userId });
   }
 }

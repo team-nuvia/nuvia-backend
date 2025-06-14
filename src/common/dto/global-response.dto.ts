@@ -38,7 +38,9 @@ export class CommonResponseDto {
   timestamp: Date = new Date();
 
   constructor(responseData: DefaultResponseData) {
-    this.ok = [HttpStatus.OK, HttpStatus.CREATED].includes(responseData.status);
+    this.ok = [HttpStatus.OK, HttpStatus.CREATED].includes(
+      responseData.status ?? HttpStatus.OK,
+    );
     if (!isNil(responseData) && !isNil(responseData.status))
       this.status = responseData.status;
     if (!isNil(responseData) && !isNil(responseData.method))
@@ -47,17 +49,27 @@ export class CommonResponseDto {
       this.path = responseData.path;
     this.timestamp = new Date();
   }
+
+  getStatus() {
+    return this.status ?? HttpStatus.BAD_REQUEST;
+  }
 }
 
 export class SuccessResponseDto<T = any> extends CommonResponseDto {
-  @ApiProperty({ name: 'payload', nullable: true })
-  payload!: T | T[];
+  @ApiProperty({
+    name: 'payload',
+    nullable: true,
+    required: false,
+    example: null,
+  })
+  payload: T | T[] | null = null;
 
   @ApiProperty({
     name: 'message',
     type: String,
     example: '<success message>',
     nullable: true,
+    required: false,
   })
   message?: string | null = '<success message>';
 
@@ -75,22 +87,24 @@ export class ErrorResponseDto extends CommonResponseDto {
     type: String,
     example: '<error message>',
     nullable: true,
+    required: false,
   })
   message: string | null = '<error message>';
 
   @ApiProperty({
-    name: 'reason',
+    name: 'cause',
     type: String,
-    example: '<error reason>',
+    example: null,
     nullable: true,
+    required: false,
   })
-  reason?: string | null = '<error reason>';
+  cause?: string | null = null;
 
-  constructor(options: WithMessageResponseData) {
-    const { message = null, reason = null, ...responseData } = options ?? {};
+  constructor(options?: WithMessageResponseData) {
+    const { message = null, cause = null, ...responseData } = options ?? {};
     super(responseData);
     if (message) this.message = message;
-    if (reason) this.reason = reason;
+    if (cause) this.cause = cause;
   }
 }
 
@@ -111,7 +125,7 @@ export class ErrorResponseDto extends CommonResponseDto {
 //     @ApiProperty({
 //       name: 'detail',
 //       nullable: true,
-//       example: detail ?? '<reason>',
+//       example: detail ?? '<cause>',
 //     })
 //     detail!: string | null;
 
@@ -136,6 +150,8 @@ export class BadRequestResponseDto extends ErrorResponseDto {
 
 /* 401 에러 응답 */
 export class UnauthorizedResponseDto extends ErrorResponseDto {
+  status: HttpStatus = HttpStatus.UNAUTHORIZED;
+
   @ApiProperty({
     name: 'message',
     type: String,
@@ -146,6 +162,8 @@ export class UnauthorizedResponseDto extends ErrorResponseDto {
 
 /* 403 에러 응답 */
 export class ForbiddenResponseDto extends ErrorResponseDto {
+  status: HttpStatus = HttpStatus.FORBIDDEN;
+
   @ApiProperty({
     name: 'message',
     type: String,
@@ -156,6 +174,8 @@ export class ForbiddenResponseDto extends ErrorResponseDto {
 
 /* 404 에러 응답 */
 export class NotFoundResponseDto extends ErrorResponseDto {
+  status: HttpStatus = HttpStatus.NOT_FOUND;
+
   @ApiProperty({
     name: 'message',
     type: String,
@@ -166,6 +186,8 @@ export class NotFoundResponseDto extends ErrorResponseDto {
 
 /* 409 에러 응답 */
 export class ConflictResponseDto extends ErrorResponseDto {
+  status: HttpStatus = HttpStatus.CONFLICT;
+
   @ApiProperty({
     name: 'message',
     type: String,
@@ -176,6 +198,8 @@ export class ConflictResponseDto extends ErrorResponseDto {
 
 /* 500 에러 응답 */
 export class InternalServerErrorResponseDto extends ErrorResponseDto {
+  status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+
   @ApiProperty({
     name: 'message',
     type: String,

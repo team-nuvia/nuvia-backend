@@ -3,7 +3,7 @@ import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsStrongPassword } from 'class-validator';
 
-export class CreateUserDto {
+export class BodyCreateUserDto {
   @ApiProperty({
     name: 'email',
     type: String,
@@ -21,7 +21,6 @@ export class CreateUserDto {
     type: String,
     example: faker.person.fullName(),
   })
-  @IsEmail()
   username!: string;
 
   @ApiProperty({
@@ -32,7 +31,6 @@ export class CreateUserDto {
       last: faker.helpers.arrayElement(Sample.username.last),
     }),
   })
-  @IsEmail()
   nickname!: string;
 
   @ApiProperty({

@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ErrorCodeService } from './error-code.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateErrorCodeDto } from './dto/create-error-code.dto';
 import { UpdateErrorCodeDto } from './dto/update-error-code.dto';
+import { ErrorCodeService } from './error-code.service';
 
+@ApiTags('에러 코드')
 @Controller('error-code')
 export class ErrorCodeController {
   constructor(private readonly errorCodeService: ErrorCodeService) {}
@@ -23,7 +33,10 @@ export class ErrorCodeController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateErrorCodeDto: UpdateErrorCodeDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateErrorCodeDto: UpdateErrorCodeDto,
+  ) {
     return this.errorCodeService.update(+id, updateErrorCodeDto);
   }
 

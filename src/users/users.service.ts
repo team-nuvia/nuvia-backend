@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UtilService } from '@util/util.service';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { BodyCreateUserDto } from './dto/body-create-user.dto';
+import { BodyUpdateUserDto } from './dto/body-update-user.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class UsersService {
     private readonly utilService: UtilService,
   ) {}
 
-  async create({ password, ...createUserDto }: CreateUserDto) {
+  async create({ password, ...createUserDto }: BodyCreateUserDto) {
     const alreadyExistUser = await this.isExistUserBy({
       email: createUserDto.email,
     });
@@ -23,16 +23,19 @@ export class UsersService {
       throw new Conflict('이미 존재하는 사용자입니다.', createUserDto.email);
     }
 
-    const user = this.userRepository.create();
-    Object.assign(user, createUserDto);
     const { hashedPassword, ...userSecret } =
       this.utilService.hashPassword(password);
-    Object.assign(user, {
-      userSecret: { ...userSecret, password: hashedPassword },
-    });
-    const { userSecret: _, ...newUser } = await this.userRepository.save(user, {
-      transaction: true,
-    });
+
+    const { userSecret: _, ...newUser } = await this.userRepository.save(
+      {
+        ...createUserDto,
+        userSecret: { ...userSecret, password: hashedPassword },
+      },
+      {
+        transaction: true,
+      },
+    );
+
     return newUser;
   }
 
@@ -44,8 +47,12 @@ export class UsersService {
     return this.userRepository.existsBy(condition);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.userRepository.update(id, updateUserDto);
+  async update(id: number, updateUserDto: BodyUpdateUserDto) {
+    const updated = await this.userRepository.save(
+      { id, ...updateUserDto },
+      { transaction: true, reload: true },
+    );
+    return updated;
   }
 
   async remove(id: number) {

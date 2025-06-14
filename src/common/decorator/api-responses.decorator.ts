@@ -201,7 +201,7 @@ export const ApiErrorResponses = <T extends new (...args: any[]) => any>(
             },
             reason: {
               type: 'string',
-              example: apiMetadata.reason ?? '<message_reason>',
+              example: apiMetadata.cause ?? '<message_reason>',
               nullable: true,
             },
           },

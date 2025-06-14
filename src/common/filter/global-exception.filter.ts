@@ -6,7 +6,6 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ErrorResponseDto } from '../dto/global-response.dto';
 import { RequestMethod } from '../variable/enums';
 
 @Catch()
@@ -20,11 +19,13 @@ export class GlobalExceptionFilter<T extends HttpException>
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
     const status =
-      exception instanceof HttpException ? exception.getStatus() : 400;
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : (exception['status'] ?? 400);
 
     const message = exception.message ?? '서버 오류가 발생했습니다.';
     const reason: string | null = (exception.cause as string) ?? null;
-    const errorResponse: ErrorResponseDto = {
+    const errorResponse = {
       ok: false,
       status,
       path: req.originalUrl,

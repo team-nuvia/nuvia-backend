@@ -2,7 +2,6 @@ import { LoggerService } from '@logger/logger.service';
 import {
   CallHandler,
   ExecutionContext,
-  HttpStatus,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
@@ -35,11 +34,11 @@ export class ResponseInterceptor implements NestInterceptor {
         );
 
         return new SuccessResponseDto({
-          ok: [HttpStatus.OK, HttpStatus.CREATED].includes(status),
+          ok: status < 300 && status >= 200,
           status,
           path,
           method,
-          timestamp: Date.now(),
+          timestamp: new Date(),
           payload: data,
           message: data.message ?? null,
         });

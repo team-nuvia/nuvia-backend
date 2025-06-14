@@ -92,6 +92,8 @@ export class User {
   @OneToOne(() => Profile, (profile) => profile.user)
   profile!: Relation<Profile>;
 
-  @OneToOne(() => UserSecret, (userSecret) => userSecret.user)
+  @OneToOne(() => UserSecret, (userSecret) => userSecret.user, {
+    cascade: true,
+  })
   userSecret!: Relation<UserSecret>;
 }

@@ -84,7 +84,6 @@ export class UserSecret {
   deletedAt!: Date | null;
 
   @OneToOne(() => User, (user) => user.userSecret, {
-    cascade: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn()
