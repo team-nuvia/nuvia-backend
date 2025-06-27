@@ -4,6 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import dayjs from 'dayjs';
+import { IUser } from 'models/iuser';
 import {
   Column,
   CreateDateColumn,
@@ -16,7 +17,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class User implements IUser {
   @ApiProperty({ name: 'id', type: Number, example: 1 })
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;

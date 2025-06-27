@@ -38,6 +38,7 @@ async function bootstrap() {
   const commonConfig = commonService.getConfig('common');
 
   /* 재시작 구분선 */
+  /* 로그 파일에 적용 */
   loggerService.log('=============================================');
   loggerService.info('=============================================');
   loggerService.debug('=============================================');
@@ -56,15 +57,16 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor(loggerService));
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
-  app.enableVersioning({ type: VersioningType.URI });
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
   app.enableCors({
+    // TODO: 운영일 때 호스트 적용
     origin: commonConfig.runMode === RunMode.Development ? '*' : '*',
     credentials: commonConfig.runMode === RunMode.Production,
   });
 
   const config = new DocumentBuilder()
-    .setTitle('NestJS + TypeORM Seed Template')
-    .setDescription('NestJS + TypeORM Seed Template API Docs')
+    .setTitle('Snappoll API')
+    .setDescription('Snappoll API Docs')
     .setVersion(version)
     .build();
   const documentFactory = () =>

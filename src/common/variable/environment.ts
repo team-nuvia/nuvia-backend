@@ -17,10 +17,15 @@ export const RUN_ON = getOriginEnvAs(String, 'RUN_ON', RunOn.Local);
 dotenv.config({
   path: path.join(path.resolve(), '.env'),
 });
+
 /* 환경변수 체크 */
-if (fs.existsSync(`.env.${RUN_MODE}.${RUN_ON}`)) {
+const envFilename =
+  RUN_MODE !== RunMode.Production
+    ? `.env.${RUN_MODE}.${RUN_ON}`
+    : `.env.${RunMode.Production}`;
+if (fs.existsSync(envFilename)) {
   dotenv.config({
-    path: path.join(path.resolve(), `.env.${RUN_MODE}.${RUN_ON}`),
+    path: path.join(path.resolve(), envFilename),
     override: true,
   });
 }
