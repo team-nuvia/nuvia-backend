@@ -1,4 +1,4 @@
-[submodule "models"]
-	path = models
-	url = https://github.com/kkn1125/snappoll-models
+[submodule "share"]
+	path = share
+	url = https://github.com/kkn1125/nuvia-models.git
 	branch = main
