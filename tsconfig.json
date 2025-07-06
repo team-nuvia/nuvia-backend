@@ -24,7 +24,7 @@
     "inlineSources": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@models/*": ["models/*"],
+      "@share/*": ["share/*"],
       "@util/*": ["src/util/*"],
       "@user-secrets/*": ["src/users/user-secrets/*"],
       "@users/*": ["src/users/*"],
