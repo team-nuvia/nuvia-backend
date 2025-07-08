@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import dayjs from 'dayjs';
-import { IUser } from 'share/iuser';
+import { IUser } from '@share/interface/iuser';
 import {
   Column,
   CreateDateColumn,
