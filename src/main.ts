@@ -65,8 +65,8 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Snappoll API')
-    .setDescription('Snappoll API Docs')
+    .setTitle('Nuvia API')
+    .setDescription('Nuvia API Docs')
     .setVersion(version)
     .build();
   const documentFactory = () =>
