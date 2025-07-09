@@ -20,8 +20,8 @@ export declare global {
 
   export interface CommonResponseData<T extends any = any>
     extends DefaultResponseData {
-    message?: string;
-    payload?: T | null;
+    message?: string | null;
+    payload?: T | T[] | null;
   }
 
   // export interface CommonResponseData<T extends any>
@@ -34,15 +34,23 @@ export declare global {
     reason?: string | null;
   }
 
-  export interface WithMessageResponseData extends DefaultResponseData {
-    message?: string;
-    reason?: string | null;
-  }
+  // export interface WithMessageResponseData extends DefaultResponseData {
+  //   message?: string;
+  //   reason?: string | null;
+  // }
 
-  export type ApiMetadata = Pick<
-    DefaultResponseData,
-    'httpStatus' | 'method' | 'path' | 'description' | 'message' | 'reason'
-  >;
+  // export type ApiMetadata = Pick<
+  //   DefaultResponseData,
+  //   'httpStatus' | 'method' | 'path' | 'description' | 'message' | 'reason'
+  // >;
+  export interface ApiMetadata {
+    status: HttpStatus;
+    method: RequestMethod;
+    path: string;
+    description: string;
+    message?: string;
+    reason?: string;
+  }
 
   export type ResponseArgs<T> = Omit<
     WithMessageCommonResponseData<T>,

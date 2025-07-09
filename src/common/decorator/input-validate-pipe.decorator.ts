@@ -9,9 +9,7 @@ export const InputValidationPipe = (options?: ValidationPipeOptions) => {
     exceptionFactory(errors) {
       console.log('🚀 ~ exceptionFactory ~ errors:', errors);
       const message = errors.shift();
-      return new BadRequestResponseDto({
-        reason: message?.property ?? '{{param}}',
-      });
+      return new BadRequestResponseDto(message?.property ?? '{{param}}');
     },
   });
 };

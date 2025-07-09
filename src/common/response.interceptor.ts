@@ -5,7 +5,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { instanceToPlain } from 'class-transformer';
+import { serializeResponse } from '@util/serializeResponse';
 import { Request, Response } from 'express';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { RequestMethod } from './variable/enums';
@@ -24,7 +24,16 @@ export class ResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
-        console.log('🚀 ~ ResponseInterceptor ~ map ~ data:', data);
+        data.ok = httpStatus < 300 && httpStatus >= 200;
+        data.httpStatus = httpStatus;
+        data.path = path;
+        data.method = method;
+        data.timestamp = new Date();
+        data.name = data.constructor.name;
+        data.payload = data.payload ?? null;
+        data.message = data.message ?? '응답 완료';
+        data.reason = data.reason ?? null;
+
         this.loggerService.log(
           `⬅️ RES. [${method}] ${path} ${httpStatus} ---`,
           data,
@@ -44,7 +53,8 @@ export class ResponseInterceptor implements NestInterceptor {
         //   message: data.message ?? '응답 완료',
         //   reason: data.reason ?? null,
         // });
-        return instanceToPlain(data);
+        const serialized = serializeResponse(data);
+        return serialized;
         // return data;
       }),
       catchError((err) => {

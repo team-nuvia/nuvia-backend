@@ -6,6 +6,7 @@ import { isNil } from '@util/isNil';
 import crypto from 'crypto';
 import imageSize from 'image-size';
 import { Repository } from 'typeorm';
+import { NotFoundResponseProfileDto } from './dto/not-found-response-profile.dto';
 import { Profile } from './entities/profile.entity';
 
 @Injectable()
@@ -40,34 +41,32 @@ export class ProfilesService {
   }
 
   async findOne(userId: number) {
-    try {
-      const commonConfig = this.commonService.getConfig('common');
-      const {
-        id,
-        userId: uid,
-        buffer,
-        ...profile
-      } = await this.profileRepository.findOneOrFail({
-        where: { userId },
-      });
-      return {
-        ...profile,
-        imageUrl: {
-          preview: {
-            low: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=p&q=20&rs=jpeg`,
-            mid: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=p&q=50&rs=jpeg`,
-            high: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=p&q=100&rs=jpeg`,
-          },
-          download: {
-            low: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=d&q=20&rs=jpeg`,
-            mid: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=d&q=50&rs=jpeg`,
-            high: `${commonConfig.serverUrl}/api/static/image/${profile.filename}?t=d&q=100&rs=jpeg`,
-          },
-        },
-      };
-    } catch (error) {
-      throw new NotFoundResponseDto();
+    const commonConfig = this.commonService.getConfig('common');
+    const profile = await this.profileRepository.findOne({
+      where: { userId },
+    });
+
+    if (isNil(profile)) {
+      throw new NotFoundResponseProfileDto();
     }
+
+    const { id, userId: uid, buffer, ...rest } = profile;
+
+    return {
+      ...rest,
+      imageUrl: {
+        preview: {
+          low: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=p&q=20&rs=jpeg`,
+          mid: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=p&q=50&rs=jpeg`,
+          high: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=p&q=100&rs=jpeg`,
+        },
+        download: {
+          low: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=d&q=20&rs=jpeg`,
+          mid: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=d&q=50&rs=jpeg`,
+          high: `${commonConfig.serverUrl}/api/static/image/${rest.filename}?t=d&q=100&rs=jpeg`,
+        },
+      },
+    };
   }
 
   async update(userId: number, file: Express.Multer.File) {

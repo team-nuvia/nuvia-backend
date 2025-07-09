@@ -1,6 +1,8 @@
-import { Conflict } from '@common/dto/exception-response.dto';
+import { ConflictResponseDto } from '@common/dto/global-response.dto';
+import { NotFoundResponseUserDto } from '@common/dto/response/not-found-response-user.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { BodyCreateUserDto } from './dto/body-create-user.dto';
@@ -20,7 +22,7 @@ export class UsersService {
     });
 
     if (alreadyExistUser) {
-      throw new Conflict('이미 존재하는 사용자입니다.', createUserDto.email);
+      throw new ConflictResponseDto(createUserDto.email);
     }
 
     const { hashedPassword, ...userSecret } =
@@ -39,8 +41,14 @@ export class UsersService {
     return newUser;
   }
 
-  findMe(id: number) {
-    return this.userRepository.findOne({ where: { id } });
+  async findMe(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (isNil(user)) {
+      throw new NotFoundResponseUserDto();
+    }
+
+    return user;
   }
 
   isExistUserBy(condition: FindOptionsWhere<User> | FindOptionsWhere<User>[]) {

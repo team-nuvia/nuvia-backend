@@ -1,8 +1,8 @@
-import { SuccessResponseDto } from '@common/dto/global-response.dto';
-import { PayloadUserSecretDto } from './payload-user-secret.dto';
+import { SuccessResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
+import { PayloadUserSecretDto } from './payload-user-secret.dto';
 
-export class SuccessResponseUpdateUserSecretDto extends SuccessResponseDto<PayloadUserSecretDto> {
+export class SuccessResponseUpdateUserSecretDto extends SuccessResponse<PayloadUserSecretDto> {
   @ApiProperty({
     name: 'payload',
     type: () => PayloadUserSecretDto,

@@ -1,5 +1,8 @@
-import { BadRequest } from '@common/dto/exception-response.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestResponseDto,
+  NotFoundResponseDto,
+} from '@common/dto/global-response.dto';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
@@ -30,7 +33,7 @@ export class UserSecretsService {
     });
 
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundResponseDto();
     }
 
     const { userSecret } = user;
@@ -46,7 +49,7 @@ export class UserSecretsService {
     );
 
     if (!isSamePassword) {
-      throw new BadRequest('비밀번호가 일치하지 않습니다.');
+      throw new BadRequestResponseDto();
     }
 
     const updatedUserSecret = await this.userSecretRepository.update(user.id, {

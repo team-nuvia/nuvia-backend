@@ -37,7 +37,7 @@ export class AuthService {
     console.log('🚀 ~ AuthService ~ user:', user, email);
 
     if (isNil(user)) {
-      throw new NotFoundResponseDto({ reason: email });
+      throw new NotFoundResponseDto(email);
     }
 
     const payload: LoginUserData = {
@@ -54,7 +54,7 @@ export class AuthService {
     });
 
     if (!isSame) {
-      throw new BadRequestResponseDto({ reason: '정보를 다시 확인 해주세요.' });
+      throw new BadRequestResponseDto('정보를 다시 확인 해주세요.');
     }
 
     return this.utilService.createJWT(payload);

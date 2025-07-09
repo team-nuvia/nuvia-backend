@@ -26,7 +26,7 @@ export const ApiOkResponses = <T extends new (...args: any[]) => any>(
               type: 'boolean',
               example: true,
             },
-            status: {
+            httpStatus: {
               type: 'enum',
               enum: Object.keys(HttpStatus),
               example: apiMetadata.status,
@@ -201,7 +201,7 @@ export const ApiErrorResponses = <T extends new (...args: any[]) => any>(
             },
             reason: {
               type: 'string',
-              example: apiMetadata.cause ?? '<message_reason>',
+              example: apiMetadata.reason ?? '<message_reason>',
               nullable: true,
             },
           },

@@ -1,9 +1,9 @@
-import { SuccessResponseDto } from '@common/dto/global-response.dto';
 import { PayloadLoginTokenDto } from '@common/dto/payload/payload-login-token.dto';
 import { PayloadUserMeDto } from '@common/dto/payload/payload-user-me.dto';
+import { SuccessResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SuccessResponseGetVersionDto extends SuccessResponseDto {
+export class SuccessResponseGetVersionDto extends SuccessResponse {
   @ApiProperty({ name: 'message', type: String, example: '버전 조회 성공' })
   declare message: string;
 
@@ -11,11 +11,11 @@ export class SuccessResponseGetVersionDto extends SuccessResponseDto {
   declare payload: string;
 
   constructor(payload: string, message = '버전 조회 성공') {
-    super({ payload, message, reason: null });
+    super(payload, message, null);
   }
 }
 
-export class SuccessResponseLoginDto extends SuccessResponseDto<PayloadLoginTokenDto> {
+export class SuccessResponseLoginDto extends SuccessResponse<PayloadLoginTokenDto> {
   @ApiProperty({
     description: '토큰',
     type: PayloadLoginTokenDto,
@@ -30,7 +30,7 @@ export class SuccessResponseLoginDto extends SuccessResponseDto<PayloadLoginToke
   declare message: string;
 }
 
-export class SuccessResponseUserMeDto extends SuccessResponseDto<PayloadUserMeDto> {
+export class SuccessResponseUserMeDto extends SuccessResponse<PayloadUserMeDto> {
   @ApiProperty({
     description: '사용자 정보',
     type: PayloadUserMeDto,

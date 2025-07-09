@@ -5,6 +5,7 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import { serializeResponse } from '@util/serializeResponse';
 import { Request, Response } from 'express';
 import { RequestMethod } from '../variable/enums';
 
@@ -31,11 +32,14 @@ export class GlobalExceptionFilter<T extends HttpException>
       path: req.originalUrl,
       method: req.method as RequestMethod,
       timestamp: new Date(),
+      name: exception.constructor.name,
+      payload: null,
       message,
       reason,
     };
 
-    res.status(status).json(errorResponse);
+    const serialized = serializeResponse(errorResponse);
+    res.status(status).json(serialized);
     this.loggerService.error(
       `⬅️ RES. [${req.method}] ${req.originalUrl} ${status} ---`,
       `${message}${reason ? ` [${reason}]` : ''}`,

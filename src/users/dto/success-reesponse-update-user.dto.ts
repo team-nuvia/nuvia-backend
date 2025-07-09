@@ -1,7 +1,7 @@
-import { SuccessResponseDto } from '@common/dto/global-response.dto';
+import { SuccessResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SuccessResponseUpdateUserDto extends SuccessResponseDto {
+export class SuccessResponseUpdateUserDto extends SuccessResponse {
   @ApiProperty({
     name: 'payload',
     type: Number,
