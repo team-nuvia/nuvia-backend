@@ -1,5 +1,5 @@
 import { CommonService } from '@common/common.service';
-import { ApiDocs } from '@common/variable/dsl';
+import { NotFoundResponseDto } from '@common/dto/global-response.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
@@ -66,7 +66,7 @@ export class ProfilesService {
         },
       };
     } catch (error) {
-      throw new ApiDocs.DslNotFoundProfile();
+      throw new NotFoundResponseDto();
     }
   }
 
@@ -76,7 +76,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new ApiDocs.DslNotFoundProfile();
+      throw new NotFoundResponseDto();
     }
 
     const originalname = file.originalname;
@@ -109,7 +109,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new ApiDocs.DslNotFoundProfile();
+      throw new NotFoundResponseDto();
     }
 
     return this.profileRepository.delete({ userId });

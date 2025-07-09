@@ -1,6 +1,9 @@
 import { BodyLoginDto } from '@common/dto/body/body-login.dto';
+import {
+  BadRequestResponseDto,
+  NotFoundResponseDto,
+} from '@common/dto/global-response.dto';
 import { PayloadLoginTokenDto } from '@common/dto/payload/payload-login-token.dto';
-import { ApiDocs } from '@common/variable/dsl';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
@@ -34,7 +37,7 @@ export class AuthService {
     console.log('🚀 ~ AuthService ~ user:', user, email);
 
     if (isNil(user)) {
-      throw new ApiDocs.DslNotFoundEmail({ cause: email });
+      throw new NotFoundResponseDto({ reason: email });
     }
 
     const payload: LoginUserData = {
@@ -51,7 +54,7 @@ export class AuthService {
     });
 
     if (!isSame) {
-      throw new ApiDocs.DslBadRequest({ cause: '정보를 다시 확인 해주세요.' });
+      throw new BadRequestResponseDto({ reason: '정보를 다시 확인 해주세요.' });
     }
 
     return this.utilService.createJWT(payload);

@@ -6,6 +6,7 @@ import {
   DB_PORT,
   DB_USERNAME,
   IS_DEV,
+  IS_PROD,
   IS_TEST,
 } from '@common/variable/environment';
 import { registerAs } from '@nestjs/config';
@@ -35,7 +36,7 @@ export const datasourceOptions: DataSourceOptions = {
   ],
   namingStrategy: new SnakeNamingStrategy(),
   // dropSchema: IS_TEST,
-  synchronize: IS_TEST,
+  synchronize: !IS_PROD,
   migrations: [path.join(__dirname + '/../migrations/*.ts')],
   migrationsTableName: 'migrations',
   migrationsTransactionMode: 'all',

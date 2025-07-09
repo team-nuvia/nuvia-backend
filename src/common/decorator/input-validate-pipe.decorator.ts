@@ -1,4 +1,4 @@
-import { ApiDocs } from '@common/variable/dsl';
+import { BadRequestResponseDto } from '@common/dto/global-response.dto';
 import { ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 
 export const InputValidationPipe = (options?: ValidationPipeOptions) => {
@@ -9,8 +9,8 @@ export const InputValidationPipe = (options?: ValidationPipeOptions) => {
     exceptionFactory(errors) {
       console.log('🚀 ~ exceptionFactory ~ errors:', errors);
       const message = errors.shift();
-      return new ApiDocs.DslBadRequest({
-        cause: message?.property ?? '{{param}}',
+      return new BadRequestResponseDto({
+        reason: message?.property ?? '{{param}}',
       });
     },
   });

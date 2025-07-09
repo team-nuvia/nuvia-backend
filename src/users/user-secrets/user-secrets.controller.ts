@@ -1,10 +1,14 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { ApiDocs } from '@common/variable/dsl';
+import {
+  BadRequestResponseDto,
+  UnauthorizedResponseDto,
+} from '@common/dto/global-response.dto';
 import { Body, Controller, HttpStatus, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BodyChangePasswordDto } from './dto/body-change-password.dto';
+import { SuccessResponseUpdateUserSecretDto } from './dto/success-response-update-user-secret.dto';
 import { UserSecretsService } from './user-secrets.service';
 
 @ApiTags('사용자 보안')
@@ -15,9 +19,9 @@ export class UserSecretsController {
 
   @ApiOperation({ summary: '비밀번호 변경' })
   @Put()
-  @CombineResponses(HttpStatus.CREATED, ApiDocs.DslUpdateUserSecret)
-  @CombineResponses(HttpStatus.BAD_REQUEST, ApiDocs.DslBadRequest)
-  @CombineResponses(HttpStatus.UNAUTHORIZED, ApiDocs.DslUnauthorized)
+  @CombineResponses(HttpStatus.CREATED, SuccessResponseUpdateUserSecretDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestResponseDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedResponseDto)
   changePassword(
     @LoginUser() user: LoginUserData,
     @Body() changePasswordDto: BodyChangePasswordDto,

@@ -5,9 +5,9 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { instanceToPlain } from 'class-transformer';
 import { Request, Response } from 'express';
-import { map, Observable } from 'rxjs';
-import { SuccessResponseDto } from './dto/global-response.dto';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { RequestMethod } from './variable/enums';
 
 @Injectable()
@@ -18,30 +18,49 @@ export class ResponseInterceptor implements NestInterceptor {
     const http = context.switchToHttp();
     const req = http.getRequest<Request>();
     const res = http.getResponse<Response>();
-    const status = res.statusCode;
+    const httpStatus = res.statusCode;
     const path = req.originalUrl;
     const method = req.method as RequestMethod;
 
     return next.handle().pipe(
       map((data) => {
+        console.log('🚀 ~ ResponseInterceptor ~ map ~ data:', data);
         this.loggerService.log(
-          `⬅️ RES. [${method}] ${path} ${status} ---`,
+          `⬅️ RES. [${method}] ${path} ${httpStatus} ---`,
           data,
         );
         this.loggerService.log(
-          `⬅️ RES.BODY. [${method}] ${path} ${status} ---`,
+          `⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`,
           JSON.stringify(req.body, null),
         );
 
-        return new SuccessResponseDto({
-          ok: status < 300 && status >= 200,
-          status,
-          path,
-          method,
-          timestamp: new Date(),
-          payload: data,
-          message: data.message ?? null,
-        });
+        // return new SuccessResponseDto({
+        //   ok: httpStatus < 300 && httpStatus >= 200,
+        //   httpStatus,
+        //   path,
+        //   method,
+        //   timestamp: new Date(),
+        //   payload: data,
+        //   message: data.message ?? '응답 완료',
+        //   reason: data.reason ?? null,
+        // });
+        return instanceToPlain(data);
+        // return data;
+      }),
+      catchError((err) => {
+        this.loggerService.error(
+          `⬅️ RES. [${method}] ${path} ${httpStatus} ---`,
+          err,
+        );
+        this.loggerService.error(
+          `⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`,
+          JSON.stringify(req.body, null),
+        );
+        this.loggerService.error(
+          `⬅️ RES.PAYLOAD. [${method}] ${path} ${httpStatus} ---`,
+          JSON.stringify(err, null),
+        );
+        return throwError(() => err);
       }),
     );
   }

@@ -1,4 +1,4 @@
-import { ApiDocs } from '@common/variable/dsl';
+import { UnauthorizedResponseDto } from '@common/dto/global-response.dto';
 import { LoggerService } from '@logger/logger.service';
 import {
   applyDecorators,
@@ -47,7 +47,7 @@ export class RequiredLoginConstraint implements CanActivate {
     const bearerToken = request.headers.authorization;
 
     if (!bearerToken || !bearerToken?.startsWith('Bearer')) {
-      throw new ApiDocs.DslUnauthorized();
+      throw new UnauthorizedResponseDto();
     }
 
     const token = bearerToken.slice(7);
@@ -66,5 +66,5 @@ export const RequiredLogin = (...roles: UserRole[]) =>
     ApiBearerAuth(),
     SetMetadata(ROLES_KEY, roles),
     UseGuards(RequiredLoginConstraint, RoleGuard),
-    CombineResponses(HttpStatus.UNAUTHORIZED, ApiDocs.DslUnauthorized),
+    CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedResponseDto),
   );

@@ -12,41 +12,51 @@ export declare global {
 
   export interface DefaultResponseData {
     ok?: boolean;
-    path?: string;
-    status?: HttpStatus;
+    httpStatus?: HttpStatus;
     method?: RequestMethod;
+    path?: string;
     timestamp?: Date;
   }
 
-  export interface CommonResponseData<T extends any>
+  export interface CommonResponseData<T extends any = any>
     extends DefaultResponseData {
-    payload: T;
+    message?: string;
+    payload?: T | null;
   }
 
-  export interface CommonResponseData<T extends any>
-    extends DefaultResponseData {
-    payload: T;
-  }
+  // export interface CommonResponseData<T extends any>
+  //   extends DefaultResponseData {
+  //   payload: T;
+  // }
 
   export interface WithMessageCommonResponseData<T extends any>
-    extends DefaultResponseData {
-    message?: string | null;
-    payload: T | null;
+    extends CommonResponseData {
+    reason?: string | null;
   }
 
   export interface WithMessageResponseData extends DefaultResponseData {
     message?: string;
-    cause?: string;
+    reason?: string | null;
   }
 
-  export interface ApiMetadata {
-    status: HttpStatus;
-    method: RequestMethod;
-    path: string;
-    description: string;
-    message?: string;
-    cause?: string;
-  }
+  export type ApiMetadata = Pick<
+    DefaultResponseData,
+    'httpStatus' | 'method' | 'path' | 'description' | 'message' | 'reason'
+  >;
+
+  export type ResponseArgs<T> = Omit<
+    WithMessageCommonResponseData<T>,
+    keyof DefaultResponseData
+  >;
+
+  // export interface ApiMetadata {
+  //   status: HttpStatus;
+  //   method: RequestMethod;
+  //   path: string;
+  //   description: string;
+  //   message: string;
+  //   cause: string | null;
+  // }
 }
 
 export declare module 'express' {

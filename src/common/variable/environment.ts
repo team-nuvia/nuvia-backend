@@ -1,7 +1,7 @@
+import { envConsumer } from '@util/envConsumer';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { envConsumer } from '@util/envConsumer';
 import { RunMode, RunOn } from './enums';
 
 const getOriginEnvAs = envConsumer(process.env);
@@ -32,6 +32,7 @@ if (fs.existsSync(envFilename)) {
 
 const getEnvAs = envConsumer(process.env);
 
+export const IS_PROD = RUN_MODE === RunMode.Production;
 export const IS_DEV = RUN_MODE === RunMode.Development;
 export const IS_TEST = RUN_MODE === RunMode.Test;
 

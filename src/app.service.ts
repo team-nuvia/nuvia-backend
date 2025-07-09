@@ -10,6 +10,7 @@ export class AppService {
     return `V${version}`;
   }
 
+  /* Test용 */
   getHello(): string {
     const workerData = {
       data: 'hello',
@@ -28,5 +29,10 @@ export class AppService {
       console.log('exit worker', exitCode);
     });
     return 'workerData is done!';
+  }
+
+  onModuleInit() {
+    const version = this.getVersion();
+    console.log(`App version: ${version}`);
   }
 }
