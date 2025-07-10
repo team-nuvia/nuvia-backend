@@ -1,15 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotFoundResponseDto } from '../global-response.dto';
+import { ErrorKey, ErrorMessage } from './error-code';
+import { NotFoundException } from './exception.interface';
 
-export class NotFoundResponseUserDto extends NotFoundResponseDto {
+export class NotFoundResponseUserDto extends NotFoundException {
   @ApiProperty({
-    description: '사용자를 찾지 못했습니다.',
+    description: ErrorMessage.NOT_FOUND_USER,
     type: String,
-    example: '사용자를 찾지 못했습니다.',
+    example: ErrorMessage.NOT_FOUND_USER,
   })
   declare message: string;
 
   constructor(reason: string | null = null) {
-    super(reason, '사용자를 찾지 못했습니다.');
+    super(ErrorKey.NOT_FOUND_USER, reason);
   }
 }

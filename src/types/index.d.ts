@@ -10,63 +10,17 @@ export declare global {
     role: UserRole;
   }
 
-  export interface DefaultResponseData {
-    ok?: boolean;
-    httpStatus?: HttpStatus;
-    method?: RequestMethod;
-    path?: string;
-    timestamp?: Date;
-  }
-
-  export interface CommonResponseData<T extends any = any>
-    extends DefaultResponseData {
-    message?: string | null;
-    payload?: T | T[] | null;
-  }
-
-  // export interface CommonResponseData<T extends any>
-  //   extends DefaultResponseData {
-  //   payload: T;
-  // }
-
-  export interface WithMessageCommonResponseData<T extends any>
-    extends CommonResponseData {
-    reason?: string | null;
-  }
-
-  // export interface WithMessageResponseData extends DefaultResponseData {
-  //   message?: string;
-  //   reason?: string | null;
-  // }
-
-  // export type ApiMetadata = Pick<
-  //   DefaultResponseData,
-  //   'httpStatus' | 'method' | 'path' | 'description' | 'message' | 'reason'
-  // >;
-  export interface ApiMetadata {
-    status: HttpStatus;
+  export interface IResponse<T extends any = any> {
+    ok: boolean;
+    httpStatus: HttpStatus;
     method: RequestMethod;
     path: string;
-    description: string;
-    message?: string;
-    reason?: string;
+    timestamp: Date;
+    payload: T | T[] | null;
+    message: string | null;
+    reason: string | null;
   }
-
-  export type ResponseArgs<T> = Omit<
-    WithMessageCommonResponseData<T>,
-    keyof DefaultResponseData
-  >;
-
-  // export interface ApiMetadata {
-  //   status: HttpStatus;
-  //   method: RequestMethod;
-  //   path: string;
-  //   description: string;
-  //   message: string;
-  //   cause: string | null;
-  // }
 }
-
 export declare module 'express' {
   interface Request {
     user: LoginUserData;

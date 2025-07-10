@@ -1,15 +1,16 @@
-import { NotFoundResponseDto } from '@common/dto/global-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { ErrorKey, ErrorMessage } from './error-code';
+import { NotFoundException } from './exception.interface';
 
-export class NotFoundResponseEmailDto extends NotFoundResponseDto {
+export class NotFoundResponseEmailDto extends NotFoundException {
   @ApiProperty({
-    description: '이메일을 찾지 못했습니다.',
+    description: ErrorMessage.NOT_FOUND_EMAIL,
     type: String,
-    example: '이메일을 찾지 못했습니다.',
+    example: ErrorMessage.NOT_FOUND_EMAIL,
   })
   declare message: string;
 
   constructor(reason: string | null = null) {
-    super(reason, '이메일을 찾지 못했습니다.');
+    super(ErrorKey.NOT_FOUND_EMAIL, reason);
   }
 }
