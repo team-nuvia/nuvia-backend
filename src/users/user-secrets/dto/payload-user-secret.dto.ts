@@ -1,6 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { SetProperty } from '@common/decorator/set-property.decorator';
 
 export class PayloadUserSecretDto {
-  @ApiProperty({ name: 'id', type: Number, example: 1 })
-  id!: number;
+  @SetProperty({
+    description: 'id',
+    value: 1,
+  })
+  id: number = 1;
 }

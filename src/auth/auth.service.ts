@@ -1,12 +1,10 @@
 import { BodyLoginDto } from '@common/dto/body/body-login.dto';
-import {
-  BadRequestResponseDto,
-  NotFoundResponseDto,
-} from '@common/dto/global-response.dto';
 import { PayloadLoginTokenDto } from '@common/dto/payload/payload-login-token.dto';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
+import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
@@ -34,10 +32,10 @@ export class AuthService {
         },
       },
     });
-    console.log('🚀 ~ AuthService ~ user:', user, email);
 
+    console.log('🚀 ~ AuthService ~ user:', user);
     if (isNil(user)) {
-      throw new NotFoundResponseDto(email);
+      throw new NotFoundUserException(email);
     }
 
     const payload: LoginUserData = {
@@ -54,7 +52,7 @@ export class AuthService {
     });
 
     if (!isSame) {
-      throw new BadRequestResponseDto('정보를 다시 확인 해주세요.');
+      throw new NoMatchUserInformationException();
     }
 
     return this.utilService.createJWT(payload);

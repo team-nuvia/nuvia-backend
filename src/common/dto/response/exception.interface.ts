@@ -1,9 +1,14 @@
-import { RequestMethod } from '@common/variable/enums';
+import { SetPropertyNullable } from '@common/decorator/set-property-nullable.decorator';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { ErrorCode, ErrorMessage, getErrorMessage } from './error-code';
+import { ErrorCode, ErrorKey, ErrorMessage, getErrorMessage } from './error-code';
 
-export class BaseException extends HttpException implements IResponse {
+interface IExceptionArgs {
+  code?: keyof typeof ErrorCode;
+  reason?: StringOrNull;
+}
+
+export abstract class BaseException<T extends any = any> extends HttpException implements IBaseResponse<T> {
   @ApiProperty({ name: 'ok', type: Boolean, example: false })
   ok!: boolean;
 
@@ -15,69 +20,40 @@ export class BaseException extends HttpException implements IResponse {
   httpStatus!: HttpStatus;
 
   @ApiProperty({
-    name: 'method',
-    enum: RequestMethod,
-    example: RequestMethod.GET,
-  })
-  method!: RequestMethod;
-
-  @ApiProperty({ name: 'path', type: String, example: '/<path>' })
-  path!: string;
-
-  @ApiProperty({ name: 'timestamp', type: Date, example: new Date() })
-  timestamp!: Date;
-
-  @ApiProperty({
-    name: 'payload',
-    type: Object,
-    example: null,
-    required: false,
-    nullable: true,
-  })
-  payload!: null;
-
-  @ApiProperty({
     name: 'name',
     type: String,
     example: '<ResponseDtoName>',
   })
   name!: string;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
-    example: ErrorMessage.BAD_REQUEST,
-    required: false,
-    nullable: true,
+  @SetPropertyNullable({
+    description: '메시지',
+    value: ErrorMessage.BAD_REQUEST,
   })
-  message: string;
+  message!: string;
 
-  @ApiProperty({
-    name: 'reason',
-    type: String,
-    example: null,
-    required: false,
-    nullable: true,
+  @SetPropertyNullable({
+    description: '이유',
+    value: null,
   })
-  reason!: string | null;
+  reason!: StringOrNull;
 
-  declare cause: string | null;
+  @SetPropertyNullable({
+    description: '페이로드',
+    value: null,
+  })
+  payload!: TypeOrNull<T>;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    const cause = reason ?? null;
+  constructor({ code = ErrorKey.BAD_REQUEST, reason = null }: IExceptionArgs = {}) {
     const { message, status, errorCode } = getErrorMessage(code);
 
     super({ statusCode: status, message, errorCode }, status);
     this.ok = false;
     this.httpStatus = status;
-    this.method = RequestMethod.GET;
-    this.path = '/<path>';
-    this.timestamp = new Date();
     this.name = this.constructor.name;
-    this.payload = null;
     this.message = message;
-    this.reason = cause;
-    this.cause = cause;
+    this.reason = reason;
+    this.payload = null;
   }
 }
 
@@ -99,8 +75,8 @@ export class BadRequestException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.BAD_REQUEST, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -122,8 +98,8 @@ export class UnauthorizedException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.UNAUTHORIZED, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -145,8 +121,8 @@ export class ForbiddenException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.FORBIDDEN, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -168,8 +144,8 @@ export class NotFoundException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.NOT_FOUND, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -191,8 +167,8 @@ export class ConflictException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.CONFLICT, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -214,8 +190,8 @@ export class PreconditionFailedException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.PRECONDITION_FAILED, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -237,8 +213,8 @@ export class TooManyRequestsException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.TOO_MANY_REQUESTS, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -260,8 +236,8 @@ export class InternalServerErrorException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.INTERNAL_SERVER_ERROR, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }
 
@@ -283,7 +259,7 @@ export class ServiceUnavailableException extends BaseException {
   })
   declare message: string;
 
-  constructor(code: keyof typeof ErrorCode, reason: string | null = null) {
-    super(code, reason);
+  constructor({ code = ErrorKey.SERVICE_UNAVAILABLE, reason = null }: IExceptionArgs = {}) {
+    super({ code, reason });
   }
 }

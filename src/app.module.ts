@@ -9,11 +9,11 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
+import { ErrorCodeModule } from './error-code/error-code.module';
 import { LoggerModule } from './logger/logger.module';
+import { StaticModule } from './static/static.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
-import { StaticModule } from './static/static.module';
-import { ErrorCodeModule } from './error-code/error-code.module';
 
 @Module({
   imports: [

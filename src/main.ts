@@ -14,6 +14,8 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/jwt.guard';
+import { BadRequestException } from '@common/dto/response';
+import { printRouterInfo } from '@util/printRouterInfo';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
@@ -36,12 +38,19 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
       stopAtFirstError: true,
+      exceptionFactory(errors) {
+        const message = errors.shift();
+        return new BadRequestException({
+          reason: message?.property ?? ('{{param}}' as StringOrNull),
+        });
+      },
     }),
   );
 
   app.use(cookieParser());
   app.use(compression());
   app.useLogger(loggerService);
+  // app.useLogger(loggerService);
 
   /* 글로벌 설정 */
   app.useGlobalGuards(new JwtGuard(utilService));
@@ -63,18 +72,23 @@ async function bootstrap() {
   setupSwagger(app, version);
 
   /* 컨테이너 설정 */
+  // 컨테이너 설정은 의존성 주입을 위해 필요합니다.
+  // AppModule에서 필요한 서비스나 리포지토리를 주입받기 위해 사용됩니다.
+  // 자동으로 주입되지 않기 때문에 명시적으로 설정해야 합니다.
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   /* 재시작 구분선 */
   /* 로그 파일에 적용 */
-  loggerService.log('=============================================');
-  loggerService.info('=============================================');
-  loggerService.debug('=============================================');
-  loggerService.warn('=============================================');
-  loggerService.error('=============================================');
+  // loggerService.log('=============================================');
+  // loggerService.info('=============================================');
+  // loggerService.debug('=============================================');
+  // loggerService.warn('=============================================');
+  // loggerService.error('=============================================');
+
+  printRouterInfo(app);
 
   await app.listen(port);
-  loggerService.log(`Server listening on http://localhost:${port}`);
+  loggerService.info(`Server listening on http://localhost:${port}`);
 }
 
 bootstrap();

@@ -55,6 +55,7 @@
     "image-size": "^2.0.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
+    "nest-winston": "^1.10.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -63,7 +64,9 @@
     "sharp": "^0.34.1",
     "typeorm": "^0.3.22",
     "typeorm-extension": "^3.7.1",
-    "typeorm-naming-strategies": "^4.1.0"
+    "typeorm-naming-strategies": "^4.1.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.26",

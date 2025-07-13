@@ -1,9 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { SetProperty } from '@common/decorator/set-property.decorator';
 
 export class BodyLoginDto {
-  @ApiProperty({ name: 'email', type: String, example: 'test@example.com' })
+  @SetProperty({
+    description: '이메일',
+    value: 'test@example.com',
+  })
   email!: string;
 
-  @ApiProperty({ name: 'password', type: String, example: 'qweQQ!!1' })
+  @SetProperty({
+    description: '비밀번호',
+    value: 'qweQQ!!1',
+  })
   password!: string;
 }

@@ -1,4 +1,4 @@
-import { SuccessResponse } from '@common/dto/response/response.interface';
+import { GetResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetProfilePayload {
@@ -41,13 +41,13 @@ export class GetProfilePayload {
   };
 }
 
-export class SuccessResponseGetProfileDto extends SuccessResponse {
+export class GetProfileResponse extends GetResponse<GetProfilePayload> {
   @ApiProperty({ name: 'message', type: String, example: '프로필 조회 성공' })
   declare message: string;
 
   @ApiProperty({
     name: 'payload',
-    type: () => GetProfilePayload,
+    type: GetProfilePayload,
 
     // example: new GetProfilePayload(),
   })

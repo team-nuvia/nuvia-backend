@@ -6,11 +6,7 @@ import { RunMode, RunOn } from './enums';
 
 const getOriginEnvAs = envConsumer(process.env);
 
-export const RUN_MODE = getOriginEnvAs(
-  String,
-  'NODE_ENV',
-  RunMode.Production,
-) as RunMode;
+export const RUN_MODE = getOriginEnvAs(String, 'NODE_ENV', RunMode.Production) as RunMode;
 export const RUN_ON = getOriginEnvAs(String, 'RUN_ON', RunOn.Local);
 
 /* 공통 환경변수 가져오기 */
@@ -19,10 +15,7 @@ dotenv.config({
 });
 
 /* 환경변수 체크 */
-const envFilename =
-  RUN_MODE !== RunMode.Production
-    ? `.env.${RUN_MODE}.${RUN_ON}`
-    : `.env.${RunMode.Production}`;
+const envFilename = RUN_MODE !== RunMode.Production ? `.env.${RUN_MODE}.${RUN_ON}` : `.env.${RunMode.Production}`;
 if (fs.existsSync(envFilename)) {
   dotenv.config({
     path: path.join(path.resolve(), envFilename),

@@ -1,4 +1,4 @@
-import { BadRequestResponseDto } from '@common/dto/global-response.dto';
+import { BadRequestException } from '@common/dto/response';
 import { ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 
 export const InputValidationPipe = (options?: ValidationPipeOptions) => {
@@ -7,9 +7,10 @@ export const InputValidationPipe = (options?: ValidationPipeOptions) => {
     transform: true,
     stopAtFirstError: true,
     exceptionFactory(errors) {
-      console.log('🚀 ~ exceptionFactory ~ errors:', errors);
       const message = errors.shift();
-      return new BadRequestResponseDto(message?.property ?? '{{param}}');
+      return new BadRequestException({
+        reason: message?.property ?? ('{{param}}' as StringOrNull),
+      });
     },
   });
 };

@@ -1,9 +1,8 @@
-import {
-  BadRequestResponseDto,
-  NotFoundResponseDto,
-} from '@common/dto/global-response.dto';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
+import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -32,8 +31,8 @@ export class UserSecretsService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundResponseDto();
+    if (isNil(user)) {
+      throw new NotFoundUserException();
     }
 
     const { userSecret } = user;
@@ -49,7 +48,7 @@ export class UserSecretsService {
     );
 
     if (!isSamePassword) {
-      throw new BadRequestResponseDto();
+      throw new NoMatchUserInformationException();
     }
 
     const updatedUserSecret = await this.userSecretRepository.update(user.id, {

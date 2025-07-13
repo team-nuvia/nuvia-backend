@@ -1,20 +1,12 @@
-import { UnauthorizedResponseDto } from '@common/dto/global-response.dto';
+import { UnauthorizedException } from '@common/dto/response';
 import { LoggerService } from '@logger/logger.service';
-import {
-  applyDecorators,
-  CanActivate,
-  ExecutionContext,
-  HttpStatus,
-  Inject,
-  SetMetadata,
-  UseGuards,
-} from '@nestjs/common';
+import { applyDecorators, CanActivate, ExecutionContext, HttpStatus, Inject, SetMetadata, UseGuards } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UtilService } from '@util/util.service';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { RoleGuard } from '../role.guard';
+import { RoleGuard } from '../guard/role.guard';
 import { UserRole } from '../variable/enums';
 import { ROLES_KEY } from '../variable/globals';
 import { CombineResponses } from './combine-responses.decorator';
@@ -30,13 +22,8 @@ export class RequiredLoginConstraint implements CanActivate {
     private readonly loggerService: LoggerService,
   ) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [context.getHandler(), context.getClass()]);
 
     if (isPublic) {
       return true;
@@ -47,7 +34,7 @@ export class RequiredLoginConstraint implements CanActivate {
     const bearerToken = request.headers.authorization;
 
     if (!bearerToken || !bearerToken?.startsWith('Bearer')) {
-      throw new UnauthorizedResponseDto();
+      throw new UnauthorizedException();
     }
 
     const token = bearerToken.slice(7);
@@ -55,7 +42,7 @@ export class RequiredLoginConstraint implements CanActivate {
       const isVerified = this.utilService.verifyJWT(token);
       return isVerified;
     } catch (error) {
-      this.loggerService.debug('JWT 검증 에러:', error);
+      this.loggerService.debug(`JWT 검증 에러 ${error}`);
       return false;
     }
   }
@@ -66,5 +53,5 @@ export const RequiredLogin = (...roles: UserRole[]) =>
     ApiBearerAuth(),
     SetMetadata(ROLES_KEY, roles),
     UseGuards(RequiredLoginConstraint, RoleGuard),
-    CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedResponseDto),
+    CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException),
   );

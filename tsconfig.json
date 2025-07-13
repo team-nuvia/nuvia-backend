@@ -26,7 +26,6 @@
     "paths": {
       "@share/*": ["share/*"],
       "@util/*": ["src/util/*"],
-      "@user-secrets/*": ["src/users/user-secrets/*"],
       "@users/*": ["src/users/*"],
       "@types/*": ["src/types/*"],
       "@logger/*": ["src/logger/*"],
@@ -34,9 +33,11 @@
       "@config/*": ["src/config/*"],
       "@common/*": ["src/common/*"],
       "@auth/*": ["src/auth/*"],
+      "@user-secrets/*": ["src/users/user-secrets/*"],
       "@/*": ["src/*"]
     }
   },
+  "exclude": ["node_modules", "dist", "**/[x]*"],
   "ts-node": {
     "files": true,
     "require": ["tsconfig-paths/register"]

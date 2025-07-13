@@ -1,14 +1,12 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import {
-  BadRequestResponseDto,
-  UnauthorizedResponseDto,
-} from '@common/dto/global-response.dto';
+import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
+import { UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, HttpStatus, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BodyChangePasswordDto } from './dto/body-change-password.dto';
-import { SuccessResponseUpdateUserSecretDto } from './dto/success-response-update-user-secret.dto';
+import { UpdateUserSecretResponse } from './response/update-user-secret.response';
 import { UserSecretsService } from './user-secrets.service';
 
 @ApiTags('사용자 보안')
@@ -19,13 +17,10 @@ export class UserSecretsController {
 
   @ApiOperation({ summary: '비밀번호 변경' })
   @Put()
-  @CombineResponses(HttpStatus.CREATED, SuccessResponseUpdateUserSecretDto)
-  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestResponseDto)
-  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedResponseDto)
-  changePassword(
-    @LoginUser() user: LoginUserData,
-    @Body() changePasswordDto: BodyChangePasswordDto,
-  ) {
+  @CombineResponses(HttpStatus.OK, UpdateUserSecretResponse)
+  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  changePassword(@LoginUser() user: LoginUserData, @Body() changePasswordDto: BodyChangePasswordDto) {
     return this.userSecretsService.changePassword(user.id, changePasswordDto);
   }
 }

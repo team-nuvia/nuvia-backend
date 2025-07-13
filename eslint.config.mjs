@@ -1,4 +1,3 @@
-// @ts-check
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
@@ -21,7 +20,7 @@ export default tseslint.config(
       sourceType: 'module',
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+        // tsconfigRootDir: import.meta.dirname,
       },
     },
   },
@@ -30,10 +29,22 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unused-variable': [
-        'off',
-        { 'ignore-pattern': '^_' },
-      ],
+      '@typescript-eslint/no-unused-variable': ['off', { 'ignore-pattern': '^_' }],
+    },
+  },
+  {
+    plugins: {
+      prettier: {
+        rules: {
+          'prettier/prettier': 'error',
+          singleQuote: true,
+          trailingComma: 'all',
+          printWidth: 150,
+          tabWidth: 2,
+          semi: true,
+          endOfLine: 'lf',
+        },
+      },
     },
   },
 );

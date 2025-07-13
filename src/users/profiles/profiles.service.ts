@@ -1,13 +1,12 @@
 import { CommonService } from '@common/common.service';
-import { NotFoundResponseDto } from '@common/dto/global-response.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
 import crypto from 'crypto';
 import imageSize from 'image-size';
 import { Repository } from 'typeorm';
-import { NotFoundResponseProfileDto } from './dto/not-found-response-profile.dto';
 import { Profile } from './entities/profile.entity';
+import { NotFoundProfileException } from './resopnse/not-found-profile.exception';
 
 @Injectable()
 export class ProfilesService {
@@ -47,7 +46,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundResponseProfileDto();
+      throw new NotFoundProfileException();
     }
 
     const { id, userId: uid, buffer, ...rest } = profile;
@@ -75,7 +74,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundResponseDto();
+      throw new NotFoundProfileException();
     }
 
     const originalname = file.originalname;
@@ -108,7 +107,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundResponseDto();
+      throw new NotFoundProfileException();
     }
 
     return this.profileRepository.delete({ userId });

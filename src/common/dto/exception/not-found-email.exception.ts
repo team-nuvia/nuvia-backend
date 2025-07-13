@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ErrorKey, ErrorMessage } from './error-code';
-import { NotFoundException } from './exception.interface';
+import { ErrorKey, ErrorMessage } from '../response/error-code';
+import { NotFoundException } from '../response/exception.interface';
 
-export class NotFoundResponseEmailDto extends NotFoundException {
+export class NotFoundEmailException extends NotFoundException {
   @ApiProperty({
     description: ErrorMessage.NOT_FOUND_EMAIL,
     type: String,
@@ -11,6 +11,6 @@ export class NotFoundResponseEmailDto extends NotFoundException {
   declare message: string;
 
   constructor(reason: string | null = null) {
-    super(ErrorKey.NOT_FOUND_EMAIL, reason);
+    super({ code: ErrorKey.NOT_FOUND_EMAIL, reason });
   }
 }

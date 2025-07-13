@@ -25,7 +25,7 @@ export class QueryGetProfileImageDto {
 
   @ApiProperty({
     name: 'dimension',
-    type: () => DimensionDto,
+    type: DimensionDto,
     example: new DimensionDto(),
     required: false,
     nullable: true,

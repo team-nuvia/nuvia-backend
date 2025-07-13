@@ -7,10 +7,7 @@ import { JwtModuleOptions } from '@nestjs/jwt';
 export class CommonService {
   constructor(private readonly configService: ConfigService) {}
 
-  getConfig<
-    Keyword extends keyof typeof config,
-    Result extends (typeof config)[Keyword],
-  >(type: Keyword): ReturnType<Result> {
+  getConfig<Keyword extends keyof typeof config, Result extends (typeof config)[Keyword]>(type: Keyword): ReturnType<Result> {
     return this.configService.get(type) as ReturnType<Result>;
   }
 

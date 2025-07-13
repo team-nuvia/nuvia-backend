@@ -1,5 +1,4 @@
-import { ConflictResponseDto } from '@common/dto/global-response.dto';
-import { NotFoundResponseUserDto } from '@common/dto/response/not-found-response-user.dto';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
@@ -8,6 +7,7 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { BodyCreateUserDto } from './dto/body-create-user.dto';
 import { BodyUpdateUserDto } from './dto/body-update-user.dto';
 import { User } from './entities/user.entity';
+import { AlreadyExistsUserException } from './exception/already-exists-user.exception';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +22,7 @@ export class UsersService {
     });
 
     if (alreadyExistUser) {
-      throw new ConflictResponseDto(createUserDto.email);
+      throw new AlreadyExistsUserException(createUserDto.email);
     }
 
     const { hashedPassword, ...userSecret } =
@@ -45,7 +45,7 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (isNil(user)) {
-      throw new NotFoundResponseUserDto();
+      throw new NotFoundUserException();
     }
 
     return user;

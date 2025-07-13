@@ -2,17 +2,7 @@ import { instanceToPlain } from 'class-transformer';
 
 export const serializeResponse = (data: any) => {
   const HIDDEN_KEYS = ['cause', 'status', 'response'];
-  const SERIALIZED_KEYS = [
-    'ok',
-    'httpStatus',
-    'method',
-    'path',
-    'timestamp',
-    'name',
-    'payload',
-    'message',
-    'reason',
-  ];
+  const SERIALIZED_KEYS = ['ok', 'httpStatus', 'name', 'message', 'reason', 'payload'];
 
   // class-transformer로 직렬화해서 @Exclude() 적용되게
   const plain = instanceToPlain(data);

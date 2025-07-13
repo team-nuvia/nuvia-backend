@@ -1,21 +1,20 @@
+import { ROLES_KEY } from '@common/variable/globals';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { UserRole } from '@share/enums/user-role';
 import { Request } from 'express';
-import { UserRole } from './variable/enums';
-import { ROLES_KEY } from './variable/globals';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
+
     if (!requiredRoles) {
       return true;
     }
+
     const { user } = context.switchToHttp().getRequest<Request>();
     if (!user.role) {
       throw new Error('사용자의 역할 정보가 없습니다.');

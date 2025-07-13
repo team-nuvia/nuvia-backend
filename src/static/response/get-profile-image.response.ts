@@ -1,7 +1,7 @@
-import { SuccessResponse } from '@common/dto/response/response.interface';
+import { GetResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SuccessResponseGetProfileImageDto extends SuccessResponse {
+export class GetProfileImageResponse extends GetResponse<Buffer> {
   @ApiProperty({
     name: 'message',
     type: String,

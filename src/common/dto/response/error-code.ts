@@ -15,6 +15,10 @@ export const ErrorKey = {
   /* Custom Error */
   NOT_FOUND_USER: 'NOT_FOUND_USER',
   NOT_FOUND_EMAIL: 'NOT_FOUND_EMAIL',
+  ALREADY_EXISTS_USER: 'ALREADY_EXISTS_USER',
+  ALREADY_EXISTS_EMAIL: 'ALREADY_EXISTS_EMAIL',
+  NO_MATCH_USER_INFORMATION: 'NO_MATCH_USER_INFORMATION',
+  NOT_FOUND_PROFILE: 'NOT_FOUND_PROFILE',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -31,6 +35,10 @@ export const ErrorCode = {
 
   NOT_FOUND_USER: HttpStatus.NOT_FOUND,
   NOT_FOUND_EMAIL: HttpStatus.NOT_FOUND,
+  ALREADY_EXISTS_USER: HttpStatus.CONFLICT,
+  ALREADY_EXISTS_EMAIL: HttpStatus.CONFLICT,
+  NO_MATCH_USER_INFORMATION: HttpStatus.BAD_REQUEST,
+  NOT_FOUND_PROFILE: HttpStatus.NOT_FOUND,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -47,6 +55,10 @@ export const ErrorMessage = {
 
   NOT_FOUND_USER: '존재하지 않는 사용자입니다.',
   NOT_FOUND_EMAIL: '존재하지 않는 이메일입니다.',
+  ALREADY_EXISTS_USER: '이미 존재하는 사용자입니다.',
+  ALREADY_EXISTS_EMAIL: '이미 존재하는 이메일입니다.',
+  NO_MATCH_USER_INFORMATION: '사용자 정보가 일치하지 않습니다.',
+  NOT_FOUND_PROFILE: '프로필을 찾지 못했습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

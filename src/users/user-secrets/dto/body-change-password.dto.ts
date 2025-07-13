@@ -1,9 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { SetProperty } from '@common/decorator/set-property.decorator';
 
 export class BodyChangePasswordDto {
-  @ApiProperty({ name: 'prevPassword', type: String, example: 'qweQQ!!1' })
+  @SetProperty({
+    description: '이전 비밀번호',
+    value: '이전 비밀번호',
+  })
   prevPassword!: string;
 
-  @ApiProperty({ name: 'newPassword', type: String, example: 'qweQQ!!1' })
+  @SetProperty({
+    description: '새 비밀번호',
+    value: '새 비밀번호',
+  })
   newPassword!: string;
 }
