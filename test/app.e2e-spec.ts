@@ -31,15 +31,17 @@ function clearTables() {
   }
 }
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
-  const createUserDto = {
+const createUserDto = {
     email: 'test@example.com',
     username: '테스트 사용자',
     nickname: '테스터',
     password: 'qweQQ!!1',
     role: UserRole.User,
   };
+
+describe('AppController (e2e)', () => {
+  let app: INestApplication<App>;
+  
   const version = [SERVER_VERSION, DEPLOY_VERSION].join('.');
   const users = new Map();
 
