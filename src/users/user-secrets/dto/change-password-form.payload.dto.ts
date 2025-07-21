@@ -1,6 +1,6 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
 
-export class BodyChangePasswordDto {
+export class ChangePasswordFormPayloadDto {
   @SetProperty({
     description: '이전 비밀번호',
     value: '이전 비밀번호',

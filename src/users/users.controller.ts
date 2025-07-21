@@ -9,10 +9,10 @@ import { BodyCreateUserDto } from './dto/body-create-user.dto';
 import { BodyUpdateUserDto } from './dto/body-update-user.dto';
 import { User } from './entities/user.entity';
 import { AlreadyExistsUserException } from './exception/already-exists-user.exception';
-import { CreateUserResponse } from './response/create-user.response';
-import { DeleteUserResponse } from './response/delete-user.response';
-import { GetUserMeResponse } from './response/get-user-me.response';
-import { UpdateUserResponse } from './response/update-user.response';
+import { CreateUserResponseDto } from './response/create-user.response.dto';
+import { DeleteUserResponseDto } from './response/delete-user.response.dto';
+import { GetUserMeResponseDto } from './response/get-user-me.response.dto';
+import { UpdateUserResponseDto } from './response/update-user.response.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('사용자')
@@ -22,7 +22,7 @@ export class UsersController {
 
   @ApiOperation({ summary: '사용자 생성' })
   @Post()
-  @CombineResponses(HttpStatus.CREATED, CreateUserResponse)
+  @CombineResponses(HttpStatus.CREATED, CreateUserResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @CombineResponses(HttpStatus.CONFLICT, AlreadyExistsUserException)
@@ -31,7 +31,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '사용자 정보 조회' })
-  @CombineResponses(HttpStatus.OK, GetUserMeResponse)
+  @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
@@ -41,7 +41,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })
-  @CombineResponses(HttpStatus.OK, UpdateUserResponse)
+  @CombineResponses(HttpStatus.OK, UpdateUserResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Patch(':id')
@@ -51,7 +51,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '사용자 삭제' })
-  @CombineResponses(HttpStatus.OK, DeleteUserResponse)
+  @CombineResponses(HttpStatus.OK, DeleteUserResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Delete(':id')

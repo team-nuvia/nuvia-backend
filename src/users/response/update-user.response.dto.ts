@@ -1,7 +1,7 @@
 import { SetPropertyNullable } from '@common/decorator/set-property-nullable.decorator';
 import { SuccessResponse } from '@common/dto/response/response.interface';
 
-export class UpdateUserResponse extends SuccessResponse {
+export class UpdateUserResponseDto extends SuccessResponse {
   @SetPropertyNullable({
     description: '사용자 정보',
     value: 1,

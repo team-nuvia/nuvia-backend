@@ -1,11 +1,11 @@
+import { SetProperty } from '@common/decorator/set-property.decorator';
 import { GetResponse } from '@common/dto/response/response.interface';
-import { ApiProperty } from '@nestjs/swagger';
 
 export class GetVersionResponse extends GetResponse {
-  @ApiProperty({ name: 'message', type: String, example: '버전 조회 성공' })
+  @SetProperty({ description: '버전 조회 성공', value: '버전 조회 성공' })
   declare message: string;
 
-  @ApiProperty({ name: 'payload', type: String, example: '1.0.0' })
+  @SetProperty({ description: '버전', value: '1.0.0' })
   declare payload: string;
 
   constructor(payload: string) {

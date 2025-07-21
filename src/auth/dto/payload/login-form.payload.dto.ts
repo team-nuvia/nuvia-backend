@@ -1,6 +1,6 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
 
-export class BodyLoginDto {
+export class LoginFormPayloadDto {
   @SetProperty({
     description: '이메일',
     value: 'test@example.com',

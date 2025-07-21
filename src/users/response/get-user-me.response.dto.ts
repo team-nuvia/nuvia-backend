@@ -1,14 +1,14 @@
 import { SetPropertyNullable } from '@common/decorator/set-property-nullable.decorator';
-import { PayloadUserMeDto } from '@common/dto/payload/payload-user-me.dto';
 import { SuccessResponse } from '@common/dto/response/response.interface';
+import { UserMeNestedResponseDto } from '@common/dto/response/user-me.nested.response.dto';
 import { HttpStatus } from '@nestjs/common';
 
-export class GetUserMeResponse extends SuccessResponse {
+export class GetUserMeResponseDto extends SuccessResponse {
   @SetPropertyNullable({
     description: '사용자 정보',
-    value: PayloadUserMeDto,
+    value: UserMeNestedResponseDto,
   })
-  payload: PayloadUserMeDto = new PayloadUserMeDto();
+  payload: UserMeNestedResponseDto = new UserMeNestedResponseDto();
 
   @SetPropertyNullable({
     description: '사용자 정보 조회 성공',
@@ -16,7 +16,7 @@ export class GetUserMeResponse extends SuccessResponse {
   })
   message: string = '사용자 정보 조회 성공';
 
-  constructor(payload: PayloadUserMeDto) {
+  constructor(payload: UserMeNestedResponseDto) {
     super(HttpStatus.OK, payload);
   }
 }

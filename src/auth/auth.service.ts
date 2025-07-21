@@ -1,13 +1,13 @@
-import { BodyLoginDto } from '@common/dto/body/body-login.dto';
-import { PayloadLoginTokenDto } from '@common/dto/payload/payload-login-token.dto';
+import { LoginFormPayloadDto } from '@auth/dto/payload/login-form.payload.dto';
+import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
 import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
-import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
+import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +17,7 @@ export class AuthService {
     private readonly utilService: UtilService,
   ) {}
 
-  async login({
-    email,
-    password,
-  }: BodyLoginDto): Promise<PayloadLoginTokenDto> {
+  async login({ email, password }: LoginFormPayloadDto): Promise<LoginTokenNestedResponseDto> {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: { userSecret: true },

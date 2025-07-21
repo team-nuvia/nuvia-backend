@@ -5,7 +5,7 @@ import { NoMatchUserInformationException } from '@common/dto/exception/no-match-
 import { UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, HttpStatus, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { BodyChangePasswordDto } from './dto/body-change-password.dto';
+import { BodyChangePasswordDto } from './dto/change-password-form.payload.dto';
 import { UpdateUserSecretResponse } from './response/update-user-secret.response';
 import { UserSecretsService } from './user-secrets.service';
 

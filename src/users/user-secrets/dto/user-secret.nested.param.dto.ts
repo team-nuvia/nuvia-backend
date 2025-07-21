@@ -1,6 +1,6 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
 
-export class PayloadUserSecretDto {
+export class UserSecretNestedParamDto {
   @SetProperty({
     description: 'id',
     value: 1,

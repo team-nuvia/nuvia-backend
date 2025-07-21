@@ -23,8 +23,9 @@ export declare global {
     payload: TypeOrNull<T>;
   }
 
-  export interface CustomApiPropertyOptions {
+  export interface CustomApiPropertyOptions<T> {
     value: any;
+    type?: T;
     description?: string;
     enum?: any;
     required?: boolean;

@@ -1,14 +1,14 @@
+import { LoginTokenNestedResponseDto } from '@auth/dto/response/login-token.nested.response.dto';
 import { SetProperty } from '@common/decorator/set-property.decorator';
-import { PayloadLoginTokenDto } from '@common/dto/payload/payload-login-token.dto';
 import { SuccessResponse } from '@common/dto/response/response.interface';
 import { HttpStatus } from '@nestjs/common';
 
-export class LoginResponse extends SuccessResponse {
+export class LoginResponseDto extends SuccessResponse {
   @SetProperty({
     description: '토큰',
-    value: PayloadLoginTokenDto,
+    value: LoginTokenNestedResponseDto,
   })
-  payload: PayloadLoginTokenDto = new PayloadLoginTokenDto();
+  payload: LoginTokenNestedResponseDto = new LoginTokenNestedResponseDto();
 
   // @ApiProperty({
   //   description: '로그인 성공',
@@ -21,7 +21,7 @@ export class LoginResponse extends SuccessResponse {
   })
   message: string = '로그인 성공';
 
-  constructor(payload: PayloadLoginTokenDto) {
+  constructor(payload: LoginTokenNestedResponseDto) {
     super(HttpStatus.OK, payload);
   }
 }

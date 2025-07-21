@@ -1,13 +1,13 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
 import { SuccessResponse } from '@common/dto/response/response.interface';
-import { PayloadUserSecretDto } from '../dto/payload-user-secret.dto';
+import { UserSecretNestedParamDto } from '../dto/user-secret.nested.param.dto';
 
-export class UpdateUserSecretResponse extends SuccessResponse<PayloadUserSecretDto> {
+export class UpdateUserSecretResponse extends SuccessResponse<UserSecretNestedParamDto> {
   @SetProperty({
     description: '비밀번호 변경 성공',
-    value: PayloadUserSecretDto,
+    value: UserSecretNestedParamDto,
   })
-  payload: PayloadUserSecretDto = new PayloadUserSecretDto();
+  payload: UserSecretNestedParamDto = new UserSecretNestedParamDto();
 
   @SetProperty({
     description: '비밀번호 변경 성공',

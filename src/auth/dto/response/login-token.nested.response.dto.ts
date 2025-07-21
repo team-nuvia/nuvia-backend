@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PayloadLoginTokenDto {
+export class LoginTokenNestedResponseDto {
   @ApiProperty({
     description: '액세스 토큰',
     type: String,
