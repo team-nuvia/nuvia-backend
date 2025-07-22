@@ -1,7 +1,6 @@
 import { CommonService } from '@common/common.service';
 import { LogLevel, RunMode } from '@common/variable/enums';
 import { Injectable } from '@nestjs/common';
-import { capitalize } from '@util/capitalize';
 import { dateFormat } from '@util/dateFormat';
 import path from 'path';
 import winston from 'winston';
@@ -72,7 +71,7 @@ export class LoggerService {
           format: dateFormat('YYYY-MM-DD HH:mm:ss.SSS'),
         }),
         winston.format.printf(({ level, message, timestamp, context }) => {
-          return `[${timestamp}] [${getIcon(level)} ${level.toUpperCase().padStart(5)}] [${capitalize((context as string) || 'n/a')}] ${message}`;
+          return `[${timestamp}] [${getIcon(level)} ${level.toUpperCase().padStart(5)}] [${context ? (context as string) : 'n/a'}] ${message}`;
         }),
       ),
       transports: transports,

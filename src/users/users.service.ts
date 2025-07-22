@@ -1,4 +1,4 @@
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';

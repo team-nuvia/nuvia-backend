@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiPropertyOptional, ApiPropertyOptions } from '@nestjs/swagger';
 
-export const SetPropertyNullable = (options: CustomApiPropertyOptions) => {
+export const SetPropertyNullable = (options: CustomApiPropertyOptions<any>) => {
   const defaultOptions = {
     description: options.description,
     type: options.value ? (typeof options.value === 'function' ? options.value : typeof options.value) : String,

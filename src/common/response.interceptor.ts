@@ -1,13 +1,8 @@
 import { LoggerService } from '@logger/logger.service';
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { serializeResponse } from '@util/serializeResponse';
 import { Request, Response } from 'express';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { RequestMethod } from './variable/enums';
 
 @Injectable()
@@ -34,14 +29,8 @@ export class ResponseInterceptor implements NestInterceptor {
         data.message = data.message ?? '응답 완료';
         data.reason = data.reason ?? null;
 
-        this.loggerService.log(
-          `⬅️ RES. [${method}] ${path} ${httpStatus} ---`,
-          data,
-        );
-        this.loggerService.log(
-          `⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`,
-          JSON.stringify(req.body, null),
-        );
+        this.loggerService.log(`⬅️ RES. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(data));
+        this.loggerService.log(`⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(req.body, null));
 
         // return new SuccessResponseDto({
         //   ok: httpStatus < 300 && httpStatus >= 200,
@@ -57,21 +46,13 @@ export class ResponseInterceptor implements NestInterceptor {
         return serialized;
         // return data;
       }),
-      catchError((err) => {
-        this.loggerService.error(
-          `⬅️ RES. [${method}] ${path} ${httpStatus} ---`,
-          err,
-        );
-        this.loggerService.error(
-          `⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`,
-          JSON.stringify(req.body, null),
-        );
-        this.loggerService.error(
-          `⬅️ RES.PAYLOAD. [${method}] ${path} ${httpStatus} ---`,
-          JSON.stringify(err, null),
-        );
-        return throwError(() => err);
-      }),
+      // catchError((err) => {
+      //   console.log('🚀 ~ ResponseInterceptor ~ catchError ~ err:', err);
+      //   this.loggerService.error(`⬅️ RES. [${method}] ${path} ${httpStatus} ---`, err);
+      //   this.loggerService.error(`⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(req.body, null));
+      //   this.loggerService.error(`⬅️ RES.PAYLOAD. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(err, null));
+      //   return throwError(() => err);
+      // }),
     );
   }
 }

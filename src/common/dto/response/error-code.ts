@@ -19,6 +19,7 @@ export const ErrorKey = {
   ALREADY_EXISTS_EMAIL: 'ALREADY_EXISTS_EMAIL',
   NO_MATCH_USER_INFORMATION: 'NO_MATCH_USER_INFORMATION',
   NOT_FOUND_PROFILE: 'NOT_FOUND_PROFILE',
+  INVALID_INPUT_VALUE: 'INVALID_INPUT_VALUE',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -39,6 +40,7 @@ export const ErrorCode = {
   ALREADY_EXISTS_EMAIL: HttpStatus.CONFLICT,
   NO_MATCH_USER_INFORMATION: HttpStatus.BAD_REQUEST,
   NOT_FOUND_PROFILE: HttpStatus.NOT_FOUND,
+  INVALID_INPUT_VALUE: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -59,6 +61,7 @@ export const ErrorMessage = {
   ALREADY_EXISTS_EMAIL: '이미 존재하는 이메일입니다.',
   NO_MATCH_USER_INFORMATION: '사용자 정보가 일치하지 않습니다.',
   NOT_FOUND_PROFILE: '프로필을 찾지 못했습니다.',
+  INVALID_INPUT_VALUE: '입력값이 올바르지 않습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

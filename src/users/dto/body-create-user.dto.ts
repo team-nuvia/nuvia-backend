@@ -1,7 +1,8 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
-import { Sample, UserRole } from '@common/variable/enums';
+import { Sample } from '@common/variable/enums';
 import { fakerKO as faker } from '@faker-js/faker';
-import { IsEmail, IsEnum, IsStrongPassword } from 'class-validator';
+import { UserRole } from '@share/enums/user-role';
+import { IsEmail, IsEnum, IsString, IsStrongPassword } from 'class-validator';
 
 export class BodyCreateUserDto {
   @SetProperty({
@@ -19,6 +20,7 @@ export class BodyCreateUserDto {
     description: '이름',
     value: faker.person.fullName(),
   })
+  @IsString()
   username!: string;
 
   @SetProperty({
@@ -28,6 +30,7 @@ export class BodyCreateUserDto {
       last: faker.helpers.arrayElement(Sample.username.last),
     }),
   })
+  @IsString()
   nickname!: string;
 
   @SetProperty({
@@ -41,6 +44,7 @@ export class BodyCreateUserDto {
     minSymbols: 1,
     minUppercase: 1,
   })
+  @IsString()
   password!: string;
 
   @SetProperty({

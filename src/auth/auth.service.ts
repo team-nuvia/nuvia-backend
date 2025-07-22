@@ -1,6 +1,5 @@
-import { LoginFormPayloadDto } from '@auth/dto/payload/login-form.payload.dto';
-import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception';
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
+import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception.dto';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
@@ -17,7 +16,57 @@ export class AuthService {
     private readonly utilService: UtilService,
   ) {}
 
-  async login({ email, password }: LoginFormPayloadDto): Promise<LoginTokenNestedResponseDto> {
+  async login(payload: LoginUserData): Promise<LoginTokenNestedResponseDto> {
+    // const user = await this.userRepository.findOne({
+    //   where: { email },
+    //   relations: { userSecret: true },
+    //   select: {
+    //     userSecret: {
+    //       salt: true,
+    //       password: true,
+    //       iteration: true,
+    //     },
+    //   },
+    // });
+
+    // console.log('🚀 ~ AuthService ~ user:', user);
+    // if (isNil(user)) {
+    //   throw new NotFoundUserException(email);
+    // }
+
+    // const payload: LoginUserData = {
+    //   id: user.id,
+    //   email: user.email,
+    //   username: user.username,
+    //   nickname: user.nickname,
+    //   role: user.role,
+    // };
+    // const isSame = this.utilService.verifyPassword(password, {
+    //   iteration: user.userSecret.iteration,
+    //   salt: user.userSecret.salt,
+    //   password: user.userSecret.password,
+    // });
+
+    // if (!isSame) {
+    //   throw new NoMatchUserInformationException();
+    // }
+
+    // const payload: LoginUserData = {
+    //   id: user.id,
+    //   email: user.email,
+    //   username: user.username,
+    //   nickname: user.nickname,
+    //   role: user.role,
+    // };
+
+    return this.utilService.createJWT(payload);
+  }
+
+  verifyToken(token: string) {
+    return this.utilService.verifyJWT(token);
+  }
+
+  async validateUser(email: string, password: string) {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: { userSecret: true },
@@ -30,18 +79,10 @@ export class AuthService {
       },
     });
 
-    console.log('🚀 ~ AuthService ~ user:', user);
     if (isNil(user)) {
       throw new NotFoundUserException(email);
     }
 
-    const payload: LoginUserData = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      nickname: user.nickname,
-      role: user.role,
-    };
     const isSame = this.utilService.verifyPassword(password, {
       iteration: user.userSecret.iteration,
       salt: user.userSecret.salt,
@@ -52,10 +93,6 @@ export class AuthService {
       throw new NoMatchUserInformationException();
     }
 
-    return this.utilService.createJWT(payload);
-  }
-
-  verifyToken(token: string) {
-    return this.utilService.verifyJWT(token);
+    return user;
   }
 }

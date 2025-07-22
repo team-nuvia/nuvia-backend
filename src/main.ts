@@ -1,21 +1,20 @@
 import { CommonService } from '@common/common.service';
+import { InputValidationPipe } from '@common/decorator/input-validate-pipe.decorator';
 import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
 import { ResponseInterceptor } from '@common/response.interceptor';
 import { RunMode } from '@common/variable/enums';
 import { LoggerService } from '@logger/logger.service';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { VersioningType } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { printRouterInfo } from '@util/printRouterInfo';
 import { setupSwagger } from '@util/setupSwagger';
-import { UtilService } from '@util/util.service';
 import { useContainer } from 'class-validator';
 import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/jwt.guard';
-import { BadRequestException } from '@common/dto/response';
-import { printRouterInfo } from '@util/printRouterInfo';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
@@ -24,7 +23,6 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
-  const utilService = app.get(UtilService);
   const commonService = app.get(CommonService);
   const loggerService = app.get(LoggerService);
   const commonConfig = commonService.getConfig('common');
@@ -33,18 +31,19 @@ async function bootstrap() {
   const port = commonConfig.port;
 
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      stopAtFirstError: true,
-      exceptionFactory(errors) {
-        const message = errors.shift();
-        return new BadRequestException({
-          reason: message?.property ?? ('{{param}}' as StringOrNull),
-        });
-      },
-    }),
+    // new ValidationPipe({
+    //   whitelist: true,
+    //   forbidNonWhitelisted: true,
+    //   transform: true,
+    //   stopAtFirstError: true,
+    //   exceptionFactory(errors) {
+    //     const message = errors.shift();
+    //     return new BadRequestException({
+    //       reason: message?.property ?? ('{{param}}' as StringOrNull),
+    //     });
+    //   },
+    // }),
+    InputValidationPipe(),
   );
 
   app.use(cookieParser());
@@ -53,7 +52,7 @@ async function bootstrap() {
   // app.useLogger(loggerService);
 
   /* 글로벌 설정 */
-  app.useGlobalGuards(new JwtGuard(utilService));
+  app.useGlobalGuards(new JwtGuard(app.get(Reflector)));
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new ResponseInterceptor(loggerService));
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService));

@@ -1,10 +1,12 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
+import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception';
+import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserRole } from '@share/enums/user-role';
 import { BodyCreateUserDto } from './dto/body-create-user.dto';
 import { BodyUpdateUserDto } from './dto/body-update-user.dto';
 import { User } from './entities/user.entity';
@@ -21,11 +23,12 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: '사용자 생성' })
-  @Post()
   @CombineResponses(HttpStatus.CREATED, CreateUserResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @CombineResponses(HttpStatus.CONFLICT, AlreadyExistsUserException)
+  @Public()
+  @Post()
   create(@Body() createUserDto: BodyCreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -35,7 +38,7 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
-  @RequiredLogin()
+  @RequiredLogin(UserRole.User)
   findMe(@LoginUser() user: LoginUserData): Promise<User | null> {
     return this.usersService.findMe(user.id);
   }

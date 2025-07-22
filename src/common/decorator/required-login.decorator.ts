@@ -3,14 +3,13 @@ import { LoggerService } from '@logger/logger.service';
 import { applyDecorators, CanActivate, ExecutionContext, HttpStatus, Inject, SetMetadata, UseGuards } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UserRole } from '@share/enums/user-role';
 import { UtilService } from '@util/util.service';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { RoleGuard } from '../guard/role.guard';
-import { UserRole } from '../variable/enums';
-import { ROLES_KEY } from '../variable/globals';
+import { PUBLIC_KEY, ROLES_KEY } from '../variable/globals';
 import { CombineResponses } from './combine-responses.decorator';
-import { PUBLIC_KEY } from './public.decorator';
 
 export class RequiredLoginConstraint implements CanActivate {
   constructor(

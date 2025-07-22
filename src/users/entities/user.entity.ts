@@ -1,20 +1,12 @@
-import { Sample, UserRole } from '@common/variable/enums';
+import { Sample } from '@common/variable/enums';
 import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRole } from '@share/enums/user-role';
+import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import dayjs from 'dayjs';
-import { IUser } from '@share/interface/iuser';
-import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  Relation,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class User implements IUser {

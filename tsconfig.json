@@ -24,7 +24,7 @@
     "inlineSources": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@share/*": ["share/*"],
+      "@share/*": ["src/share/*"],
       "@util/*": ["src/util/*"],
       "@users/*": ["src/users/*"],
       "@types/*": ["src/types/*"],

@@ -1,5 +1,5 @@
 import { SetProperty } from '@common/decorator/set-property.decorator';
-import { UserRole } from '@common/variable/enums';
+import { UserRole } from '@share/enums/user-role';
 
 export class UserMeNestedResponseDto {
   @SetProperty({
