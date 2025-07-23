@@ -1,5 +1,6 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
+import { PassRoles } from '@common/decorator/pass-roles.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
@@ -7,10 +8,10 @@ import { BadRequestException, NotFoundException, UnauthorizedException } from '@
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@share/enums/user-role';
-import { BodyCreateUserDto } from './dto/body-create-user.dto';
-import { BodyUpdateUserDto } from './dto/body-update-user.dto';
+import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
+import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
+import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { User } from './entities/user.entity';
-import { AlreadyExistsUserException } from './exception/already-exists-user.exception';
 import { CreateUserResponseDto } from './response/create-user.response.dto';
 import { DeleteUserResponseDto } from './response/delete-user.response.dto';
 import { GetUserMeResponseDto } from './response/get-user-me.response.dto';
@@ -26,10 +27,10 @@ export class UsersController {
   @CombineResponses(HttpStatus.CREATED, CreateUserResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
-  @CombineResponses(HttpStatus.CONFLICT, AlreadyExistsUserException)
+  @CombineResponses(HttpStatus.CONFLICT, AlreadyExistsUserExceptionDto)
   @Public()
   @Post()
-  create(@Body() createUserDto: BodyCreateUserDto) {
+  create(@Body() createUserDto: CreateUserPayloadDto) {
     return this.usersService.create(createUserDto);
   }
 
@@ -38,7 +39,8 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
-  @RequiredLogin(UserRole.User)
+  @RequiredLogin()
+  @PassRoles(UserRole.User)
   findMe(@LoginUser() user: LoginUserData): Promise<User | null> {
     return this.usersService.findMe(user.id);
   }
@@ -49,7 +51,7 @@ export class UsersController {
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Patch(':id')
   @RequiredLogin()
-  update(@Param('id') id: string, @Body() updateUserDto: BodyUpdateUserDto) {
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserPayloadDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 

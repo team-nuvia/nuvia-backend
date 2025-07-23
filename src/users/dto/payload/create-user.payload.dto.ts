@@ -4,7 +4,7 @@ import { fakerKO as faker } from '@faker-js/faker';
 import { UserRole } from '@share/enums/user-role';
 import { IsEmail, IsEnum, IsString, IsStrongPassword } from 'class-validator';
 
-export class BodyCreateUserDto {
+export class CreateUserPayloadDto {
   @SetProperty({
     description: '이메일',
     value: faker.internet.email({

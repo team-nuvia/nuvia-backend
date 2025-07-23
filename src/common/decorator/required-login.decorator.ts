@@ -1,14 +1,12 @@
 import { UnauthorizedException } from '@common/dto/response';
 import { LoggerService } from '@logger/logger.service';
-import { applyDecorators, CanActivate, ExecutionContext, HttpStatus, Inject, SetMetadata, UseGuards } from '@nestjs/common';
+import { applyDecorators, CanActivate, ExecutionContext, HttpStatus, Inject, UseGuards } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { UserRole } from '@share/enums/user-role';
 import { UtilService } from '@util/util.service';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { RoleGuard } from '../guard/role.guard';
-import { PUBLIC_KEY, ROLES_KEY } from '../variable/globals';
+import { PUBLIC_KEY } from '../variable/globals';
 import { CombineResponses } from './combine-responses.decorator';
 
 export class RequiredLoginConstraint implements CanActivate {
@@ -47,10 +45,5 @@ export class RequiredLoginConstraint implements CanActivate {
   }
 }
 
-export const RequiredLogin = (...roles: UserRole[]) =>
-  applyDecorators(
-    ApiBearerAuth(),
-    SetMetadata(ROLES_KEY, roles),
-    UseGuards(RequiredLoginConstraint, RoleGuard),
-    CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException),
-  );
+export const RequiredLogin = () =>
+  applyDecorators(ApiBearerAuth(), UseGuards(RequiredLoginConstraint), CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException));

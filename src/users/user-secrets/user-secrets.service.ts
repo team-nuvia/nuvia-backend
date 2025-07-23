@@ -6,7 +6,7 @@ import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { ChangePasswordFormPayloadDto } from './dto/change-password-form.payload.dto';
+import { ChangePasswordFormPayloadDto } from './dto/payload/change-password-form.payload.dto';
 import { UserSecret } from './entities/user-secret.entity';
 
 @Injectable()

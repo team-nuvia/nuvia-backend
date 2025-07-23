@@ -10,6 +10,7 @@ export class RoleGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
+    console.log('🚀 ~ RoleGuard ~ canActivate ~ requiredRoles:', requiredRoles);
 
     if (!requiredRoles) {
       return true;
@@ -24,6 +25,7 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
+    console.log('🚀 ~ RoleGuard ~ canActivate ~ user.role:', user.role);
     if (!requiredRoles.includes(user.role)) {
       throw new Error('허용되지 않은 접근입니다.');
     }

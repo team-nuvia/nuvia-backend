@@ -4,10 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { BodyCreateUserDto } from './dto/body-create-user.dto';
-import { BodyUpdateUserDto } from './dto/body-update-user.dto';
+import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
+import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
+import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { User } from './entities/user.entity';
-import { AlreadyExistsUserException } from './exception/already-exists-user.exception';
 
 @Injectable()
 export class UsersService {
@@ -16,17 +16,16 @@ export class UsersService {
     private readonly utilService: UtilService,
   ) {}
 
-  async create({ password, ...createUserDto }: BodyCreateUserDto) {
+  async create({ password, ...createUserDto }: CreateUserPayloadDto) {
     const alreadyExistUser = await this.isExistUserBy({
       email: createUserDto.email,
     });
 
     if (alreadyExistUser) {
-      throw new AlreadyExistsUserException(createUserDto.email);
+      throw new AlreadyExistsUserExceptionDto(createUserDto.email);
     }
 
-    const { hashedPassword, ...userSecret } =
-      this.utilService.hashPassword(password);
+    const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
 
     const { userSecret: _, ...newUser } = await this.userRepository.save(
       {
@@ -55,11 +54,8 @@ export class UsersService {
     return this.userRepository.existsBy(condition);
   }
 
-  async update(id: number, updateUserDto: BodyUpdateUserDto) {
-    const updated = await this.userRepository.save(
-      { id, ...updateUserDto },
-      { transaction: true, reload: true },
-    );
+  async update(id: number, updateUserDto: UpdateUserPayloadDto) {
+    const updated = await this.userRepository.save({ id, ...updateUserDto }, { transaction: true, reload: true });
     return updated;
   }
 

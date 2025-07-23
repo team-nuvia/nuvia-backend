@@ -37,15 +37,13 @@ export class JwtGuard extends AuthGuard('jwt') {
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     if (isPublic) {
-      console.log('🚀 ~ JwtGuard ~ canActivate ~ isPublic:', isPublic);
       return true;
     }
 
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
-    console.log('🚀 ~ JwtGuard ~ handleRequest ~ info:', info);
+  handleRequest(err: any, user: any, _info: any) {
     // You can throw an exception based on either "info" or "err" arguments
     if (err || !user) {
       throw err || new UnauthorizedException();
