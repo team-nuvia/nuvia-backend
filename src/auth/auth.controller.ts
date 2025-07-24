@@ -25,7 +25,7 @@ export class AuthController {
   @CombineResponses(HttpStatus.OK, LoginResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
-  async login(@Req() req: Request /* @Body() loginDto: LoginFormPayloadDto */): Promise<LoginTokenNestedResponseDto> {
+  async login(@Req() req: Request): Promise<LoginTokenNestedResponseDto> {
     console.log('🚀 ~ AuthController ~ login ~ req:', req.user);
     const token = await this.authService.login(req.user);
     return token;

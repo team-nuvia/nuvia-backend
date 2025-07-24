@@ -11,7 +11,6 @@ import { UserRole } from '@share/enums/user-role';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
-import { User } from './entities/user.entity';
 import { CreateUserResponseDto } from './response/create-user.response.dto';
 import { DeleteUserResponseDto } from './response/delete-user.response.dto';
 import { GetUserMeResponseDto } from './response/get-user-me.response.dto';
@@ -41,8 +40,9 @@ export class UsersController {
   @Get('me')
   @RequiredLogin()
   @PassRoles(UserRole.User)
-  findMe(@LoginUser() user: LoginUserData): Promise<User | null> {
-    return this.usersService.findMe(user.id);
+  async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
+    const getMe = await this.usersService.findMe(user.id);
+    return new GetUserMeResponseDto(getMe);
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })
