@@ -5,23 +5,19 @@ import { HttpStatus } from '@nestjs/common';
 
 export class LoginResponseDto extends SuccessResponse {
   @SetProperty({
-    description: '토큰',
-    value: LoginTokenNestedResponseDto,
-  })
-  payload: LoginTokenNestedResponseDto = new LoginTokenNestedResponseDto();
-
-  // @ApiProperty({
-  //   description: '로그인 성공',
-  //   type: String,
-  //   example: '로그인 성공',
-  // })
-  @SetProperty({
     description: '로그인 성공',
     value: '로그인 성공',
   })
   message: string = '로그인 성공';
 
+  @SetProperty({
+    description: '토큰',
+    value: LoginTokenNestedResponseDto,
+  })
+  payload: LoginTokenNestedResponseDto = new LoginTokenNestedResponseDto();
+
   constructor(payload: LoginTokenNestedResponseDto) {
     super(HttpStatus.OK, payload);
+    if (payload) this.payload = payload;
   }
 }

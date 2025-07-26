@@ -14,7 +14,7 @@ import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { JwtGuard } from './auth/jwt.guard';
+import { JwtGuard } from './auth/guard/jwt.guard';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
@@ -30,21 +30,7 @@ async function bootstrap() {
   const version = commonConfig.version;
   const port = commonConfig.port;
 
-  app.useGlobalPipes(
-    // new ValidationPipe({
-    //   whitelist: true,
-    //   forbidNonWhitelisted: true,
-    //   transform: true,
-    //   stopAtFirstError: true,
-    //   exceptionFactory(errors) {
-    //     const message = errors.shift();
-    //     return new BadRequestException({
-    //       reason: message?.property ?? ('{{param}}' as StringOrNull),
-    //     });
-    //   },
-    // }),
-    InputValidationPipe(),
-  );
+  app.useGlobalPipes(InputValidationPipe());
 
   app.use(cookieParser());
   app.use(compression());

@@ -149,6 +149,23 @@ export class NotFoundException extends BaseException {
   }
 }
 
+/* 405 */
+export class MethodNotAllowedException extends BaseException {
+  @ApiProperty({
+    name: 'httpStatus',
+    enum: HttpStatus,
+    example: HttpStatus.METHOD_NOT_ALLOWED,
+  })
+  declare httpStatus: HttpStatus;
+
+  @ApiProperty({
+    name: 'message',
+    type: String,
+    example: ErrorMessage.METHOD_NOT_ALLOWED,
+  })
+  declare message: string;
+}
+
 /* 409 */
 export class ConflictException extends BaseException {
   @ApiProperty({

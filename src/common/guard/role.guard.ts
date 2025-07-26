@@ -10,14 +10,13 @@ export class RoleGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
-    console.log('🚀 ~ RoleGuard ~ canActivate ~ requiredRoles:', requiredRoles);
 
     if (!requiredRoles) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest<Request>();
-    if (!user.role) {
+    if (!user?.role) {
       throw new Error('사용자의 역할 정보가 없습니다.');
     }
 

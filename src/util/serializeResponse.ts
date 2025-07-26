@@ -1,6 +1,6 @@
 import { instanceToPlain } from 'class-transformer';
 
-export const serializeResponse = (data: any) => {
+export const serializeResponse = <T>(data: T): T => {
   const HIDDEN_KEYS = ['cause', 'status', 'response'];
   const SERIALIZED_KEYS = ['ok', 'httpStatus', 'name', 'message', 'reason', 'payload'];
 
@@ -14,5 +14,5 @@ export const serializeResponse = (data: any) => {
         return SERIALIZED_KEYS.indexOf(a[0]) - SERIALIZED_KEYS.indexOf(b[0]);
       }),
   );
-  return serialized;
+  return serialized as T;
 };

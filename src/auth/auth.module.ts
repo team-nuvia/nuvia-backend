@@ -8,8 +8,8 @@ import { User } from '@users/entities/user.entity';
 import { UserSecret } from '@users/user-secrets/entities/user-secret.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { LocalStrategy } from './local.strategy';
+import { JwtStrategy } from './guard/jwt.strategy';
+import { LocalStrategy } from './guard/local.strategy';
 
 @Module({
   imports: [

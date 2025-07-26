@@ -8,6 +8,11 @@ export class LoggerMiddleware implements NestMiddleware {
 
   use(req: Request, _res: any, next: () => void) {
     this.loggerService.log(`➡️ REQ. [${req.method}] ${req.originalUrl}`);
+
+    if (req.body && Object.keys(req.body).length > 0) {
+      this.loggerService.log(`➡️ REQ. [BODY] ${JSON.stringify(req.body, null)}`);
+    }
+
     next();
   }
 }

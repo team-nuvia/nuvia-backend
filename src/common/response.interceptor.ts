@@ -1,6 +1,7 @@
 import { LoggerService } from '@logger/logger.service';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { serializeResponse } from '@util/serializeResponse';
+import { instanceToPlain } from 'class-transformer';
 import { Request, Response } from 'express';
 import { map, Observable } from 'rxjs';
 import { RequestMethod } from './variable/enums';
@@ -19,40 +20,27 @@ export class ResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
-        data.ok = httpStatus < 300 && httpStatus >= 200;
-        data.httpStatus = httpStatus;
-        data.path = path;
-        data.method = method;
-        data.timestamp = new Date();
-        data.name = data.constructor.name;
-        data.payload = data.payload ?? null;
-        data.message = data.message ?? '응답 완료';
-        data.reason = data.reason ?? null;
+        const responseEntity = {
+          ok: httpStatus < 300 && httpStatus >= 200,
+          httpStatus,
+          name: data.name,
+          message: data.message ?? '응답 완료',
+          reason: data.reason ?? null,
+          payload: instanceToPlain(data.payload) ?? null,
+        };
 
-        this.loggerService.log(`⬅️ RES. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(data));
-        this.loggerService.log(`⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(req.body, null));
+        const serialized = serializeResponse(responseEntity);
 
-        // return new SuccessResponseDto({
-        //   ok: httpStatus < 300 && httpStatus >= 200,
-        //   httpStatus,
-        //   path,
-        //   method,
-        //   timestamp: new Date(),
-        //   payload: data,
-        //   message: data.message ?? '응답 완료',
-        //   reason: data.reason ?? null,
-        // });
-        const serialized = serializeResponse(data);
+        this.loggerService.log(`⬅️ RES. [${method}] ${path} ${serialized.httpStatus}`);
+        this.loggerService.log(JSON.stringify(serialized));
+
+        if (req.body && Object.keys(req.body).length > 0) {
+          this.loggerService.log(`⬅️ RES. [BODY] ${JSON.stringify(req.body, null)}`);
+        }
+        console.log('🚀 ~ ResponseInterceptor ~ intercept ~ serialized:', serialized);
+
         return serialized;
-        // return data;
       }),
-      // catchError((err) => {
-      //   console.log('🚀 ~ ResponseInterceptor ~ catchError ~ err:', err);
-      //   this.loggerService.error(`⬅️ RES. [${method}] ${path} ${httpStatus} ---`, err);
-      //   this.loggerService.error(`⬅️ RES.BODY. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(req.body, null));
-      //   this.loggerService.error(`⬅️ RES.PAYLOAD. [${method}] ${path} ${httpStatus} ---`, JSON.stringify(err, null));
-      //   return throwError(() => err);
-      // }),
     );
   }
 }

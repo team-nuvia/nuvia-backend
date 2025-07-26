@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import imageSize from 'image-size';
 import { Repository } from 'typeorm';
 import { Profile } from './entities/profile.entity';
-import { NotFoundProfileException } from './resopnse/not-found-profile.exception';
+import { NotFoundProfileException } from './dto/exception/not-found-profile.exception.dto';
 
 @Injectable()
 export class ProfilesService {

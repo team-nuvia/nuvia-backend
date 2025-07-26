@@ -5,6 +5,7 @@ import { UserRole } from '@share/enums/user-role';
 import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
+import { Type } from 'class-transformer';
 import dayjs from 'dayjs';
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm';
 
@@ -25,7 +26,7 @@ export class User implements IUser {
     type: String,
     example: faker.person.fullName(),
   })
-  @Column('varchar', { length: 50 })
+  @Column('varchar', { length: 50, unique: true })
   username!: string;
 
   @ApiProperty({
@@ -47,6 +48,7 @@ export class User implements IUser {
       .join('<br>')}`,
   })
   @Column('varchar', { length: 50 })
+  @Type(() => Number)
   role!: UserRole;
 
   @ApiProperty({

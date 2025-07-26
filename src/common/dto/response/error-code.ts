@@ -6,6 +6,7 @@ export const ErrorKey = {
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
   NOT_FOUND: 'NOT_FOUND',
+  METHOD_NOT_ALLOWED: 'METHOD_NOT_ALLOWED',
   CONFLICT: 'CONFLICT',
   PRECONDITION_FAILED: 'PRECONDITION_FAILED',
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
@@ -20,6 +21,8 @@ export const ErrorKey = {
   NO_MATCH_USER_INFORMATION: 'NO_MATCH_USER_INFORMATION',
   NOT_FOUND_PROFILE: 'NOT_FOUND_PROFILE',
   INVALID_INPUT_VALUE: 'INVALID_INPUT_VALUE',
+  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
+  VERIFY_TOKEN_SUCCESS: 'VERIFY_TOKEN_SUCCESS',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -28,6 +31,7 @@ export const ErrorCode = {
   UNAUTHORIZED: HttpStatus.UNAUTHORIZED,
   FORBIDDEN: HttpStatus.FORBIDDEN,
   NOT_FOUND: HttpStatus.NOT_FOUND,
+  METHOD_NOT_ALLOWED: HttpStatus.METHOD_NOT_ALLOWED,
   CONFLICT: HttpStatus.CONFLICT,
   PRECONDITION_FAILED: HttpStatus.PRECONDITION_FAILED,
   TOO_MANY_REQUESTS: HttpStatus.TOO_MANY_REQUESTS,
@@ -41,6 +45,8 @@ export const ErrorCode = {
   NO_MATCH_USER_INFORMATION: HttpStatus.BAD_REQUEST,
   NOT_FOUND_PROFILE: HttpStatus.NOT_FOUND,
   INVALID_INPUT_VALUE: HttpStatus.BAD_REQUEST,
+  LOGIN_SUCCESS: HttpStatus.OK,
+  VERIFY_TOKEN_SUCCESS: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -49,6 +55,7 @@ export const ErrorMessage = {
   UNAUTHORIZED: '인증되지 않은 요청입니다.',
   FORBIDDEN: '권한이 없는 요청입니다.',
   NOT_FOUND: '존재하지 않는 요청입니다.',
+  METHOD_NOT_ALLOWED: '허용되지 않은 요청입니다.',
   CONFLICT: '중복된 요청입니다.',
   PRECONDITION_FAILED: '사전 조건이 충족되지 않은 요청입니다.',
   TOO_MANY_REQUESTS: '요청이 너무 많습니다.',
@@ -62,6 +69,8 @@ export const ErrorMessage = {
   NO_MATCH_USER_INFORMATION: '사용자 정보가 일치하지 않습니다.',
   NOT_FOUND_PROFILE: '프로필을 찾지 못했습니다.',
   INVALID_INPUT_VALUE: '입력값이 올바르지 않습니다.',
+  LOGIN_SUCCESS: '로그인 성공',
+  VERIFY_TOKEN_SUCCESS: '토큰 검증 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

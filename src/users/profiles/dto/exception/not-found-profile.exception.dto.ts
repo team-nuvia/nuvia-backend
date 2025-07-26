@@ -1,7 +1,7 @@
 import { ErrorKey, NotFoundException } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NotFoundProfileException extends NotFoundException {
+export class NotFoundProfileExceptionDto extends NotFoundException {
   @ApiProperty({
     name: 'message',
     type: String,

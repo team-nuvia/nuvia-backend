@@ -1,23 +1,21 @@
 import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
-import { FindOptionsWhere, Repository } from 'typeorm';
-import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
+import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
-import { User } from './entities/user.entity';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly userRepository: UsersRepository,
     private readonly utilService: UtilService,
   ) {}
 
   async create({ password, ...createUserDto }: CreateUserPayloadDto) {
-    const alreadyExistUser = await this.isExistUserBy({
+    const alreadyExistUser = await this.userRepository.existsBy({
       email: createUserDto.email,
     });
 
@@ -27,21 +25,16 @@ export class UsersService {
 
     const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
 
-    const { userSecret: _, ...newUser } = await this.userRepository.save(
-      {
-        ...createUserDto,
-        userSecret: { ...userSecret, password: hashedPassword },
-      },
-      {
-        transaction: true,
-      },
-    );
+    const { userSecret: _, ...newUser } = await this.userRepository.save({
+      ...createUserDto,
+      userSecret: { ...userSecret, password: hashedPassword },
+    });
 
     return newUser;
   }
 
   async findMe(id: number) {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOneById(id);
 
     if (isNil(user)) {
       throw new NotFoundUserException();
@@ -50,12 +43,8 @@ export class UsersService {
     return user;
   }
 
-  isExistUserBy(condition: FindOptionsWhere<User> | FindOptionsWhere<User>[]) {
-    return this.userRepository.existsBy(condition);
-  }
-
   async update(id: number, updateUserDto: UpdateUserPayloadDto) {
-    const updated = await this.userRepository.save({ id, ...updateUserDto }, { transaction: true, reload: true });
+    const updated = await this.userRepository.save({ id, ...updateUserDto });
     return updated;
   }
 

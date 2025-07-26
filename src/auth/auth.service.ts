@@ -1,6 +1,6 @@
 import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception.dto';
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
-import { Injectable } from '@nestjs/common';
+import { ErrorKey } from '@common/dto/response';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
@@ -17,52 +17,11 @@ export class AuthService {
   ) {}
 
   async login(payload: LoginUserData): Promise<LoginTokenNestedResponseDto> {
-    // const user = await this.userRepository.findOne({
-    //   where: { email },
-    //   relations: { userSecret: true },
-    //   select: {
-    //     userSecret: {
-    //       salt: true,
-    //       password: true,
-    //       iteration: true,
-    //     },
-    //   },
-    // });
-
-    // console.log('🚀 ~ AuthService ~ user:', user);
-    // if (isNil(user)) {
-    //   throw new NotFoundUserException(email);
-    // }
-
-    // const payload: LoginUserData = {
-    //   id: user.id,
-    //   email: user.email,
-    //   username: user.username,
-    //   nickname: user.nickname,
-    //   role: user.role,
-    // };
-    // const isSame = this.utilService.verifyPassword(password, {
-    //   iteration: user.userSecret.iteration,
-    //   salt: user.userSecret.salt,
-    //   password: user.userSecret.password,
-    // });
-
-    // if (!isSame) {
-    //   throw new NoMatchUserInformationException();
-    // }
-
-    // const payload: LoginUserData = {
-    //   id: user.id,
-    //   email: user.email,
-    //   username: user.username,
-    //   nickname: user.nickname,
-    //   role: user.role,
-    // };
-
+    console.log('🚀 ~ AuthService ~ login ~ payload:', payload);
     return this.utilService.createJWT(payload);
   }
 
-  verifyToken(token: string) {
+  verifyToken(token: string): boolean {
     return this.utilService.verifyJWT(token);
   }
 
@@ -80,7 +39,7 @@ export class AuthService {
     });
 
     if (isNil(user)) {
-      throw new NotFoundUserException(email);
+      throw new NotFoundException({ code: ErrorKey.NOT_FOUND_USER, reason: email });
     }
 
     const isSame = this.utilService.verifyPassword(password, {

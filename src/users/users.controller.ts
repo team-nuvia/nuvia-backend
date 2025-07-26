@@ -17,6 +17,7 @@ import { GetUserMeResponseDto } from './response/get-user-me.response.dto';
 import { UpdateUserResponseDto } from './response/update-user.response.dto';
 import { UsersService } from './users.service';
 
+@RequiredLogin
 @ApiTags('사용자')
 @Controller('users')
 export class UsersController {
@@ -38,7 +39,6 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
-  @RequiredLogin()
   @PassRoles(UserRole.User)
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
     const getMe = await this.usersService.findMe(user.id);
@@ -50,9 +50,9 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Patch(':id')
-  @RequiredLogin()
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserPayloadDto) {
-    return this.usersService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserPayloadDto) {
+    await this.usersService.update(+id, updateUserDto);
+    return new UpdateUserResponseDto();
   }
 
   @ApiOperation({ summary: '사용자 삭제' })
@@ -60,8 +60,8 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Delete(':id')
-  @RequiredLogin()
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.usersService.remove(+id);
+    return new DeleteUserResponseDto();
   }
 }

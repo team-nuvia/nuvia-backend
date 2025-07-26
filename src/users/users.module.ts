@@ -5,6 +5,7 @@ import { User } from './entities/user.entity';
 import { ProfilesModule } from './profiles/profiles.module';
 import { UserSecretsModule } from './user-secrets/user-secrets.module';
 import { UsersController } from './users.controller';
+import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
 
 @Module({
@@ -24,6 +25,6 @@ import { UsersService } from './users.service';
     ]),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UsersRepository],
 })
 export class UsersModule {}
