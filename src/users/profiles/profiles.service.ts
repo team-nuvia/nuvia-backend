@@ -5,8 +5,8 @@ import { isNil } from '@util/isNil';
 import crypto from 'crypto';
 import imageSize from 'image-size';
 import { Repository } from 'typeorm';
+import { NotFoundProfileExceptionDto } from './dto/exception/not-found-profile.exception.dto';
 import { Profile } from './entities/profile.entity';
-import { NotFoundProfileException } from './dto/exception/not-found-profile.exception.dto';
 
 @Injectable()
 export class ProfilesService {
@@ -21,10 +21,7 @@ export class ProfilesService {
     const mimetype = file.mimetype;
     const size = file.size;
     const buffer = file.buffer;
-    const filename =
-      crypto.randomBytes(32).toString('hex') +
-      '.' +
-      originalname.split('.').pop();
+    const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
     const dimensions = imageSize(buffer);
 
     await this.profileRepository.save({
@@ -46,7 +43,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundProfileException();
+      throw new NotFoundProfileExceptionDto();
     }
 
     const { id, userId: uid, buffer, ...rest } = profile;
@@ -74,17 +71,14 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundProfileException();
+      throw new NotFoundProfileExceptionDto();
     }
 
     const originalname = file.originalname;
     const mimetype = file.mimetype;
     const size = file.size;
     const buffer = file.buffer;
-    const filename =
-      crypto.randomBytes(32).toString('hex') +
-      '.' +
-      originalname.split('.').pop();
+    const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
     const dimensions = imageSize(buffer);
 
     await this.profileRepository.update(
@@ -107,7 +101,7 @@ export class ProfilesService {
     });
 
     if (isNil(profile)) {
-      throw new NotFoundProfileException();
+      throw new NotFoundProfileExceptionDto();
     }
 
     return this.profileRepository.delete({ userId });

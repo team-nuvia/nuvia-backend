@@ -41,6 +41,7 @@ export class UsersController {
   @Get('me')
   @PassRoles(UserRole.User)
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
+    console.log('🚀 ~ UsersController ~ findMe ~ user:', user);
     const getMe = await this.usersService.findMe(user.id);
     return new GetUserMeResponseDto(getMe);
   }

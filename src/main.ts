@@ -9,7 +9,6 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { printRouterInfo } from '@util/printRouterInfo';
 import { setupSwagger } from '@util/setupSwagger';
-import { useContainer } from 'class-validator';
 import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -30,11 +29,12 @@ async function bootstrap() {
   const version = commonConfig.version;
   const port = commonConfig.port;
 
-  app.useGlobalPipes(InputValidationPipe());
-
+  app.useLogger(loggerService);
   app.use(cookieParser());
   app.use(compression());
-  app.useLogger(loggerService);
+
+  app.useGlobalPipes(InputValidationPipe());
+
   // app.useLogger(loggerService);
 
   /* 글로벌 설정 */
@@ -49,8 +49,13 @@ async function bootstrap() {
   /* CORS 설정 */
   app.enableCors({
     // TODO: 운영일 때 호스트 적용
-    origin: commonConfig.runMode === RunMode.Development ? '*' : '*',
-    credentials: commonConfig.runMode === RunMode.Production,
+    origin:
+      commonConfig.runMode === RunMode.Development
+        ? ['http://localhost:5000', 'http://localhost:5000/', 'http://127.0.0.1:5000', 'http://127.0.0.1:5000/']
+        : ['http://localhost:5000'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
+    credentials: true,
+    maxAge: 86400,
   });
 
   /* Swagger 설정 */
@@ -60,7 +65,7 @@ async function bootstrap() {
   // 컨테이너 설정은 의존성 주입을 위해 필요합니다.
   // AppModule에서 필요한 서비스나 리포지토리를 주입받기 위해 사용됩니다.
   // 자동으로 주입되지 않기 때문에 명시적으로 설정해야 합니다.
-  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  // useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   /* 재시작 구분선 */
   /* 로그 파일에 적용 */

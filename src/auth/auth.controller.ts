@@ -4,9 +4,9 @@ import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
-import { Controller, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/response/login.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
@@ -24,8 +24,19 @@ export class AuthController {
   @CombineResponses(HttpStatus.OK, LoginResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
-  async login(@Req() req: Request): Promise<LoginResponseDto> {
+  async login(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<LoginResponseDto> {
     const token = await this.authService.login(req.user);
+    res.cookie('access_token', token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 1,
+    });
+    res.cookie('refresh_token', token.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+    });
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5000');
     return new LoginResponseDto(token);
   }
 
