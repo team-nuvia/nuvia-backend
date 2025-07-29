@@ -9,6 +9,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/response/login.response.dto';
+import { LogoutResponseDto } from './dto/response/logout.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 
@@ -26,18 +27,37 @@ export class AuthController {
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<LoginResponseDto> {
     const token = await this.authService.login(req.user);
-    res.cookie('access_token', token.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 1,
-    });
+    // res.cookie('access_token', token.accessToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'lax',
+    //   maxAge: 1000 * 60 * 60 * 24 * 1,
+    // });
     res.cookie('refresh_token', token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30,
     });
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5000');
     return new LoginResponseDto(token);
+  }
+
+  @Public()
+  @ApiOperation({ summary: '로그아웃' })
+  @Post('logout')
+  @CombineResponses(HttpStatus.OK, LogoutResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
+  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
+  async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
+    // const token = await this.authService.login(req.user);
+    // res.cookie('access_token', token.accessToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'lax',
+    //   maxAge: 1000 * 60 * 60 * 24 * 1,
+    // });
+    res.clearCookie('refresh_token');
+    return new LogoutResponseDto();
   }
 
   @ApiOperation({ summary: '토큰 검증' })

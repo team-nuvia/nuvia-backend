@@ -37,7 +37,6 @@ export class ResponseInterceptor implements NestInterceptor {
         if (req.body && Object.keys(req.body).length > 0) {
           this.loggerService.log(`⬅️ RES. [BODY] ${JSON.stringify(req.body, null)}`);
         }
-        console.log('🚀 ~ ResponseInterceptor ~ intercept ~ serialized:', serialized);
 
         return serialized;
       }),
