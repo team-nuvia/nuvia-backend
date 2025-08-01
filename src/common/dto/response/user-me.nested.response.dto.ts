@@ -1,29 +1,29 @@
-import { SetProperty } from '@common/decorator/set-property.decorator';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@share/enums/user-role';
 
 export class UserMeNestedResponseDto {
-  @SetProperty({
+  @ApiProperty({
     description: '사용자 이메일',
-    value: 'test@test.com',
+    example: 'test@test.com',
   })
-  email: string = 'test@test.com';
+  email!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '사용자 이름',
-    value: 'test username',
+    example: 'test username',
   })
-  username: string = 'test username';
+  username!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '사용자 닉네임',
-    value: 'test nickname',
+    example: 'test nickname',
   })
-  nickname: string = 'test nickname';
+  nickname!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '사용자 권한',
     enum: UserRole,
-    value: UserRole.User,
+    example: UserRole.Viewer,
   })
-  role: UserRole = UserRole.User;
+  role!: UserRole;
 }
