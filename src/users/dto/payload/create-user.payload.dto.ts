@@ -1,13 +1,13 @@
-import { SetProperty } from '@common/decorator/set-property.decorator';
 import { Sample } from '@common/variable/enums';
 import { fakerKO as faker } from '@faker-js/faker';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@share/enums/user-role';
 import { IsEmail, IsEnum, IsString, IsStrongPassword } from 'class-validator';
 
 export class CreateUserPayloadDto {
-  @SetProperty({
+  @ApiProperty({
     description: '이메일',
-    value: faker.internet.email({
+    example: faker.internet.email({
       firstName: 'lowfi',
       lastName: 'awesome',
       provider: 'example.com',
@@ -16,16 +16,16 @@ export class CreateUserPayloadDto {
   @IsEmail()
   email!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '이름',
-    value: faker.person.fullName(),
+    example: faker.person.fullName(),
   })
   @IsString()
   username!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '닉네임',
-    value: faker.helpers.mustache('{{first}}{{last}}', {
+    example: faker.helpers.mustache('{{first}}{{last}}', {
       first: faker.helpers.arrayElement(Sample.username.first),
       last: faker.helpers.arrayElement(Sample.username.last),
     }),
@@ -33,9 +33,9 @@ export class CreateUserPayloadDto {
   @IsString()
   nickname!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: '최소 5자 이상, 숫자, 대/소문자, 특수문자 1개씩 포함되어야 합니다.',
-    value: 'qweQQ!!1',
+    example: 'qweQQ!!1',
   })
   @IsStrongPassword({
     minLength: 5,
@@ -47,12 +47,12 @@ export class CreateUserPayloadDto {
   @IsString()
   password!: string;
 
-  @SetProperty({
+  @ApiProperty({
     description: `사용자 권한:<br>${Object.entries(UserRole)
       .map(([role, value]) => `${role}: ${value}`)
       .join('<br>')}`,
-    value: UserRole.User,
     enum: UserRole,
+    example: UserRole.Viewer,
   })
   @IsEnum(UserRole)
   role!: UserRole;

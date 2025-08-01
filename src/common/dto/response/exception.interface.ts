@@ -1,4 +1,4 @@
-import { SetPropertyNullable } from '@common/decorator/set-property-nullable.decorator';
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { ErrorCode, ErrorKey, ErrorMessage, getErrorMessage } from './error-code';
@@ -9,38 +9,37 @@ interface IExceptionArgs {
 }
 
 export abstract class BaseException<T extends any = any> extends HttpException implements IBaseResponse<T> {
-  @ApiProperty({ name: 'ok', type: Boolean, example: false })
+  @ApiProperty({ description: '성공 여부', example: false })
   ok!: boolean;
 
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.BAD_REQUEST,
   })
   httpStatus!: HttpStatus;
 
   @ApiProperty({
-    name: 'name',
-    type: String,
+    description: '이름',
     example: '<ResponseDtoName>',
   })
   name!: string;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '메시지',
-    value: ErrorMessage.BAD_REQUEST,
+    example: ErrorMessage.BAD_REQUEST,
   })
   message!: string;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '이유',
-    value: null,
+    example: null,
   })
   reason!: StringOrNull;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '페이로드',
-    value: null,
+    example: null,
   })
   payload!: TypeOrNull<T>;
 
@@ -60,18 +59,15 @@ export abstract class BaseException<T extends any = any> extends HttpException i
 /* 400 */
 export class BadRequestException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.BAD_REQUEST,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.BAD_REQUEST,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -83,18 +79,15 @@ export class BadRequestException extends BaseException {
 /* 401 */
 export class UnauthorizedException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.UNAUTHORIZED,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.UNAUTHORIZED,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -106,18 +99,15 @@ export class UnauthorizedException extends BaseException {
 /* 403 */
 export class ForbiddenException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.FORBIDDEN,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.FORBIDDEN,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -129,18 +119,15 @@ export class ForbiddenException extends BaseException {
 /* 404 */
 export class NotFoundException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.NOT_FOUND,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.NOT_FOUND,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -152,15 +139,14 @@ export class NotFoundException extends BaseException {
 /* 405 */
 export class MethodNotAllowedException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.METHOD_NOT_ALLOWED,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.METHOD_NOT_ALLOWED,
   })
   declare message: string;
@@ -169,18 +155,15 @@ export class MethodNotAllowedException extends BaseException {
 /* 409 */
 export class ConflictException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.CONFLICT,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.CONFLICT,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -192,18 +175,15 @@ export class ConflictException extends BaseException {
 /* 412 */
 export class PreconditionFailedException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.PRECONDITION_FAILED,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.PRECONDITION_FAILED,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -215,18 +195,15 @@ export class PreconditionFailedException extends BaseException {
 /* 429 */
 export class TooManyRequestsException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.TOO_MANY_REQUESTS,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.TOO_MANY_REQUESTS,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -238,18 +215,15 @@ export class TooManyRequestsException extends BaseException {
 /* 500 */
 export class InternalServerErrorException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.INTERNAL_SERVER_ERROR,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.INTERNAL_SERVER_ERROR,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 
@@ -261,18 +235,15 @@ export class InternalServerErrorException extends BaseException {
 /* 503 */
 export class ServiceUnavailableException extends BaseException {
   @ApiProperty({
-    name: 'httpStatus',
+    description: 'HTTP 상태 코드',
     enum: HttpStatus,
     example: HttpStatus.SERVICE_UNAVAILABLE,
   })
   declare httpStatus: HttpStatus;
 
-  @ApiProperty({
-    name: 'message',
-    type: String,
+  @ApiPropertyNullable({
+    description: '메시지',
     example: ErrorMessage.SERVICE_UNAVAILABLE,
-    required: false,
-    nullable: true,
   })
   declare message: string;
 

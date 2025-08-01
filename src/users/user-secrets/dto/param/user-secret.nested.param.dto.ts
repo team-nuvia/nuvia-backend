@@ -1,9 +1,6 @@
-import { SetProperty } from '@common/decorator/set-property.decorator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UserSecretNestedParamDto {
-  @SetProperty({
-    description: 'id',
-    value: 1,
-  })
-  id: number = 1;
+  @ApiProperty({ description: 'id', example: 1 })
+  id!: number;
 }

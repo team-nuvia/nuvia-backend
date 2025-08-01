@@ -7,14 +7,13 @@ import { NotFoundUserException } from '@common/dto/exception/not-found-user.exce
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@share/enums/user-role';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
-import { CreateUserResponseDto } from './response/create-user.response.dto';
-import { DeleteUserResponseDto } from './response/delete-user.response.dto';
-import { GetUserMeResponseDto } from './response/get-user-me.response.dto';
-import { UpdateUserResponseDto } from './response/update-user.response.dto';
+import { CreateUserResponseDto } from './dto/response/create-user.response.dto';
+import { DeleteUserResponseDto } from './dto/response/delete-user.response.dto';
+import { GetUserMeResponseDto } from './dto/response/get-user-me.response.dto';
+import { UpdateUserResponseDto } from './dto/response/update-user.response.dto';
 import { UsersService } from './users.service';
 
 @RequiredLogin
@@ -39,9 +38,8 @@ export class UsersController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
-  @PassRoles(UserRole.User)
+  @PassRoles()
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
-    console.log('🚀 ~ UsersController ~ findMe ~ user:', user);
     const getMe = await this.usersService.findMe(user.id);
     return new GetUserMeResponseDto(getMe);
   }
