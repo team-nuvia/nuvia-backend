@@ -28,26 +28,57 @@ export const printRouterInfo = (app: INestApplication) => {
       const method = Object.keys(route.methods)[0];
       return [method.toUpperCase(), route.path];
     })
-    .sort((a, b) => a[1].localeCompare(b[1]) && a[1].localeCompare(b[1]))
-    .reduce<Record<string, [string, string][]>>((acc, [method, path]) => {
-      const group = path.split('/')[1];
-      if (domains.includes(group)) {
-        if (!acc[group]) {
-          acc[group] = [];
-        }
-        acc[group].push([method, path]);
-      } else {
-        if (!acc['/']) {
-          acc['/'] = [];
-        }
-        acc['/'].push([method, path]);
-      }
-      return acc;
-    }, {});
+    .sort((a, b) => a[1].localeCompare(b[1]) && a[1].localeCompare(b[1]));
 
-  console.log('Route List:');
-  Object.entries(routerPaths).forEach(([group, routes]) => {
-    console.log(`  ${(group === '/' ? '[root]' : group).padEnd(maxGroupLength, ' ')}: ${routes.length} routes`);
+  const pathMap: Record<string, number> = {};
+  for (const [, path] of routerPaths) {
+    const paths = path.split('/').filter(Boolean);
+    for (let i = 0; i < paths.length; i++) {
+      const expectedPrefix = paths.slice(0, i).join('/');
+      pathMap[expectedPrefix] = (pathMap[expectedPrefix] ?? 0) + 1;
+    }
+  }
+
+  const newPathMap: Record<string, number> = {};
+  for (const [key] of Object.entries(pathMap)) {
+    for (let i = 0; i < key.length; i++) {
+      if (key[i] === '/') {
+        newPathMap[key.slice(0, i)] = (newPathMap[key.slice(0, i)] ?? 0) + 1;
+        continue;
+      }
+    }
+  }
+
+  const [firstPath, secondPath] = Object.entries(newPathMap).sort((a, b) => b[1] - a[1]);
+
+  const rootHasNext = secondPath[0].startsWith(firstPath[0]) && firstPath[0] !== secondPath[0];
+
+  const commonPath = !secondPath[0].includes('/') ? firstPath[0] : rootHasNext ? secondPath[0] : '';
+
+  const routerMap = routerPaths.reduce<Record<string, [string, string][]>>((acc, [method, path]) => {
+    const group = path.replace('/' + commonPath, '').split('/')[1];
+    if (domains.includes(group)) {
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push([method, path]);
+    } else {
+      if (!acc['/']) {
+        acc['/'] = [];
+      }
+      acc['/'].push([method, path]);
+    }
+    return acc;
+  }, {});
+
+  const countText = (count: number) => `${count} route${count > 1 ? 's' : ''}`;
+
+  const routeMapList = Object.entries(routerMap);
+  console.log(
+    `Route List: ${countText(routeMapList.reduce((acc, [, routes]) => acc + routes.length, 0))} [${routeMapList.length} group${routeMapList.length > 1 ? 's' : ''}]`,
+  );
+  routeMapList.forEach(([group, routes]) => {
+    console.log(`  ${(group === '/' ? '[root]' : group).padEnd(maxGroupLength, ' ')}: ${countText(routes.length)}`);
     routes
       .sort((a, b) => ORDER_METHODS.indexOf(a[0]) - ORDER_METHODS.indexOf(b[0]))
       .forEach(([method, path]) => {

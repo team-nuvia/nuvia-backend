@@ -23,6 +23,7 @@ export const ErrorKey = {
   INVALID_INPUT_VALUE: 'INVALID_INPUT_VALUE',
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
   VERIFY_TOKEN_SUCCESS: 'VERIFY_TOKEN_SUCCESS',
+  EXPIRED_TOKEN: 'EXPIRED_TOKEN',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -47,6 +48,7 @@ export const ErrorCode = {
   INVALID_INPUT_VALUE: HttpStatus.BAD_REQUEST,
   LOGIN_SUCCESS: HttpStatus.OK,
   VERIFY_TOKEN_SUCCESS: HttpStatus.OK,
+  EXPIRED_TOKEN: HttpStatus.UNAUTHORIZED,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -71,6 +73,7 @@ export const ErrorMessage = {
   INVALID_INPUT_VALUE: '입력값이 올바르지 않습니다.',
   LOGIN_SUCCESS: '로그인 성공',
   VERIFY_TOKEN_SUCCESS: '토큰 검증 성공',
+  EXPIRED_TOKEN: '토큰이 만료되었습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

@@ -51,7 +51,7 @@ export class GetProfileResponseDto {
 }
 
 export class GetProfileResponse extends GetResponse<GetProfileResponseDto> {
-  @ApiProperty({ name: 'message', type: String, example: '프로필 조회 성공' })
+  @ApiProperty({ name: 'message', example: '프로필 조회 성공' })
   declare message: string;
 
   @ApiProperty({ name: 'payload', type: GetProfileResponseDto })

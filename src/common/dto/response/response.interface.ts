@@ -51,21 +51,21 @@ export abstract class BaseResponse<T extends any = any> implements IBaseResponse
 }
 
 /* SuccessResponse */
-export class SuccessResponse<T extends any = any> extends BaseResponse<T> {
+export class SuccessResponse<T extends any> extends BaseResponse<T> {
   constructor(payload: TypeOrNull<T> = null) {
     super(HttpStatus.OK, payload);
   }
 }
 
 /* Success Data Response */
-export class GetResponse<T extends any = any> extends SuccessResponse<T> {
+export class GetResponse<T extends any> extends SuccessResponse<T> {
   constructor(payload: TypeOrNull<T> = null) {
     super(payload);
   }
 }
 
 /* 201 */
-export class CreatedResponse<T extends any = any> extends BaseResponse<T> {
+export class CreatedResponse<T extends any> extends BaseResponse<T> {
   constructor(payload: TypeOrNull<T> = null) {
     super(HttpStatus.CREATED, payload);
   }

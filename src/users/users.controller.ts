@@ -34,7 +34,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '사용자 정보 조회' })
-  @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
+  // @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')

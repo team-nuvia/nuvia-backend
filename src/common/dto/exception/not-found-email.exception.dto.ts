@@ -5,7 +5,6 @@ import { NotFoundException } from '../response/exception.interface';
 export class NotFoundEmailException extends NotFoundException {
   @ApiProperty({
     description: ErrorMessage.NOT_FOUND_EMAIL,
-    type: String,
     example: ErrorMessage.NOT_FOUND_EMAIL,
   })
   declare message: string;

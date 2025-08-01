@@ -1,11 +1,11 @@
-import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
-import { SuccessResponse } from '@common/dto/response/response.interface';
+import { GetResponse } from '@common/dto/response/response.interface';
 import { UserMeNestedResponseDto } from '@common/dto/response/user-me.nested.response.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class GetUserMeResponseDto extends SuccessResponse {
-  @ApiPropertyNullable({ description: '사용자 정보 조회 성공', example: '사용자 정보 조회 성공' })
-  message: string = '사용자 정보 조회 성공';
+export class GetUserMeResponseDto extends GetResponse<UserMeNestedResponseDto> {
+  @ApiProperty({ description: '사용자 정보 조회 성공', example: '사용자 정보 조회 성공' })
+  declare message: string;
 
-  @ApiPropertyNullable({ description: '사용자 정보', type: UserMeNestedResponseDto })
+  @ApiProperty({ description: '사용자 정보', type: UserMeNestedResponseDto })
   declare payload: UserMeNestedResponseDto;
 }

@@ -4,23 +4,22 @@ import { AvailableFormatInfo, FormatEnum } from 'sharp';
 import { ResponseTypeParsePipe } from '../pipe/response-type-parse.pipe';
 
 export class DimensionDto {
-  @ApiProperty({ name: 'width', type: Number, example: 100, required: true })
+  @ApiProperty({ name: 'width', example: 100, required: true })
   width!: number;
 
-  @ApiProperty({ name: 'height', type: Number, example: 100, required: true })
+  @ApiProperty({ name: 'height', example: 100, required: true })
   height!: number;
 }
 
 export class QueryGetProfileImageDto {
   @ApiProperty({
     name: 'type',
-    type: String,
     example: 'profile',
     required: true,
   })
   type!: string;
 
-  @ApiProperty({ name: 'quality', type: Number, example: 100, required: true })
+  @ApiProperty({ name: 'quality', example: 100, required: true })
   quality!: number;
 
   @ApiProperty({
@@ -34,7 +33,6 @@ export class QueryGetProfileImageDto {
 
   @ApiProperty({
     name: 'rs',
-    type: String,
     example: 'webp',
     required: true,
   })

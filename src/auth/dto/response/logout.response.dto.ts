@@ -2,7 +2,7 @@ import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.dec
 import { SuccessResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class LogoutResponseDto extends SuccessResponse {
+export class LogoutResponseDto extends SuccessResponse<null> {
   @ApiProperty({ description: '로그아웃 성공', example: '로그아웃 성공' })
   declare message: string;
 

@@ -27,19 +27,18 @@ export class AuthController {
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<LoginResponseDto> {
     const token = await this.authService.login(req.user);
-    // res.cookie('access_token', token.accessToken, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'lax',
-    //   maxAge: 1000 * 60 * 60 * 24 * 1,
-    // });
+
+    /* 리프레시만 쿠키 저장 */
     res.cookie('refresh_token', token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30,
     });
-    return new LoginResponseDto(token);
+
+    /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
+    const { refreshToken, ...onlyAccessToken } = token;
+    return new LoginResponseDto(onlyAccessToken);
   }
 
   @Public()
@@ -49,13 +48,6 @@ export class AuthController {
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
   async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
-    // const token = await this.authService.login(req.user);
-    // res.cookie('access_token', token.accessToken, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'lax',
-    //   maxAge: 1000 * 60 * 60 * 24 * 1,
-    // });
     res.clearCookie('refresh_token');
     return new LogoutResponseDto();
   }
@@ -66,6 +58,6 @@ export class AuthController {
   @RequiredLogin
   verifyToken(@LoginToken() token: string): VerifyTokenResponseDto {
     const verifyToken = this.authService.verifyToken(token);
-    return new VerifyTokenResponseDto(verifyToken);
+    return new VerifyTokenResponseDto({ verified: verifyToken });
   }
 }

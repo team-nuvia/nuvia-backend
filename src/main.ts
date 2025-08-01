@@ -77,9 +77,10 @@ async function bootstrap() {
   // loggerService.warn('=============================================');
   // loggerService.error('=============================================');
 
+  await app.listen(port);
+
   printRouterInfo(app);
 
-  await app.listen(port);
   loggerService.info(`Server listening on http://localhost:${port}`);
 }
 

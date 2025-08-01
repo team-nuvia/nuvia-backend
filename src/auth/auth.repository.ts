@@ -12,4 +12,12 @@ export class AuthRepository extends BaseRepository<User> {
   ) {
     super(userRepository);
   }
+
+  findUserWithSecret(email: string) {
+    return this.userRepository.findOne({
+      where: { email },
+      relations: { userSecret: true },
+      select: { userSecret: { salt: true, password: true, iteration: true } },
+    });
+  }
 }

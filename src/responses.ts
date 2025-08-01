@@ -1,7 +1,7 @@
 import { GetResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetVersionResponse extends GetResponse {
+export class GetVersionResponse extends GetResponse<string> {
   @ApiProperty({ description: '버전 조회 성공', example: '버전 조회 성공' })
   declare message: string;
 
