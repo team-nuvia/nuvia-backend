@@ -13,5 +13,5 @@ export class GetProfileImageResponse extends GetResponse<Buffer> {
     type: Buffer,
     example: Buffer.from('image.png'),
   })
-  declare payload: Buffer;
+  payload: Buffer = Buffer.from('image.png');
 }

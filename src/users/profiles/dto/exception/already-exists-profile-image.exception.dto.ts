@@ -1,13 +1,13 @@
 import { BadRequestException, ErrorKey, ErrorMessage } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NoMatchUserInformationExceptionDto extends BadRequestException {
+export class AlreadyExistsProfileImageExceptionDto extends BadRequestException {
   @ApiProperty({
-    example: ErrorMessage.NO_MATCH_USER_INFORMATION,
+    example: ErrorMessage.ALREADY_EXISTS_PROFILE_IMAGE,
   })
   declare message: string;
 
   constructor(reason: StringOrNull = null) {
-    super({ code: ErrorKey.NO_MATCH_USER_INFORMATION, reason });
+    super({ code: ErrorKey.ALREADY_EXISTS_PROFILE_IMAGE, reason });
   }
 }

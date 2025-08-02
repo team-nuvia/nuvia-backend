@@ -1,4 +1,4 @@
-import { InvalidInputValueException } from '@common/dto/exception/invalid-input-value.exception.dto';
+import { InvalidInputValueExceptionDto } from '@common/dto/exception/invalid-input-value.exception.dto';
 import { ArgumentMetadata, Injectable, PipeTransform, ValidationError, ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 
 /* 입력값 검증 파이프 */
@@ -31,9 +31,9 @@ export class InputValidationPipeConstraints extends ValidationPipe implements Pi
 
     const values = Object.values(constraints);
     if (values.length > 1) {
-      return new InvalidInputValueException([namespace.join('.'), values].join('.'));
+      return new InvalidInputValueExceptionDto([namespace.join('.'), values].join('.'));
     }
-    return new InvalidInputValueException(namespace.join('.'));
+    return new InvalidInputValueExceptionDto(namespace.join('.'));
   };
   // /* 검증 예외 처리 커스텀 */
   // exceptionFactory = (errors: ValidationError[]) => {

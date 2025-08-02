@@ -1,5 +1,4 @@
-import { ErrorKey } from '@common/dto/response';
-import { ConflictException } from '@common/dto/response/exception.interface';
+import { ConflictException, ErrorKey } from '@common/dto/response';
 
 export class AlreadyExistsUserExceptionDto extends ConflictException {
   constructor(reason: StringOrNull = null) {

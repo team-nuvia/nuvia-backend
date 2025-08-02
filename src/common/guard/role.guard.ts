@@ -1,3 +1,5 @@
+import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-access.exception.dto';
+import { NoRoleInformationExceptionDto } from '@common/dto/exception/no-role-information.exception.dto';
 import { ROLES_KEY } from '@common/variable/globals';
 import { LoggerService } from '@logger/logger.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
@@ -21,12 +23,12 @@ export class RoleGuard implements CanActivate {
 
     const { user } = context.switchToHttp().getRequest<Request>();
     if (!user?.role) {
-      throw new Error('사용자의 역할 정보가 없습니다.');
+      throw new NoRoleInformationExceptionDto();
     }
 
     this.logger.log(`user.role: ${user.role}`);
     if (!requiredRoles.includes(user.role)) {
-      throw new Error('허용되지 않은 접근입니다.');
+      throw new ForbiddenAccessExceptionDto();
     }
 
     return true;

@@ -20,6 +20,7 @@ export class ResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
+        console.log('🚀 ~ ResponseInterceptor ~ intercept ~ data:', data);
         const responseEntity = {
           ok: httpStatus < 300 && httpStatus >= 200,
           httpStatus,

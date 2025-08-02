@@ -1,59 +1,64 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
+import { ErrorMessage } from '@common/dto/response';
 import { GetResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ImageUrlLevelType {
   @ApiProperty({ name: 'low', example: 'https://example.com/low.jpg' })
-  low!: string;
+  low: string = 'https://example.com/low.jpg';
 
   @ApiProperty({ name: 'mid', example: 'https://example.com/mid.jpg' })
-  mid!: string;
+  mid: string = 'https://example.com/mid.jpg';
 
   @ApiProperty({ name: 'high', example: 'https://example.com/high.jpg' })
-  high!: string;
+  high: string = 'https://example.com/high.jpg';
 }
 
 export class ImageUrlType {
-  @ApiProperty({ name: 'preview', type: ImageUrlLevelType })
+  @ApiProperty({ name: 'preview', type: () => ImageUrlLevelType })
   preview!: ImageUrlLevelType;
 
-  @ApiProperty({ name: 'download', type: ImageUrlLevelType })
+  @ApiProperty({ name: 'download', type: () => ImageUrlLevelType })
   download!: ImageUrlLevelType;
 }
 
 export class GetProfileResponseDto {
   @ApiProperty({ name: 'id', example: 1 })
-  id!: number;
+  id: number = 1;
 
   @ApiProperty({ name: 'userId', example: 1 })
-  userId!: number;
+  userId: number = 1;
 
   @ApiProperty({ name: 'originalname', example: '1' })
-  originalname!: string;
+  originalname: string = '1';
 
   @ApiProperty({ name: 'filename', example: '1' })
-  filename!: string;
+  filename: string = '1';
 
   @ApiProperty({ name: 'mimetype', example: '1' })
-  mimetype!: string;
+  mimetype: string = '1';
 
   @ApiProperty({ name: 'size', example: 1 })
-  size!: number;
+  size: number = 1;
 
   @ApiProperty({ name: 'width', example: 1 })
-  width!: number;
+  width: number = 1;
 
   @ApiProperty({ name: 'height', example: 1 })
-  height!: number;
+  height: number = 1;
 
-  @ApiPropertyNullable({ name: 'imageUrl', type: ImageUrlType })
+  @ApiPropertyNullable({ name: 'imageUrl', type: () => ImageUrlType })
   imageUrl!: ImageUrlType;
 }
 
 export class GetProfileResponse extends GetResponse<GetProfileResponseDto> {
-  @ApiProperty({ name: 'message', example: '프로필 조회 성공' })
-  declare message: string;
+  @ApiProperty({ example: ErrorMessage.SUCCESS_GET_PROFILE })
+  message: string = ErrorMessage.SUCCESS_GET_PROFILE;
 
-  @ApiProperty({ name: 'payload', type: GetProfileResponseDto })
+  @ApiProperty({ description: ErrorMessage.SUCCESS_GET_PROFILE, type: () => GetProfileResponseDto })
   declare payload: GetProfileResponseDto;
+
+  constructor(payload: GetProfileResponseDto = new GetProfileResponseDto()) {
+    super(payload);
+  }
 }

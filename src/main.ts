@@ -54,8 +54,6 @@ async function bootstrap() {
         ? ['http://localhost:5000', 'http://localhost:5000/', 'http://127.0.0.1:5000', 'http://127.0.0.1:5000/']
         : ['http://localhost:5000'],
     methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
     credentials: true,
     maxAge: 86400,
   });

@@ -2,8 +2,8 @@ import { CombineResponses } from '@common/decorator/combine-responses.decorator'
 import { LoginToken } from '@common/decorator/login-token.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception.dto';
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
+import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Controller, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -23,8 +23,8 @@ export class AuthController {
   @ApiOperation({ summary: '로그인' })
   @Post('login')
   @CombineResponses(HttpStatus.OK, LoginResponseDto)
-  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
-  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationExceptionDto)
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<LoginResponseDto> {
     const token = await this.authService.login(req.user);
 
@@ -38,6 +38,8 @@ export class AuthController {
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
     const { refreshToken, ...onlyAccessToken } = token;
+    console.log('🚀 ~ AuthController ~ login ~ onlyAccessToken:', onlyAccessToken);
+    console.log('🚀 ~ AuthController ~ login ~ new LoginResponseDto(onlyAccessToken):', new LoginResponseDto(onlyAccessToken));
     return new LoginResponseDto(onlyAccessToken);
   }
 
@@ -45,8 +47,8 @@ export class AuthController {
   @ApiOperation({ summary: '로그아웃' })
   @Post('logout')
   @CombineResponses(HttpStatus.OK, LogoutResponseDto)
-  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
-  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationException)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationExceptionDto)
   async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
     res.clearCookie('refresh_token');
     return new LogoutResponseDto();

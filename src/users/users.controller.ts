@@ -3,7 +3,7 @@ import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { PassRoles } from '@common/decorator/pass-roles.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -34,13 +34,13 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '사용자 정보 조회' })
-  // @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
-  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserException)
+  @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Get('me')
   @PassRoles()
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
-    const getMe = await this.usersService.findMe(user.id);
+    const getMe = await this.usersService.getMe(user.id);
     return new GetUserMeResponseDto(getMe);
   }
 

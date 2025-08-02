@@ -1,40 +1,36 @@
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Validate } from 'class-validator';
 import { AvailableFormatInfo, FormatEnum } from 'sharp';
-import { ResponseTypeParsePipe } from '../pipe/response-type-parse.pipe';
+import { ResponseTypeParsePipe } from '../../pipe/response-type-parse.pipe';
 
 export class DimensionDto {
-  @ApiProperty({ name: 'width', example: 100, required: true })
+  @ApiProperty({ name: 'width', example: 100 })
   width!: number;
 
-  @ApiProperty({ name: 'height', example: 100, required: true })
+  @ApiProperty({ name: 'height', example: 100 })
   height!: number;
 }
 
-export class QueryGetProfileImageDto {
+export class QueryGetProfileImagePayloadDto {
   @ApiProperty({
     name: 'type',
     example: 'profile',
-    required: true,
   })
   type!: string;
 
   @ApiProperty({ name: 'quality', example: 100, required: true })
   quality!: number;
 
-  @ApiProperty({
+  @ApiPropertyNullable({
     name: 'dimension',
-    type: DimensionDto,
-    example: new DimensionDto(),
-    required: false,
-    nullable: true,
+    type: () => DimensionDto,
   })
   dimension!: DimensionDto | null;
 
   @ApiProperty({
     name: 'rs',
     example: 'webp',
-    required: true,
   })
   @Validate(ResponseTypeParsePipe)
   responseType!: keyof FormatEnum | AvailableFormatInfo;

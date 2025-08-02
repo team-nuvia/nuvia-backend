@@ -1,73 +1,34 @@
-import { Sample } from '@common/variable/enums';
-import { fakerKO as faker } from '@faker-js/faker';
-import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@share/enums/user-role';
 import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { Type } from 'class-transformer';
-import dayjs from 'dayjs';
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class User implements IUser {
-  @ApiProperty({ description: '사용자 PK', example: 1 })
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
 
-  @ApiProperty({
-    description: '이메일',
-    example: faker.internet.email({ provider: 'example.com' }),
-  })
   @Column('varchar', { length: 50, unique: true, comment: '이메일' })
   email!: string;
 
-  @ApiProperty({
-    description: '사용자 이름',
-    example: faker.person.fullName(),
-  })
   @Column('varchar', { length: 50, unique: true })
   username!: string;
 
-  @ApiProperty({
-    description: '닉네임',
-    example: faker.helpers.mustache('{{first}}{{last}}', {
-      first: faker.helpers.arrayElement(Sample.username.first),
-      last: faker.helpers.arrayElement(Sample.username.last),
-    }),
-  })
   @Column('varchar', { length: 50 })
   nickname!: string;
 
-  @ApiProperty({
-    description: `사용자 권한:<br>${Object.entries(UserRole)
-      .map(([role, value]) => `${role}: ${value}`)
-      .join('<br>')}`,
-    example: UserRole.Viewer,
-  })
   @Column('varchar', { length: 50 })
   @Type(() => Number)
   role!: UserRole;
 
-  @ApiProperty({
-    description: '생성일시',
-    example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
-  })
   @CreateDateColumn({ comment: '생성일시' })
   createdAt!: Date;
 
-  @ApiProperty({
-    description: '수정일시',
-    example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
-  })
   @UpdateDateColumn({ comment: '수정일시' })
   updatedAt!: Date;
 
-  @ApiProperty({
-    description: '삭제일시',
-    example: dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'),
-    nullable: true,
-  })
   @DeleteDateColumn({ select: false, nullable: true, comment: '삭제일시' })
   deletedAt!: Date | null;
 

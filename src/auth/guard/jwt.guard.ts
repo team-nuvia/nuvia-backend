@@ -1,4 +1,4 @@
-import { ExpiredTokenException } from '@auth/dto/exception/jwt-token-expired.exception.dto';
+import { ExpiredTokenExceptionDto } from '@auth/dto/exception/jwt-token-expired.exception.dto';
 import { UnauthorizedException } from '@common/dto/response';
 import { PUBLIC_KEY } from '@common/variable/globals';
 import { ExecutionContext, Injectable } from '@nestjs/common';
@@ -29,7 +29,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     // console.log('🚀 ~ JwtGuard ~ handleRequest ~ user:', user);
     if (err || !user) {
       if (info.message.includes('jwt expired')) {
-        throw new ExpiredTokenException();
+        throw new ExpiredTokenExceptionDto();
       }
       throw err || new UnauthorizedException();
     }

@@ -1,11 +1,16 @@
+import { ErrorMessage } from '@common/dto/response';
 import { SuccessResponse } from '@common/dto/response/response.interface';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserSecretNestedParamDto } from '../param/user-secret.nested.param.dto';
+import { UserSecretNestedParamDto } from './user-secret.nested.param.dto';
 
 export class UpdateUserSecretResponseDto extends SuccessResponse<UserSecretNestedParamDto> {
-  @ApiProperty({ description: '비밀번호 변경 성공', example: '비밀번호 변경 성공' })
-  declare message: string;
+  @ApiProperty({ example: ErrorMessage.SUCCESS_UPDATE_USER_SECRET })
+  message: string = ErrorMessage.SUCCESS_UPDATE_USER_SECRET;
 
-  @ApiProperty({ description: '비밀번호 변경 성공', type: UserSecretNestedParamDto })
+  @ApiProperty({ description: ErrorMessage.SUCCESS_UPDATE_USER_SECRET, type: () => UserSecretNestedParamDto })
   declare payload: UserSecretNestedParamDto;
+
+  constructor(payload: UserSecretNestedParamDto = new UserSecretNestedParamDto()) {
+    super(payload);
+  }
 }
