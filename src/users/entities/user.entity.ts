@@ -14,10 +14,10 @@ export class User implements IUser {
   email!: string;
 
   @Column('varchar', { length: 50, unique: true })
-  username!: string;
+  name!: string;
 
-  @Column('varchar', { length: 50 })
-  nickname!: string;
+  // @Column('varchar', { length: 50 })
+  // nickname!: string;
 
   @Column('varchar', { length: 50 })
   @Type(() => Number)

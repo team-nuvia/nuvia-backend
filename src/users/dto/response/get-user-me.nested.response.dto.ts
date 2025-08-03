@@ -9,11 +9,11 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ example: 'example@example.com' })
   email: string = 'example@example.com';
 
-  @ApiProperty({ example: 'username' })
-  username: string = 'username';
+  @ApiProperty({ example: 'name' })
+  name: string = 'name';
 
-  @ApiProperty({ example: 'nickname' })
-  nickname: string = 'nickname';
+  // @ApiProperty({ example: 'nickname' })
+  // nickname: string = 'nickname';
 
   @ApiProperty({ enum: UserRole, example: UserRole.Admin })
   role: UserRole = UserRole.Admin;

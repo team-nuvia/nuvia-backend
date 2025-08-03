@@ -42,6 +42,7 @@ export const ErrorKey = {
   SUCCESS_GET_PROFILE: 'SUCCESS_GET_PROFILE',
   SUCCESS_UPDATE_PROFILE: 'SUCCESS_UPDATE_PROFILE',
   SUCCESS_UPDATE_USER_SECRET: 'SUCCESS_UPDATE_USER_SECRET',
+  SUCCESS_CREATE_SURVEY: 'SUCCESS_CREATE_SURVEY',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -85,6 +86,7 @@ export const ErrorCode = {
   SUCCESS_GET_PROFILE: HttpStatus.OK,
   SUCCESS_UPDATE_PROFILE: HttpStatus.OK,
   SUCCESS_UPDATE_USER_SECRET: HttpStatus.OK,
+  SUCCESS_CREATE_SURVEY: HttpStatus.CREATED,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -128,6 +130,7 @@ export const ErrorMessage = {
   SUCCESS_GET_PROFILE: '프로필 조회 성공',
   SUCCESS_UPDATE_PROFILE: '프로필 수정 성공',
   SUCCESS_UPDATE_USER_SECRET: '비밀번호 변경 성공',
+  SUCCESS_CREATE_SURVEY: '설문 생성 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

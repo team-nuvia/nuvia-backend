@@ -33,7 +33,7 @@ export class UsersRepository extends BaseRepository<User> {
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.profile', 'up')
       .where('u.id = :id', { id })
-      .select(['u.id', 'u.email', 'u.username', 'u.nickname', 'u.role', 'u.createdAt', 'up.filename'])
+      .select(['u.id', 'u.email', 'u.name', 'u.role', 'u.createdAt', 'up.filename'])
       .getOne();
 
     if (isNil(userMeData)) {
@@ -47,8 +47,8 @@ export class UsersRepository extends BaseRepository<User> {
     const responseGetMeData: GetUserMeNestedResponseDto = {
       id: userMeData.id,
       email: userMeData.email,
-      username: userMeData.username,
-      nickname: userMeData.nickname,
+      name: userMeData.name,
+      // nickname: userMeData.nickname,
       role: userMeData.role,
       createdAt: userMeData.createdAt,
       profileImageUrl,
