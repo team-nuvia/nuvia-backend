@@ -1,0 +1,38 @@
+export const PlanGrantConstraintsType = {
+  /* LIMIT 범주 */
+  SurveyCreate: 'survey.create',
+  SurveyAnswerCreate: 'survey.answer.create',
+  TeamInvite: 'team.invite',
+  PerQuestionForSurvey: 'per.question.for.survey',
+
+  /* ALLOW 범주 */
+  FileUpload: 'file.upload',
+  FileUploadImage: 'file.upload.image',
+  FileUploadFile: 'file.upload.file',
+  FileUploadJpg: 'file.upload.jpg',
+  FileUploadPng: 'file.upload.png',
+  FileUploadGif: 'file.upload.gif',
+  FileUploadWebp: 'file.upload.webp',
+  FileUploadJpeg: 'file.upload.jpeg',
+  FileUploadBmp: 'file.upload.bmp',
+  FileUploadTiff: 'file.upload.tiff',
+  FileUploadPdf: 'file.upload.pdf',
+  FileUploadXlsx: 'file.upload.xlsx',
+  FileUploadAll: 'file.upload.all',
+  FileUploadMultipleAll: 'file.upload.multiple.all',
+  Download: 'download',
+  DownloadImage: 'download.image',
+  DownloadFile: 'download.file',
+  DownloadJpg: 'download.jpg',
+  DownloadPng: 'download.png',
+  DownloadGif: 'download.gif',
+  DownloadWebp: 'download.webp',
+  DownloadJpeg: 'download.jpeg',
+  DownloadBmp: 'download.bmp',
+  DownloadTiff: 'download.tiff',
+  DownloadPdf: 'download.pdf',
+  DownloadXlsx: 'download.xlsx',
+  DownloadAll: 'download.all',
+  DownloadMultipleAll: 'download.multiple.all',
+} as const;
+export type PlanGrantConstraintsType = (typeof PlanGrantConstraintsType)[keyof typeof PlanGrantConstraintsType];

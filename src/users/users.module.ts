@@ -1,3 +1,4 @@
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,7 +11,7 @@ import { UsersService } from './users.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Subscription]),
     ProfilesModule,
     UserSecretsModule,
     RouterModule.register([

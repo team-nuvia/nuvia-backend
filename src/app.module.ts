@@ -15,6 +15,10 @@ import { StaticModule } from './static/static.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
+import { PlansModule } from './plans/plans.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -31,6 +35,10 @@ import { UtilModule } from './util/util.module';
     SurveysModule,
     DatabaseModule,
     ErrorCodeModule,
+    PlansModule,
+    SubscriptionsModule,
+    OrganizationsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

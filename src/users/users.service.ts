@@ -1,6 +1,5 @@
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
-import { UserRole } from '@share/enums/user-role';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
@@ -29,7 +28,6 @@ export class UsersService {
 
     const { userSecret: _, ...newUser } = await this.userRepository.save({
       ...createUserDto,
-      role: UserRole.Owner,
       userSecret: { ...userSecret, password: hashedPassword },
     });
 

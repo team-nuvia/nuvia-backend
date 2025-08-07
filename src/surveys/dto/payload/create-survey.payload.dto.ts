@@ -1,8 +1,9 @@
 import { IsDatetimeString } from '@common/decorator/is-datetime-string.decorator';
 import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SurveyStatus } from '@share/enums/survey-status';
 import { DateFormat } from '@util/dateFormat';
-import { IsArray, IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { CreateSurveyQuestionPayloadNestedDto } from './create-survey-question.payload.nested.dto';
 
 export class CreateSurveyPayloadDto {
@@ -28,6 +29,14 @@ export class CreateSurveyPayloadDto {
   @IsNotEmpty()
   @IsBoolean()
   isPublic!: boolean;
+
+  @ApiProperty({
+    description: '설문 상태',
+    example: SurveyStatus.Draft,
+  })
+  @IsNotEmpty()
+  @IsEnum(SurveyStatus)
+  status!: SurveyStatus;
 
   @ApiProperty({
     description: '설문 만료 일시',

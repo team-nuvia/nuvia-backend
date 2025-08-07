@@ -1,36 +1,28 @@
-import { UserRole } from '@share/enums/user-role';
+import { Permission } from '@/organizations/permissions/entities/permission.entity';
+import { Payment } from '@/payments/entities/payment.entity';
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { Survey } from '@/surveys/entities/survey.entity';
+import { QuestionAnswer } from '@/surveys/questions/answers/entities/question-answer.entity';
+import { CommonService } from '@common/common.service';
+import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
-import { Type } from 'class-transformer';
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Entity()
-export class User implements IUser {
+export class User extends DefaultDateInterface implements IUser {
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
 
-  @Column('varchar', { length: 50, unique: true, comment: '이메일' })
-  email!: string;
-
-  @Column('varchar', { length: 50, unique: true })
+  @Column('varchar', { length: 50, comment: '이름' })
   name!: string;
 
-  // @Column('varchar', { length: 50 })
-  // nickname!: string;
+  @Column('varchar', { unique: true, length: 50, comment: '이메일' })
+  email!: string;
 
-  @Column('varchar', { length: 50 })
-  @Type(() => Number)
-  role!: UserRole;
-
-  @CreateDateColumn({ comment: '생성일시' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ comment: '수정일시' })
-  updatedAt!: Date;
-
-  @DeleteDateColumn({ select: false, nullable: true, comment: '삭제일시' })
-  deletedAt!: Date | null;
+  @Column('varchar', { unique: true, length: 50, comment: '닉네임' })
+  nickname!: string;
 
   @OneToOne(() => Profile, (profile) => profile.user)
   profile!: Relation<Profile>;
@@ -39,4 +31,34 @@ export class User implements IUser {
     cascade: true,
   })
   userSecret!: Relation<UserSecret>;
+
+  @OneToMany(() => Survey, (survey) => survey.user, {
+    cascade: true,
+  })
+  surveys!: Relation<Survey>[];
+
+  @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.user, {
+    cascade: true,
+  })
+  questionAnswers!: Relation<QuestionAnswer>[];
+
+  @OneToMany(() => Permission, (permission) => permission.user, {
+    cascade: true,
+  })
+  permissions!: Relation<Permission>[];
+
+  @OneToMany(() => Payment, (payment) => payment.user, {
+    cascade: true,
+  })
+  payments!: Relation<Payment>[];
+
+  @ManyToOne(() => Subscription, (subscription) => subscription.users, {
+    onDelete: 'NO ACTION',
+  })
+  subscription!: Relation<Subscription>;
+
+  getProfileUrl(commonService: CommonService): string | null {
+    const commonConfig = commonService.getConfig('common');
+    return this.profile.filename ? `${commonConfig.serverUrl}/api/static/image/${this.profile.filename}?t=p&q=100&rs=jpeg` : null;
+  }
 }

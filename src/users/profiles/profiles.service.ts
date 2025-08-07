@@ -1,6 +1,7 @@
 import { CommonService } from '@common/common.service';
 import { Injectable } from '@nestjs/common';
 import { isNil } from '@util/isNil';
+import { uniqueHash } from '@util/uniqueHash';
 import crypto from 'crypto';
 import imageSize from 'image-size';
 import { AlreadyExistsProfileImageExceptionDto } from './dto/exception/already-exists-profile-image.exception.dto';
@@ -19,7 +20,8 @@ export class ProfilesService {
     const mimetype = file.mimetype;
     const size = file.size;
     const buffer = file.buffer;
-    const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
+    const extension = originalname.split('.').pop();
+    const filename = uniqueHash(80) + '.' + extension;
     const dimensions = imageSize(buffer);
 
     const exists = await this.profilesRepository.owner.findOne({ where: { userId } });

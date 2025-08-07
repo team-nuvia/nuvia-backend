@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DataType } from '@share/enums/data-type';
-import { InputType } from '@share/enums/input-type';
+import { QuestionType } from '@share/enums/question-type';
 import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 import { CreateSurveyQuestionOptionPayloadNestedDto } from './create-survey-question-option.payload.nested.dto';
 
@@ -34,7 +34,7 @@ export class CreateSurveyQuestionPayloadNestedDto {
   })
   @IsNotEmpty()
   @IsString()
-  inputType!: InputType;
+  questionType!: QuestionType;
 
   @ApiProperty({
     description: '질문 옵션 유형',

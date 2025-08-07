@@ -43,6 +43,10 @@ export const ErrorKey = {
   SUCCESS_UPDATE_PROFILE: 'SUCCESS_UPDATE_PROFILE',
   SUCCESS_UPDATE_USER_SECRET: 'SUCCESS_UPDATE_USER_SECRET',
   SUCCESS_CREATE_SURVEY: 'SUCCESS_CREATE_SURVEY',
+  NOT_FOUND_SURVEY: 'NOT_FOUND_SURVEY',
+  SUCCESS_GET_SURVEY: 'SUCCESS_GET_SURVEY',
+  SUCCESS_UPDATE_SURVEY: 'SUCCESS_UPDATE_SURVEY',
+  NOT_FOUND_ORGANIZATION: 'NOT_FOUND_ORGANIZATION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -87,6 +91,10 @@ export const ErrorCode = {
   SUCCESS_UPDATE_PROFILE: HttpStatus.OK,
   SUCCESS_UPDATE_USER_SECRET: HttpStatus.OK,
   SUCCESS_CREATE_SURVEY: HttpStatus.CREATED,
+  NOT_FOUND_SURVEY: HttpStatus.NOT_FOUND,
+  SUCCESS_GET_SURVEY: HttpStatus.OK,
+  SUCCESS_UPDATE_SURVEY: HttpStatus.OK,
+  NOT_FOUND_ORGANIZATION: HttpStatus.NOT_FOUND,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -131,6 +139,10 @@ export const ErrorMessage = {
   SUCCESS_UPDATE_PROFILE: '프로필 수정 성공',
   SUCCESS_UPDATE_USER_SECRET: '비밀번호 변경 성공',
   SUCCESS_CREATE_SURVEY: '설문 생성 성공',
+  NOT_FOUND_SURVEY: '설문이 존재하지 않습니다.',
+  SUCCESS_GET_SURVEY: '설문 조회 성공',
+  SUCCESS_UPDATE_SURVEY: '설문 수정 성공',
+  NOT_FOUND_ORGANIZATION: '조직을 찾을 수 없습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

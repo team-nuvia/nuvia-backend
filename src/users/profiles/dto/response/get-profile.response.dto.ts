@@ -55,7 +55,7 @@ export class GetProfileResponse extends GetResponse<GetProfileResponseDto> {
   @ApiProperty({ example: ErrorMessage.SUCCESS_GET_PROFILE })
   message: string = ErrorMessage.SUCCESS_GET_PROFILE;
 
-  @ApiProperty({ description: ErrorMessage.SUCCESS_GET_PROFILE, type: () => GetProfileResponseDto })
+  @ApiProperty({ description: '프로필 데이터', type: () => GetProfileResponseDto })
   declare payload: GetProfileResponseDto;
 
   constructor(payload: GetProfileResponseDto = new GetProfileResponseDto()) {

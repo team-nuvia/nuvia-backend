@@ -12,8 +12,8 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ example: 'name' })
   name: string = 'name';
 
-  // @ApiProperty({ example: 'nickname' })
-  // nickname: string = 'nickname';
+  @ApiProperty({ example: 'nickname' })
+  nickname: string = 'nickname';
 
   @ApiProperty({ enum: UserRole, example: UserRole.Admin })
   role: UserRole = UserRole.Admin;

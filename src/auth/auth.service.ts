@@ -1,7 +1,5 @@
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
-import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
-import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { AuthRepository } from './auth.repository';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
@@ -23,10 +21,6 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.authRepository.findUserWithSecret(email);
-
-    if (isNil(user) || isNil(user.userSecret)) {
-      throw new NotFoundUserExceptionDto(email);
-    }
 
     const { iteration, salt, password: hashedPassword } = user.userSecret;
     const verifyContent = { iteration, salt, password: hashedPassword };

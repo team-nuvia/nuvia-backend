@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class NoExistsUploadFileExceptionDto extends BadRequestException {
   @ApiProperty({
-    description: ErrorMessage.NO_EXISTS_UPLOAD_FILE,
+    example: ErrorMessage.NO_EXISTS_UPLOAD_FILE,
   })
   declare message: string;
 

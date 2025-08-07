@@ -7,6 +7,10 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     return this.repository;
   }
 
+  get manager() {
+    return this.repository.manager.connection;
+  }
+
   useManager(manager?: EntityManager): {
     owner: Repository<T>;
     manager: Repository<T>;
