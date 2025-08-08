@@ -1,23 +1,17 @@
-import { NoMatchUserInformationException } from '@common/dto/exception/no-match-user-info.exception.dto';
-import { ErrorKey } from '@common/dto/response';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '@users/entities/user.entity';
-import { isNil } from '@util/isNil';
+import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
+import { Injectable } from '@nestjs/common';
 import { UtilService } from '@util/util.service';
-import { Repository } from 'typeorm';
+import { AuthRepository } from './auth.repository';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly authRepository: AuthRepository,
     private readonly utilService: UtilService,
   ) {}
 
   async login(payload: LoginUserData): Promise<LoginTokenNestedResponseDto> {
-    console.log('🚀 ~ AuthService ~ login ~ payload:', payload);
     return this.utilService.createJWT(payload);
   }
 
@@ -26,30 +20,14 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string) {
-    const user = await this.userRepository.findOne({
-      where: { email },
-      relations: { userSecret: true },
-      select: {
-        userSecret: {
-          salt: true,
-          password: true,
-          iteration: true,
-        },
-      },
-    });
+    const user = await this.authRepository.findUserWithSecret(email);
 
-    if (isNil(user)) {
-      throw new NotFoundException({ code: ErrorKey.NOT_FOUND_USER, reason: email });
-    }
-
-    const isSame = this.utilService.verifyPassword(password, {
-      iteration: user.userSecret.iteration,
-      salt: user.userSecret.salt,
-      password: user.userSecret.password,
-    });
+    const { iteration, salt, password: hashedPassword } = user.userSecret;
+    const verifyContent = { iteration, salt, password: hashedPassword };
+    const isSame = this.utilService.verifyPassword(password, verifyContent);
 
     if (!isSame) {
-      throw new NoMatchUserInformationException();
+      throw new NoMatchUserInformationExceptionDto();
     }
 
     return user;

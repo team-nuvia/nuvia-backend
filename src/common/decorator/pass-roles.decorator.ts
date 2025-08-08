@@ -3,4 +3,4 @@ import { applyDecorators, UseGuards } from '@nestjs/common';
 import { UserRole } from '@share/enums/user-role';
 import { Roles } from './roles.decorator';
 
-export const PassRoles = (...roles: UserRole[]) => applyDecorators(Roles(...roles), UseGuards(RoleGuard));
+export const PassRoles = (roles?: UserRole[]) => applyDecorators(Roles(roles), UseGuards(RoleGuard));

@@ -1,10 +1,11 @@
-import { NotFoundUserException } from '@common/dto/exception/not-found-user.exception.dto';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
+import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
@@ -33,11 +34,11 @@ export class UsersService {
     return newUser;
   }
 
-  async findMe(id: number) {
-    const user = await this.userRepository.findOneById(id);
+  async getMe(id: number): Promise<GetUserMeNestedResponseDto> {
+    const user = await this.userRepository.getMe(id);
 
     if (isNil(user)) {
-      throw new NotFoundUserException();
+      throw new NotFoundUserExceptionDto();
     }
 
     return user;

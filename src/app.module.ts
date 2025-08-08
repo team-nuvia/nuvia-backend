@@ -4,6 +4,9 @@ import secretConfig from '@config/secret.config';
 import { typeormConfig } from '@config/typeorm.config';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '@users/entities/user.entity';
+import { UsersRepository } from '@users/users.repository';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -11,7 +14,12 @@ import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 import { ErrorCodeModule } from './error-code/error-code.module';
 import { LoggerModule } from './logger/logger.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { PaymentsModule } from './payments/payments.module';
+import { PlansModule } from './plans/plans.module';
 import { StaticModule } from './static/static.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
 
@@ -21,17 +29,23 @@ import { UtilModule } from './util/util.module';
       isGlobal: true,
       load: [commonConfig, typeormConfig, secretConfig],
     }),
+    TypeOrmModule.forFeature([User]),
     AuthModule,
     UtilModule,
     UsersModule,
     CommonModule,
     LoggerModule,
-    DatabaseModule,
     StaticModule,
+    SurveysModule,
+    DatabaseModule,
     ErrorCodeModule,
+    PlansModule,
+    SubscriptionsModule,
+    OrganizationsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, UsersRepository],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

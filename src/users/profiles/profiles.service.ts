@@ -1,18 +1,17 @@
 import { CommonService } from '@common/common.service';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { isNil } from '@util/isNil';
+import { uniqueHash } from '@util/uniqueHash';
 import crypto from 'crypto';
 import imageSize from 'image-size';
-import { Repository } from 'typeorm';
+import { AlreadyExistsProfileImageExceptionDto } from './dto/exception/already-exists-profile-image.exception.dto';
 import { NotFoundProfileExceptionDto } from './dto/exception/not-found-profile.exception.dto';
-import { Profile } from './entities/profile.entity';
+import { ProfilesRepository } from './profiles.repository';
 
 @Injectable()
 export class ProfilesService {
   constructor(
-    @InjectRepository(Profile)
-    private readonly profileRepository: Repository<Profile>,
+    private readonly profilesRepository: ProfilesRepository,
     private readonly commonService: CommonService,
   ) {}
 
@@ -21,11 +20,17 @@ export class ProfilesService {
     const mimetype = file.mimetype;
     const size = file.size;
     const buffer = file.buffer;
-    const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
+    const extension = originalname.split('.').pop();
+    const filename = uniqueHash(80) + '.' + extension;
     const dimensions = imageSize(buffer);
 
-    await this.profileRepository.save({
-      userId,
+    const exists = await this.profilesRepository.findByUserId(userId);
+
+    if (!isNil(exists)) {
+      throw new AlreadyExistsProfileImageExceptionDto();
+    }
+
+    await this.profilesRepository.uploadProfileImage(userId, {
       originalname,
       filename,
       mimetype,
@@ -38,9 +43,7 @@ export class ProfilesService {
 
   async findOne(userId: number) {
     const commonConfig = this.commonService.getConfig('common');
-    const profile = await this.profileRepository.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
@@ -66,9 +69,7 @@ export class ProfilesService {
   }
 
   async update(userId: number, file: Express.Multer.File) {
-    const profile = await this.profileRepository.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
@@ -81,8 +82,8 @@ export class ProfilesService {
     const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
     const dimensions = imageSize(buffer);
 
-    await this.profileRepository.update(
-      { userId },
+    await this.profilesRepository.update(
+      userId,
       {
         originalname,
         filename,
@@ -96,14 +97,12 @@ export class ProfilesService {
   }
 
   async remove(userId: number) {
-    const profile = await this.profileRepository.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
     }
 
-    return this.profileRepository.delete({ userId });
+    return this.profilesRepository.delete(userId);
   }
 }

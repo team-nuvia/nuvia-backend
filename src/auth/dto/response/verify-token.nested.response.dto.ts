@@ -1,3 +1,6 @@
-import { LoginTokenNestedResponseDto } from '@auth/dto/response/login-token.nested.response.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class VerifyTokenNestedResponseDto extends LoginTokenNestedResponseDto {}
+export class VerifyTokenNestedResponseDto {
+  @ApiProperty({ description: '토큰 검증 성공', example: true })
+  verified: boolean = true;
+}

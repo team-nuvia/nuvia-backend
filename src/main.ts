@@ -1,8 +1,10 @@
 import { CommonService } from '@common/common.service';
 import { InputValidationPipe } from '@common/decorator/input-validate-pipe.decorator';
 import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
-import { ResponseInterceptor } from '@common/response.interceptor';
+import { ResponseInterceptor } from '@common/interceptor/response.interceptor';
+import { TransactionalInterceptor } from '@common/interceptor/transactional.interceptor';
 import { RunMode } from '@common/variable/enums';
+import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
@@ -40,7 +42,7 @@ async function bootstrap() {
   /* 글로벌 설정 */
   app.useGlobalGuards(new JwtGuard(app.get(Reflector)));
   app.setGlobalPrefix('api');
-  app.useGlobalInterceptors(new ResponseInterceptor(loggerService));
+  app.useGlobalInterceptors(new ResponseInterceptor(loggerService), new TransactionalInterceptor(app.get(TxRunner), app.get(Reflector)));
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
   /* 버저닝 */
@@ -54,8 +56,6 @@ async function bootstrap() {
         ? ['http://localhost:5000', 'http://localhost:5000/', 'http://127.0.0.1:5000', 'http://127.0.0.1:5000/']
         : ['http://localhost:5000'],
     methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
     credentials: true,
     maxAge: 86400,
   });
@@ -77,9 +77,10 @@ async function bootstrap() {
   // loggerService.warn('=============================================');
   // loggerService.error('=============================================');
 
+  await app.listen(port);
+
   printRouterInfo(app);
 
-  await app.listen(port);
   loggerService.info(`Server listening on http://localhost:${port}`);
 }
 

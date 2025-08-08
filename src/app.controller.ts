@@ -1,9 +1,12 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { Public } from '@common/decorator/public.decorator';
 import { Controller, Get, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiHideProperty, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { uniqueHash } from '@util/uniqueHash';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
 
+@Public()
 @ApiTags('앱')
 @Controller()
 export class AppController {
@@ -16,5 +19,13 @@ export class AppController {
     const version = this.appService.getVersion();
 
     return new GetVersionResponse(version);
+  }
+
+  @ApiHideProperty()
+  @Get('hash-test')
+  hashTest() {
+    return {
+      hashedUniqueKey: uniqueHash(),
+    };
   }
 }

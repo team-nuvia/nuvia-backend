@@ -14,11 +14,7 @@ export class UtilService {
 
   verifyPassword(inputPassword: string, verifyContent: VerifySecretDto) {
     const storedPassword = verifyContent.password;
-    const { hashedPassword } = this.hashPassword(
-      inputPassword,
-      verifyContent.salt,
-      verifyContent.iteration,
-    );
+    const { hashedPassword } = this.hashPassword(inputPassword, verifyContent.salt, verifyContent.iteration);
     return hashedPassword === storedPassword;
   }
 
@@ -35,9 +31,7 @@ export class UtilService {
     const keyLength = 64;
     const digest = 'sha512';
 
-    const hashedPassword = crypto
-      .pbkdf2Sync(password, salt, iteration, keyLength, digest)
-      .toString('base64');
+    const hashedPassword = crypto.pbkdf2Sync(password, salt, iteration, keyLength, digest).toString('base64');
 
     return {
       salt,
@@ -46,7 +40,7 @@ export class UtilService {
     };
   }
 
-  createJWT<Payload extends object>(payload: Payload) {
+  createJWT(payload: LoginUserData) {
     const secretConfig = this.commonService.getConfig('secret');
     const accessToken = jwt.sign(payload, secretConfig.jwt, {
       expiresIn: secretConfig.tokenExpireTime,

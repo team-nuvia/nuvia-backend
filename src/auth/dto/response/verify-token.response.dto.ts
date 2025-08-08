@@ -1,21 +1,15 @@
-import { SetProperty } from '@common/decorator/set-property.decorator';
-import { SuccessResponse } from '@common/dto/response';
-import { HttpStatus } from '@nestjs/common';
+import { ErrorMessage, SuccessResponse } from '@common/dto/response';
+import { ApiProperty } from '@nestjs/swagger';
+import { VerifyTokenNestedResponseDto } from './verify-token.nested.response.dto';
 
-export class VerifyTokenResponseDto extends SuccessResponse {
-  @SetProperty({
-    description: '토큰 검증 성공',
-    value: '토큰 검증 성공',
-  })
-  message: string = '토큰 검증 성공';
+export class VerifyTokenResponseDto extends SuccessResponse<VerifyTokenNestedResponseDto> {
+  @ApiProperty({ example: ErrorMessage.VERIFY_TOKEN_SUCCESS })
+  message: string = ErrorMessage.VERIFY_TOKEN_SUCCESS;
 
-  @SetProperty({
-    description: '토큰 검증 성공',
-    value: true,
-  })
-  payload: boolean = true;
+  @ApiProperty({ description: '토큰 검증 성공', type: () => VerifyTokenNestedResponseDto })
+  declare payload: VerifyTokenNestedResponseDto;
 
-  constructor(payload: boolean) {
-    super(HttpStatus.OK, payload);
+  constructor(payload: VerifyTokenNestedResponseDto = new VerifyTokenNestedResponseDto()) {
+    super(payload);
   }
 }

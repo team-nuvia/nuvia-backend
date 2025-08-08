@@ -1,23 +1,18 @@
-import { LoginTokenNestedResponseDto } from '@auth/dto/response/login-token.nested.response.dto';
-import { SetProperty } from '@common/decorator/set-property.decorator';
-import { SuccessResponse } from '@common/dto/response/response.interface';
-import { HttpStatus } from '@nestjs/common';
+import { ErrorMessage } from '@common/dto/response';
+import { GetResponse } from '@common/dto/response/response.interface';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { LoginTokenNestedResponseDto } from './login-token.nested.response.dto';
 
-export class LoginResponseDto extends SuccessResponse {
-  @SetProperty({
-    description: '로그인 성공',
-    value: '로그인 성공',
-  })
-  message: string = '로그인 성공';
+export class OnlyAccessToken extends OmitType(LoginTokenNestedResponseDto, ['refreshToken']) {}
 
-  @SetProperty({
-    description: '토큰',
-    value: LoginTokenNestedResponseDto,
-  })
-  payload: LoginTokenNestedResponseDto = new LoginTokenNestedResponseDto();
+export class LoginResponseDto extends GetResponse<OnlyAccessToken> {
+  @ApiProperty({ example: ErrorMessage.LOGIN_SUCCESS })
+  message: string = ErrorMessage.LOGIN_SUCCESS;
 
-  constructor(payload: LoginTokenNestedResponseDto) {
-    super(HttpStatus.OK, payload);
-    if (payload) this.payload = payload;
+  @ApiProperty({ description: '토큰', type: () => OnlyAccessToken })
+  declare payload: OnlyAccessToken;
+
+  constructor(payload: OnlyAccessToken = new OnlyAccessToken()) {
+    super(payload);
   }
 }

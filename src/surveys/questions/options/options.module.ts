@@ -1,0 +1,8 @@
+import { Module } from '@nestjs/common';
+import { OptionsService } from './options.service';
+
+@Module({
+  controllers: [],
+  providers: [OptionsService],
+})
+export class OptionsModule {}

@@ -1,7 +1,12 @@
-import { BadRequestException } from '@common/dto/response/exception.interface';
-import { ErrorKey } from '../response';
+import { ApiProperty } from '@nestjs/swagger';
+import { BadRequestException, ErrorKey, ErrorMessage } from '../response';
 
-export class InvalidInputValueException extends BadRequestException {
+export class InvalidInputValueExceptionDto extends BadRequestException {
+  @ApiProperty({
+    example: ErrorMessage.INVALID_INPUT_VALUE,
+  })
+  declare message: string;
+
   constructor(reason: string | null = null) {
     super({ code: ErrorKey.INVALID_INPUT_VALUE, reason });
   }

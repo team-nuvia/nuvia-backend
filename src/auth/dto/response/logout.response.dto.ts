@@ -1,21 +1,16 @@
-import { SetProperty } from '@common/decorator/set-property.decorator';
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
+import { ErrorMessage } from '@common/dto/response';
 import { SuccessResponse } from '@common/dto/response/response.interface';
-import { HttpStatus } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class LogoutResponseDto extends SuccessResponse {
-  @SetProperty({
-    description: '로그아웃 성공',
-    value: '로그아웃 성공',
-  })
-  message: string = '로그아웃 성공';
+export class LogoutResponseDto extends SuccessResponse<null> {
+  @ApiProperty({ example: ErrorMessage.SUCCESS_LOGOUT })
+  message: string = ErrorMessage.SUCCESS_LOGOUT;
 
-  @SetProperty({
-    description: '토큰',
-    value: null,
-  })
-  payload: null = null;
+  @ApiPropertyNullable({ description: '토큰', example: null })
+  declare payload: null;
 
-  constructor() {
-    super(HttpStatus.OK, null);
+  constructor(payload: null = null) {
+    super(payload);
   }
 }

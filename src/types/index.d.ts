@@ -9,8 +9,8 @@ export declare global {
   export declare interface LoginUserData {
     id: number;
     email: string;
-    username: string;
-    nickname: string;
+    name: string;
+    // nickname: string;
     role: UserRole;
   }
 

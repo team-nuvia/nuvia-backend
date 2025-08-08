@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '@users/entities/user.entity';
 import { UserSecret } from '@users/user-secrets/entities/user-secret.entity';
 import { AuthController } from './auth.controller';
+import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './guard/jwt.strategy';
 import { LocalStrategy } from './guard/local.strategy';
@@ -28,6 +29,6 @@ import { LocalStrategy } from './guard/local.strategy';
     TypeOrmModule.forFeature([User, UserSecret]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, AuthRepository, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}

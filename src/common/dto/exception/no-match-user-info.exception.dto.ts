@@ -1,7 +1,12 @@
-import { ErrorKey } from '@common/dto/response';
-import { BadRequestException } from '@common/dto/response/exception.interface';
+import { BadRequestException, ErrorKey, ErrorMessage } from '@common/dto/response';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class NoMatchUserInformationException extends BadRequestException {
+export class NoMatchUserInformationExceptionDto extends BadRequestException {
+  @ApiProperty({
+    example: ErrorMessage.NO_MATCH_USER_INFORMATION,
+  })
+  declare message: string;
+
   constructor(reason: StringOrNull = null) {
     super({ code: ErrorKey.NO_MATCH_USER_INFORMATION, reason });
   }

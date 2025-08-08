@@ -1,42 +1,42 @@
-import { SetPropertyNullable } from '@common/decorator/set-property-nullable.decorator';
-import { SetProperty } from '@common/decorator/set-property.decorator';
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { HttpStatus } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 export abstract class BaseResponse<T extends any = any> implements IBaseResponse<T> {
-  @SetProperty({
+  @ApiProperty({
     description: '성공 여부',
-    value: true,
+    example: true,
   })
   ok!: boolean;
 
-  @SetProperty({
+  @ApiProperty({
     description: 'HTTP 상태 코드',
-    value: HttpStatus.OK,
     enum: HttpStatus,
+    example: HttpStatus.OK,
   })
   httpStatus!: HttpStatus;
 
-  @SetProperty({
+  @ApiProperty({
     description: '이름',
-    value: '<ResponseDtoName>',
+    example: '<ResponseDtoName>',
   })
   name!: string;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '메시지',
-    value: '<response message>',
+    example: '<response message>',
   })
   message!: StringOrNull;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '이유',
-    value: '<response reason>',
+    example: '<response reason>',
   })
   reason!: StringOrNull;
 
-  @SetPropertyNullable({
+  @ApiPropertyNullable({
     description: '페이로드',
-    value: null,
+    example: null,
   })
   payload!: TypeOrNull<T>;
 
@@ -51,21 +51,21 @@ export abstract class BaseResponse<T extends any = any> implements IBaseResponse
 }
 
 /* SuccessResponse */
-export class SuccessResponse<T extends any = any> extends BaseResponse<T> {
-  constructor(httpStatus: HttpStatus = HttpStatus.OK, payload: TypeOrNull<T> = null) {
-    super(httpStatus, payload);
-  }
-}
-
-/* Success Data Response */
-export class GetResponse<T extends any = any> extends SuccessResponse<T> {
+export class SuccessResponse<T extends any> extends BaseResponse<T> {
   constructor(payload: TypeOrNull<T> = null) {
     super(HttpStatus.OK, payload);
   }
 }
 
+/* Success Data Response */
+export class GetResponse<T extends any> extends SuccessResponse<T> {
+  constructor(payload: TypeOrNull<T> = null) {
+    super(payload);
+  }
+}
+
 /* 201 */
-export class CreatedResponse<T extends any = any> extends SuccessResponse<T> {
+export class CreatedResponse<T extends any> extends BaseResponse<T> {
   constructor(payload: TypeOrNull<T> = null) {
     super(HttpStatus.CREATED, payload);
   }
