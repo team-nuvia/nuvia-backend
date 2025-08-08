@@ -2,7 +2,7 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserRole } from '@share/enums/user-role';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { Subscription } from '../../subscriptions/entities/subscription.entity';
-import { Permission } from '../permissions/entities/permission.entity';
+import { OrganizationRole } from '../organization-roles/entities/organization-role.entity';
 
 @Entity()
 export class Organization extends DefaultDateInterface {
@@ -21,10 +21,10 @@ export class Organization extends DefaultDateInterface {
   @Column('varchar', { length: 45, comment: '기본 역할' })
   defaultRole!: UserRole;
 
-  @OneToMany(() => Permission, (permission) => permission.organization, {
+  @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.organization, {
     cascade: true,
   })
-  permissions!: Relation<Permission>[];
+  organizationRoles!: Relation<OrganizationRole>[];
 
   @OneToOne(() => Subscription, (subscription) => subscription.organization, {
     onDelete: 'NO ACTION',

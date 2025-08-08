@@ -4,7 +4,7 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
 import { User } from '@users/entities/user.entity';
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation, Unique } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation, Unique } from 'typeorm';
 
 @Unique(['userId', 'planId'])
 @Entity()
@@ -35,8 +35,8 @@ export class Subscription extends DefaultDateInterface {
   })
   users!: Relation<User>[];
 
-  @OneToMany(() => Plan, (plan) => plan.subscription, {
-    cascade: true,
+  @ManyToOne(() => Plan, (plan) => plan.subscriptions, {
+    onDelete: 'NO ACTION',
   })
-  plans!: Relation<Plan>[];
+  plan!: Relation<Plan>;
 }

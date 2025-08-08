@@ -48,6 +48,7 @@ export const ErrorKey = {
   SUCCESS_UPDATE_SURVEY: 'SUCCESS_UPDATE_SURVEY',
   NOT_FOUND_ORGANIZATION: 'NOT_FOUND_ORGANIZATION',
   UPDATE_ORGANIZATION_SUCCESS: 'UPDATE_ORGANIZATION_SUCCESS',
+  NOT_FOUND_PERMISSION: 'NOT_FOUND_PERMISSION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -97,6 +98,7 @@ export const ErrorCode = {
   SUCCESS_UPDATE_SURVEY: HttpStatus.OK,
   NOT_FOUND_ORGANIZATION: HttpStatus.NOT_FOUND,
   UPDATE_ORGANIZATION_SUCCESS: HttpStatus.OK,
+  NOT_FOUND_PERMISSION: HttpStatus.NOT_FOUND,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -146,6 +148,7 @@ export const ErrorMessage = {
   SUCCESS_UPDATE_SURVEY: '설문 수정 성공',
   NOT_FOUND_ORGANIZATION: '조직을 찾을 수 없습니다.',
   UPDATE_ORGANIZATION_SUCCESS: '조직 정보 수정 성공',
+  NOT_FOUND_PERMISSION: '권한을 찾을 수 없습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

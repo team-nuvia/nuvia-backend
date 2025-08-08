@@ -1,4 +1,4 @@
-import { Permission } from '@/organizations/permissions/entities/permission.entity';
+import { Permission } from '@/permissions/entities/permission.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';

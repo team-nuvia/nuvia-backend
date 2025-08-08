@@ -1,22 +1,16 @@
-import { Organization } from '@/organizations/entities/organization.entity';
+import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserRole } from '@share/enums/user-role';
-import { User } from '@users/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { PermissionGrant } from '../permission-grants/entities/permission-grant.entity';
 
+@Index('index_permission_sequence', ['sequence'])
 @Entity()
 export class Permission extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('int', { comment: '사용자 아이디' })
-  userId!: number;
-
-  @Column('int', { comment: '조직 아이디' })
-  organizationId!: number;
-
-  @Column('varchar', { length: 45, comment: '권한 이름' })
+  @Column('varchar', { unique: true, length: 45, comment: '권한 이름' })
   role!: UserRole;
 
   @Column('varchar', { default: null, length: 200, nullable: true, comment: '권한 설명' })
@@ -28,15 +22,13 @@ export class Permission extends DefaultDateInterface {
   @Column('tinyint', { default: 0, comment: '권한 비활성 여부' })
   isDeprecated!: boolean;
 
-  @ManyToOne(() => User, (user) => user.permissions, {
-    onDelete: 'NO ACTION',
-  })
-  user!: Relation<User>;
+  @Column('tinyint', { default: 0, comment: '권한 기본 여부' })
+  isDefault!: boolean;
 
-  @ManyToOne(() => Organization, (organization) => organization.permissions, {
-    onDelete: 'NO ACTION',
+  @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.permission, {
+    cascade: true,
   })
-  organization!: Relation<Organization>;
+  organizationRoles!: Relation<OrganizationRole>[];
 
   @OneToMany(() => PermissionGrant, (permissionGrant) => permissionGrant.permission, {
     cascade: true,

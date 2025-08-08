@@ -29,8 +29,4 @@ export class PermissionsService {
       .where('p.id = :id', { id })
       .execute();
   }
-
-  remove(id: number) {
-    return this.permissionsRepository.orm.getManager().createQueryBuilder(Permission, 'p').softDelete().where('p.id = :id', { id }).execute();
-  }
 }
