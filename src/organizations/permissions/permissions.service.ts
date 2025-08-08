@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { Permission } from './entities/permission.entity';
+import { PermissionsRepository } from './permissions.repository';
 
 @Injectable()
 export class PermissionsService {
+  constructor(private readonly permissionsRepository: PermissionsRepository) {}
+
   create(createPermissionDto: CreatePermissionDto) {
-    return 'This action adds a new permission';
+    return this.permissionsRepository.orm.getManager().createQueryBuilder(Permission, 'p').insert().values(createPermissionDto).execute();
   }
 
   findAll() {
-    return `This action returns all permissions`;
+    return this.permissionsRepository.orm.getManager().createQueryBuilder(Permission, 'p').getMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} permission`;
+    return this.permissionsRepository.orm.getManager().createQueryBuilder(Permission, 'p').where('p.id = :id', { id }).getOne();
   }
 
   update(id: number, updatePermissionDto: UpdatePermissionDto) {
-    return `This action updates a #${id} permission`;
+    return this.permissionsRepository.orm
+      .getManager()
+      .createQueryBuilder(Permission, 'p')
+      .update()
+      .set(updatePermissionDto)
+      .where('p.id = :id', { id })
+      .execute();
   }
 
   remove(id: number) {
-    return `This action removes a #${id} permission`;
+    return this.permissionsRepository.orm.getManager().createQueryBuilder(Permission, 'p').softDelete().where('p.id = :id', { id }).execute();
   }
 }

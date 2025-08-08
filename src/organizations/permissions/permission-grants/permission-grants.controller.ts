@@ -1,8 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PermissionGrantsService } from './permission-grants.service';
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreatePermissionGrantDto } from './dto/create-permission-grant.dto';
 import { UpdatePermissionGrantDto } from './dto/update-permission-grant.dto';
+import { PermissionGrantsService } from './permission-grants.service';
 
+@RequiredLogin
+@ApiTags('권한 제약사항')
 @Controller('permission-grants')
 export class PermissionGrantsController {
   constructor(private readonly permissionGrantsService: PermissionGrantsService) {}

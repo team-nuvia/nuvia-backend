@@ -24,7 +24,7 @@ export class ProfilesService {
     const filename = uniqueHash(80) + '.' + extension;
     const dimensions = imageSize(buffer);
 
-    const exists = await this.profilesRepository.owner.findOne({ where: { userId } });
+    const exists = await this.profilesRepository.findByUserId(userId);
 
     if (!isNil(exists)) {
       throw new AlreadyExistsProfileImageExceptionDto();
@@ -43,9 +43,7 @@ export class ProfilesService {
 
   async findOne(userId: number) {
     const commonConfig = this.commonService.getConfig('common');
-    const profile = await this.profilesRepository.useManager().owner.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
@@ -71,9 +69,7 @@ export class ProfilesService {
   }
 
   async update(userId: number, file: Express.Multer.File) {
-    const profile = await this.profilesRepository.useManager().owner.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
@@ -86,8 +82,8 @@ export class ProfilesService {
     const filename = crypto.randomBytes(32).toString('hex') + '.' + originalname.split('.').pop();
     const dimensions = imageSize(buffer);
 
-    await this.profilesRepository.useManager().owner.update(
-      { userId },
+    await this.profilesRepository.update(
+      userId,
       {
         originalname,
         filename,
@@ -101,14 +97,12 @@ export class ProfilesService {
   }
 
   async remove(userId: number) {
-    const profile = await this.profilesRepository.useManager().owner.findOne({
-      where: { userId },
-    });
+    const profile = await this.profilesRepository.findByUserId(userId);
 
     if (isNil(profile)) {
       throw new NotFoundProfileExceptionDto();
     }
 
-    return this.profilesRepository.useManager().owner.delete({ userId });
+    return this.profilesRepository.delete(userId);
   }
 }

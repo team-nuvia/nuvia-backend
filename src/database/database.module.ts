@@ -1,6 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrmHelper } from '@util/orm.helper';
 import { DatabaseService } from './database.service';
+import { TxContext } from './tx.context';
+import { TxRunner } from './tx.runner';
 
 @Global()
 @Module({
@@ -9,6 +12,7 @@ import { DatabaseService } from './database.service';
       useClass: DatabaseService,
     }),
   ],
-  exports: [TypeOrmModule],
+  providers: [TxContext, TxRunner, OrmHelper],
+  exports: [TypeOrmModule, TxContext, TxRunner, OrmHelper],
 })
 export class DatabaseModule {}

@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PermissionGrantsService } from './permission-grants.service';
 import { PermissionGrantsController } from './permission-grants.controller';
+import { PermissionGrantsRepository } from './permission-grants.repository';
+import { PermissionGrantsService } from './permission-grants.service';
 
 @Module({
   controllers: [PermissionGrantsController],
-  providers: [PermissionGrantsService],
+  providers: [PermissionGrantsService, PermissionGrantsRepository],
 })
 export class PermissionGrantsModule {}

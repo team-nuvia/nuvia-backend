@@ -4,7 +4,7 @@ import { serializeResponse } from '@util/serializeResponse';
 import { instanceToPlain } from 'class-transformer';
 import { Request, Response } from 'express';
 import { map, Observable } from 'rxjs';
-import { RequestMethod } from './variable/enums';
+import { RequestMethod } from '../variable/enums';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {

@@ -4,8 +4,8 @@ import { OptionsModule } from './options/options.module';
 import { QuestionsService } from './questions.service';
 
 @Module({
+  imports: [AnswersModule, OptionsModule],
   controllers: [],
   providers: [QuestionsService],
-  imports: [AnswersModule, OptionsModule],
 })
 export class QuestionsModule {}

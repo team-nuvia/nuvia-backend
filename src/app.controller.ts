@@ -1,10 +1,12 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { Public } from '@common/decorator/public.decorator';
 import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { ApiHideProperty, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { uniqueHash } from '@util/uniqueHash';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
 
+@Public()
 @ApiTags('앱')
 @Controller()
 export class AppController {

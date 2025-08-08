@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { Payment } from './entities/payment.entity';
+import { PaymentsRepository } from './payments.repository';
 
 @Injectable()
 export class PaymentsService {
+  constructor(private readonly paymentsRepository: PaymentsRepository) {}
+
   create(createPaymentDto: CreatePaymentDto) {
-    return 'This action adds a new payment';
+    return this.paymentsRepository.orm.getManager().createQueryBuilder(Payment, 'p').insert().values(createPaymentDto).execute();
   }
 
   findAll() {
-    return `This action returns all payments`;
+    return this.paymentsRepository.orm.getManager().createQueryBuilder(Payment, 'p').getMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} payment`;
+    return this.paymentsRepository.orm.getManager().createQueryBuilder(Payment, 'p').where('p.id = :id', { id }).getOne();
   }
 
   update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
+    return this.paymentsRepository.orm
+      .getManager()
+      .createQueryBuilder(Payment, 'p')
+      .update()
+      .set(updatePaymentDto)
+      .where('p.id = :id', { id })
+      .execute();
   }
 
   remove(id: number) {
-    return `This action removes a #${id} payment`;
+    return this.paymentsRepository.orm.getManager().createQueryBuilder(Payment, 'p').softDelete().where('p.id = :id', { id }).execute();
   }
 }

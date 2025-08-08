@@ -1,9 +1,8 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SurveyStatus } from '@share/enums/survey-status';
+import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
-import { Repository } from 'typeorm';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
@@ -12,31 +11,35 @@ import { Survey } from './entities/survey.entity';
 import { Question } from './questions/entities/question.entity';
 
 @Injectable()
-export class SurveysRepository extends BaseRepository<Survey> {
-  constructor(
-    @InjectRepository(Survey)
-    private readonly surveyRepository: Repository<Survey>,
-  ) {
-    super(surveyRepository);
+export class SurveysRepository extends BaseRepository {
+  constructor(readonly orm: OrmHelper) {
+    super(orm);
   }
 
   async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     console.log('🚀 ~ SurveysRepository ~ createSurvey ~ createSurveyPayloadDto:', createSurveyPayloadDto);
     const hashedUniqueKey = uniqueHash();
-    const survey = this.surveyRepository.create({
-      ...createSurveyPayloadDto,
-      userId,
-      hashedUniqueKey,
-      expiresAt: createSurveyPayloadDto.expiresAt ?? new Date(),
-    });
-    console.log('🚀 ~ SurveysRepository ~ createSurvey ~ survey:', survey);
-    await this.surveyRepository.save(survey);
+    await this.orm
+      .getManager()
+      .createQueryBuilder()
+      .insert()
+      .into('survey')
+      .values({
+        userId,
+        hashedUniqueKey,
+        title: createSurveyPayloadDto.title,
+        description: createSurveyPayloadDto.description,
+        expiresAt: createSurveyPayloadDto.expiresAt ?? new Date(),
+        isPublic: createSurveyPayloadDto.isPublic,
+        status: createSurveyPayloadDto.status,
+      })
+      .execute();
   }
 
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
     const { search, page, limit, status } = searchQuery;
 
-    const query = this.surveyRepository.createQueryBuilder('s').where('s.userId = :userId', { userId });
+    const query = this.orm.getManager().createQueryBuilder(Survey, 's').where('s.userId = :userId', { userId });
 
     if (search) {
       query.andWhere('s.title LIKE :search', { search: `%${search}%` });
@@ -77,7 +80,7 @@ export class SurveysRepository extends BaseRepository<Survey> {
     const surveyFormData = updateSurveyPayloadDto.surveyFormData;
     const surveyQuestionDataList = updateSurveyPayloadDto.surveyQuestionData;
 
-    await this.manager.transaction(async (transactionalEntityManager) => {
+    await this.orm.getManager().transaction(async (transactionalEntityManager) => {
       await transactionalEntityManager.update(Survey, id, surveyFormData);
 
       for (const surveyQuestionData of surveyQuestionDataList) {

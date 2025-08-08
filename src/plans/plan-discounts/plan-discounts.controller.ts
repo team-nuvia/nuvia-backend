@@ -1,8 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PlanDiscountsService } from './plan-discounts.service';
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreatePlanDiscountDto } from './dto/create-plan-discount.dto';
 import { UpdatePlanDiscountDto } from './dto/update-plan-discount.dto';
+import { PlanDiscountsService } from './plan-discounts.service';
 
+@RequiredLogin
+@ApiTags('플랜 할인')
 @Controller('plan-discounts')
 export class PlanDiscountsController {
   constructor(private readonly planDiscountsService: PlanDiscountsService) {}

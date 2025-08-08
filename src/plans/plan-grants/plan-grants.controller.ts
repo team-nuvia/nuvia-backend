@@ -1,16 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Controller, Get, Param } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PlanGrantsService } from './plan-grants.service';
-import { CreatePlanGrantDto } from './dto/create-plan-grant.dto';
-import { UpdatePlanGrantDto } from './dto/update-plan-grant.dto';
 
+@RequiredLogin
+@ApiTags('플랜 제약사항')
 @Controller('plan-grants')
 export class PlanGrantsController {
   constructor(private readonly planGrantsService: PlanGrantsService) {}
-
-  @Post()
-  create(@Body() createPlanGrantDto: CreatePlanGrantDto) {
-    return this.planGrantsService.create(createPlanGrantDto);
-  }
 
   @Get()
   findAll() {
@@ -20,15 +17,5 @@ export class PlanGrantsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.planGrantsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlanGrantDto: UpdatePlanGrantDto) {
-    return this.planGrantsService.update(+id, updatePlanGrantDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.planGrantsService.remove(+id);
   }
 }

@@ -1,34 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Body, Controller, HttpStatus, Param, Patch } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { UpdateOrganizationDto } from './dto/payload/update-organization.dto';
+import { UpdateOrganizationResponseDto } from './dto/response/update-organization.response.dto';
 import { OrganizationsService } from './organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
+@RequiredLogin
+@ApiTags('조직')
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
-  @Post()
-  create(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return this.organizationsService.create(createOrganizationDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.organizationsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.organizationsService.findOne(+id);
-  }
-
+  @CombineResponses(HttpStatus.OK, UpdateOrganizationResponseDto)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto) {
-    return this.organizationsService.update(+id, updateOrganizationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.organizationsService.remove(+id);
+  async update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto) {
+    await this.organizationsService.update(+id, updateOrganizationDto);
+    return new UpdateOrganizationResponseDto();
   }
 }

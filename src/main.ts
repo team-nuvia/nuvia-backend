@@ -1,8 +1,10 @@
 import { CommonService } from '@common/common.service';
 import { InputValidationPipe } from '@common/decorator/input-validate-pipe.decorator';
 import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
-import { ResponseInterceptor } from '@common/response.interceptor';
+import { ResponseInterceptor } from '@common/interceptor/response.interceptor';
+import { TransactionalInterceptor } from '@common/interceptor/transactional.interceptor';
 import { RunMode } from '@common/variable/enums';
+import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
@@ -40,7 +42,7 @@ async function bootstrap() {
   /* 글로벌 설정 */
   app.useGlobalGuards(new JwtGuard(app.get(Reflector)));
   app.setGlobalPrefix('api');
-  app.useGlobalInterceptors(new ResponseInterceptor(loggerService));
+  app.useGlobalInterceptors(new ResponseInterceptor(loggerService), new TransactionalInterceptor(app.get(TxRunner), app.get(Reflector)));
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
   /* 버저닝 */

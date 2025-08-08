@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PlanDiscountsService } from './plan-discounts.service';
 import { PlanDiscountsController } from './plan-discounts.controller';
+import { PlanDiscountsRepository } from './plan-discounts.repository';
+import { PlanDiscountsService } from './plan-discounts.service';
 
 @Module({
   controllers: [PlanDiscountsController],
-  providers: [PlanDiscountsService],
+  providers: [PlanDiscountsService, PlanDiscountsRepository],
 })
 export class PlanDiscountsModule {}
