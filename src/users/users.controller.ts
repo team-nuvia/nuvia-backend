@@ -3,6 +3,7 @@ import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { PassRoles } from '@common/decorator/pass-roles.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Transactional } from '@common/decorator/transactional.decorator';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
@@ -27,6 +28,7 @@ export class UsersController {
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @CombineResponses(HttpStatus.CONFLICT, AlreadyExistsUserExceptionDto)
+  @Transactional()
   @Public()
   @Post()
   create(@Body() createUserDto: CreateUserPayloadDto) {

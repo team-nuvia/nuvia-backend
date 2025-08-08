@@ -1,5 +1,5 @@
 import { Organization } from '@/organizations/entities/organization.entity';
-import { Permission } from '@/organizations/permissions/entities/permission.entity';
+import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
@@ -8,7 +8,7 @@ import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
-import { DeepPartial, DeleteResult, FindOptionsWhere, QueryRunner } from 'typeorm';
+import { DeepPartial, DeleteResult, FindOptionsWhere } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
 import { NotFoundOrganizationExceptionDto } from './dto/exception/not-found-organization.exception.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
@@ -37,14 +37,15 @@ export class UsersRepository extends BaseRepository {
       .createQueryBuilder('s')
       .where('s.userId = :userId', { userId })
       .leftJoinAndSelect('s.organization', 'o')
-      .leftJoinAndMapOne('o.permission', Permission, 'p', 'p.organizationId = o.id AND p.userId = :userId', { userId })
+      .leftJoinAndMapOne('o.organizationRoles', OrganizationRole, 'or', 'or.organizationId = o.id AND or.userId = :userId', { userId })
+      .leftJoinAndSelect('or.permission', 'p')
       .getOne();
 
     if (isNil(subscription)) {
       throw new NotFoundOrganizationExceptionDto();
     }
 
-    const permission: Permission = (subscription.organization as Organization & { permission: Permission }).permission;
+    const organizationRole: OrganizationRole = (subscription.organization as Organization & { organizationRole: OrganizationRole }).organizationRole;
 
     const userMeData = await this.orm
       .getRepo(User)
@@ -65,7 +66,7 @@ export class UsersRepository extends BaseRepository {
       email: userMeData.email,
       name: userMeData.name,
       nickname: userMeData.nickname,
-      role: permission.role,
+      role: organizationRole.permission.role,
       createdAt: userMeData.createdAt,
       profileImageUrl,
     };
@@ -77,8 +78,8 @@ export class UsersRepository extends BaseRepository {
     return this.orm.getRepo(User).findOne({ where: { email } });
   }
 
-  async save(data: DeepPartial<User>, qr?: QueryRunner): Promise<User> {
-    const source = qr ? qr.manager.getRepository(User) : this.orm.getRepo(User);
+  async save(data: DeepPartial<User>): Promise<User> {
+    const source = this.orm.getRepo(User);
 
     if (isNil(data.email)) {
       throw new BadRequestException({ reason: '이메일이 없습니다.' });

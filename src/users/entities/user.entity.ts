@@ -1,4 +1,4 @@
-import { Permission } from '@/organizations/permissions/entities/permission.entity';
+import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { Payment } from '@/payments/entities/payment.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
@@ -42,10 +42,10 @@ export class User extends DefaultDateInterface implements IUser {
   })
   questionAnswers!: Relation<QuestionAnswer>[];
 
-  @OneToMany(() => Permission, (permission) => permission.user, {
+  @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.user, {
     cascade: true,
   })
-  permissions!: Relation<Permission>[];
+  organizationRoles!: Relation<OrganizationRole>[];
 
   @OneToMany(() => Payment, (payment) => payment.user, {
     cascade: true,

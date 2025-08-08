@@ -1,11 +1,10 @@
 import { Payment } from '@/payments/entities/payment.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
-import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { PlanNameType } from '../enums/plan-name-type.enum';
 import { PlanDiscount } from '../plan-discounts/entities/plan-discount.entity';
 import { PlanGrant } from '../plan-grants/entities/plan-grant.entity';
-import { PlanBilling } from './plan-billing.entity';
 
 @Entity()
 export class Plan extends DefaultDateInterface {
@@ -18,15 +17,13 @@ export class Plan extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 200, nullable: true, comment: '플랜 설명' })
   description!: string | null;
 
-  @OneToOne(() => PlanBilling, (planBilling) => planBilling.plan, {
+  @Column('int', { default: 0, unsigned: true, comment: '결제 금액(원)' })
+  price!: number;
+
+  @OneToMany(() => Subscription, (subscription) => subscription.plan, {
     cascade: true,
   })
-  planBilling!: Relation<PlanBilling>;
-
-  @ManyToOne(() => Subscription, (subscription) => subscription.plans, {
-    onDelete: 'NO ACTION',
-  })
-  subscription!: Relation<Subscription>;
+  subscriptions!: Relation<Subscription>[];
 
   @OneToMany(() => PlanDiscount, (planDiscount) => planDiscount.plan, {
     cascade: true,
