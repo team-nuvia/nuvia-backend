@@ -243,6 +243,16 @@ export class SurveysRepository extends BaseRepository {
       throw new NotFoundSurveyExceptionDto();
     }
 
+    await this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .update()
+      .set({
+        viewCount: () => 'viewCount + 1',
+      })
+      .where('s.id = :id', { id })
+      .execute();
+
     return {
       id: survey.id,
       title: survey.title,
