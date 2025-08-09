@@ -51,6 +51,10 @@ export class UtilService {
     return { accessToken, refreshToken };
   }
 
+  async refreshJWT(refreshToken: LoginUserData) {
+    return this.createJWT(refreshToken);
+  }
+
   decodeJWT(token: string) {
     return jwt.decode(token, { json: true }) as LoginUserData;
   }

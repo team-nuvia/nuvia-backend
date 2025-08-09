@@ -1,5 +1,5 @@
-import { Organization } from '@/organizations/entities/organization.entity';
 import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
+import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
@@ -37,23 +37,24 @@ export class UsersRepository extends BaseRepository {
       .createQueryBuilder('s')
       .where('s.userId = :userId', { userId })
       .leftJoinAndSelect('s.organization', 'o')
-      .leftJoinAndMapOne('o.organizationRoles', OrganizationRole, 'or', 'or.organizationId = o.id AND or.userId = :userId', { userId })
-      .leftJoinAndSelect('or.permission', 'p')
+      .leftJoinAndMapOne('o.organizationRole', OrganizationRole, 'or', 'or.organizationId = o.id AND or.userId = s.userId')
+      .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId AND or.organizationId = o.id AND or.userId = s.userId')
       .getOne();
 
     if (isNil(subscription)) {
       throw new NotFoundOrganizationExceptionDto();
     }
 
-    const organizationRole: OrganizationRole = (subscription.organization as Organization & { organizationRole: OrganizationRole }).organizationRole;
+    const permission: Permission = (subscription as Subscription & { permission: Permission }).permission;
 
     const userMeData = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.profile', 'up')
       .where('u.id = :userId', { userId })
-      .select(['u.id', 'u.email', 'u.name', 'u.createdAt', 'up.filename'])
+      .select(['u.id', 'u.email', 'u.name', 'u.createdAt', 'up.id', 'up.filename', 'up.originalname'])
       .getOne();
+    console.log('🚀 ~ UsersRepository ~ getMe ~ userMeData:', userMeData);
 
     if (isNil(userMeData)) {
       throw new NotFoundUserExceptionDto();
@@ -66,7 +67,7 @@ export class UsersRepository extends BaseRepository {
       email: userMeData.email,
       name: userMeData.name,
       nickname: userMeData.nickname,
-      role: organizationRole.permission.role,
+      role: permission.role,
       createdAt: userMeData.createdAt,
       profileImageUrl,
     };

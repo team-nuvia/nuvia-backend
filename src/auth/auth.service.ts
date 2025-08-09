@@ -15,6 +15,14 @@ export class AuthService {
     return this.utilService.createJWT(payload);
   }
 
+  async refresh(refreshTokenString: string): Promise<LoginTokenNestedResponseDto> {
+    const refreshToken = this.utilService.decodeJWT(refreshTokenString);
+    console.log('🚀 ~ AuthService ~ refresh ~ refreshToken:', refreshToken);
+    const user = await this.authRepository.findUserById(refreshToken.id);
+    console.log('🚀 ~ AuthService ~ refresh ~ user:', user);
+    return this.utilService.refreshJWT(user);
+  }
+
   verifyToken(token: string): boolean {
     return this.utilService.verifyJWT(token);
   }

@@ -1,7 +1,7 @@
 import { ErrorKey, NotFoundException } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NotFoundSurveyException extends NotFoundException {
+export class NotFoundSurveyExceptionDto extends NotFoundException {
   @ApiProperty({
     description: '설문 메시지',
     example: '설문 조회 성공',
