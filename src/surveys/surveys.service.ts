@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
+import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
+import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
+import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
+import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { SurveysRepository } from './surveys.repository';
 
 @Injectable()
@@ -15,6 +19,22 @@ export class SurveysService {
 
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
     return await this.surveyRepository.getSurvey(userId, searchQuery);
+  }
+
+  async getSurveyList(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<ListResponseDto> {
+    return await this.surveyRepository.getSurveyList(userId, searchQuery);
+  }
+
+  async getSurveyMetadata(userId: number): Promise<DashboardSurveryMetadataNestedResponseDto> {
+    return await this.surveyRepository.getSurveyMetadata(userId);
+  }
+
+  async getRecentSurvey(userId: number): Promise<DashboardRecentSurveyNestedResponseDto[]> {
+    return await this.surveyRepository.getRecentSurvey(userId);
+  }
+
+  async getSurveyDetail(userId: number, id: number): Promise<SurveyDetailNestedResponseDto> {
+    return await this.surveyRepository.getSurveyDetail(userId, id);
   }
 
   async updateSurvey(id: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {

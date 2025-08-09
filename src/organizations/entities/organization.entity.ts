@@ -1,6 +1,6 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserRole } from '@share/enums/user-role';
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { Subscription } from '../../subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '../organization-roles/entities/organization-role.entity';
 
@@ -29,5 +29,6 @@ export class Organization extends DefaultDateInterface {
   @OneToOne(() => Subscription, (subscription) => subscription.organization, {
     onDelete: 'NO ACTION',
   })
+  @JoinColumn()
   subscription!: Relation<Subscription>;
 }
