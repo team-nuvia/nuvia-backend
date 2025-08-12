@@ -7,7 +7,7 @@ export class GetRecentSurveyResponseDto extends GetResponse<DashboardRecentSurve
   @ApiProperty({ example: ErrorMessage.SUCCESS_GET_RECENT_SURVEY })
   message: string = ErrorMessage.SUCCESS_GET_RECENT_SURVEY;
 
-  @ApiProperty({ description: '설문 목록', type: [DashboardRecentSurveyNestedResponseDto] })
+  @ApiProperty({ description: '설문 목록', type: () => DashboardRecentSurveyNestedResponseDto, isArray: true })
   @IsArray()
   declare payload: DashboardRecentSurveyNestedResponseDto[];
 

@@ -29,6 +29,7 @@ export class CreateSurveyQuestionPayloadNestedDto {
   isRequired!: boolean;
 
   @ApiProperty({
+    enum: QuestionType,
     description: '질문 유형',
     example: '질문 유형',
   })
@@ -37,8 +38,9 @@ export class CreateSurveyQuestionPayloadNestedDto {
   questionType!: QuestionType;
 
   @ApiProperty({
-    description: '질문 옵션 유형',
-    example: '질문 옵션 유형',
+    enum: DataType,
+    description: '질문 답변 유형',
+    example: '질문 답변 유형',
   })
   @IsNotEmpty()
   @IsString()

@@ -42,7 +42,7 @@ export class Survey {
   isPublic!: boolean;
 
   @Column('varchar', { length: 50, comment: '설문 상태', default: SurveyStatus.Draft })
-  status!: SurveyStatus;
+  status!: SurveyStatus;  
 
   @Column('int', { comment: '조회 수', default: 0 })
   viewCount!: number;
@@ -81,6 +81,10 @@ export class Survey {
     return uniqueRespondentCount.size;
   }
 
+  /**
+   * 예상 소요시간 계산
+   * @returns 예상 소요시간 (분, 소수점 1자리까지)
+   */
   get estimatedTime() {
     // 질문 유형별 예상 소요시간 (초 단위)
     const QUESTION_TIME_MAP = {
@@ -99,7 +103,8 @@ export class Survey {
       [DataType.Rating]: 6, // 평점: 6초
     };
 
-    return this.questions.reduce((acc, question) => {
+    /* 예상시간 (초) */
+    const estimatedTime = this.questions.reduce((acc, question) => {
       const baseTime = QUESTION_TIME_MAP[question.questionType] ?? DATA_TIME_MAP[question.dataType] ?? 10; // 기본값 10초
 
       // 선택지가 많은 경우 추가 시간 계산
@@ -110,6 +115,9 @@ export class Survey {
 
       return acc + baseTime + additionalTime;
     }, 0);
+
+    /* second to minute and round up */
+    return Number((estimatedTime / 60).toFixed(1));
   }
 
   @BeforeInsert()

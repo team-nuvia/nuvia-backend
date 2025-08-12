@@ -20,7 +20,7 @@ export class GetSurveyListNestedResponseDto {
   @ApiProperty({ description: '설문 공개 여부', example: true })
   isPublic!: boolean;
 
-  @ApiProperty({ description: '설문 상태', example: SurveyStatus.Active })
+  @ApiProperty({ enum: SurveyStatus, description: '설문 상태', example: SurveyStatus.Active })
   status!: SurveyStatus;
 
   @ApiProperty({ description: '설문 조회 수', example: 10 })

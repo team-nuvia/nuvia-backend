@@ -5,7 +5,7 @@ export class CreatePermissionGrantDto {
   @ApiProperty({ description: '권한 PK' })
   permissionId!: number;
 
-  @ApiProperty({ description: '권한 제약사항 유형' })
+  @ApiProperty({ enum: PermissionGrantType, description: '권한 제약사항 유형', example: PermissionGrantType.TeamInvite })
   type!: PermissionGrantType;
 
   @ApiPropertyOptional({ description: '권한 제약사항 설명' })

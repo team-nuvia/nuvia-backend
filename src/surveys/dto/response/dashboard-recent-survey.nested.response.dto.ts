@@ -11,7 +11,7 @@ export class DashboardRecentSurveyNestedResponseDto {
   @ApiProperty({ description: '설문 설명', nullable: true, example: '서비스 개선을 위한 고객 만족도 조사입니다.' })
   description!: string | null;
 
-  @ApiProperty({ description: '설문 상태', example: SurveyStatus.Active })
+  @ApiProperty({ enum: SurveyStatus, description: '설문 상태', example: SurveyStatus.Active })
   status!: SurveyStatus;
 
   @ApiProperty({ description: '응답자 수', example: 10 })

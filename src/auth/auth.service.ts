@@ -1,7 +1,9 @@
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { UtilService } from '@util/util.service';
 import { AuthRepository } from './auth.repository';
+import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
 
 @Injectable()
@@ -11,8 +13,19 @@ export class AuthService {
     private readonly utilService: UtilService,
   ) {}
 
-  async login(payload: LoginUserData): Promise<LoginTokenNestedResponseDto> {
-    return this.utilService.createJWT(payload);
+  async login(
+    payload: LoginUserData,
+    ipAddress: string,
+    userLoginInformationPayloadDto: UserLoginInformationPayloadDto,
+  ): Promise<LoginTokenNestedResponseDto> {
+    const jwtInformation = this.utilService.createJWT(payload);
+    await this.authRepository.addUserAccessLog(payload.id, ipAddress, userLoginInformationPayloadDto, UserAccessStatusType.Login);
+
+    return jwtInformation;
+  }
+
+  async logout(loginUserData: LoginUserData, ipAddress: string) {
+    await this.authRepository.addUserAccessLog(loginUserData.id, ipAddress, null, UserAccessStatusType.Logout);
   }
 
   async refresh(refreshTokenString: string): Promise<LoginTokenNestedResponseDto> {

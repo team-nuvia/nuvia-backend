@@ -13,7 +13,7 @@ import { ProfilesService } from './profiles.service';
 import { UploadFileInterceptor } from './upload-file.interceptor';
 
 @RequiredLogin
-@ApiTags('프로필')
+@ApiTags('사용자 프로필')
 @Controller('profiles')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}

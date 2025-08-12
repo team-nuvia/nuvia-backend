@@ -31,8 +31,9 @@ export class CreateSurveyPayloadDto {
   isPublic!: boolean;
 
   @ApiProperty({
+    enum: SurveyStatus,
     description: '설문 상태',
-    example: SurveyStatus.Draft,
+    example: SurveyStatus.Active,
   })
   @IsNotEmpty()
   @IsEnum(SurveyStatus)

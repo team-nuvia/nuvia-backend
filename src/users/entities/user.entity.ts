@@ -8,6 +8,7 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
+import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Entity()
@@ -53,6 +54,11 @@ export class User extends DefaultDateInterface implements IUser {
     cascade: true,
   })
   payments!: Relation<Payment>[];
+
+  @OneToMany(() => UserAccess, (userAccess) => userAccess.user, {
+    cascade: true,
+  })
+  userAccesses!: Relation<UserAccess>[];
 
   @OneToOne(() => Subscription, (subscription) => subscription.user, {
     cascade: true,

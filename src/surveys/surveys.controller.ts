@@ -1,21 +1,26 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
-import { Body, Controller, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
+import { UpdateSurveyVisibilityPayloadDto } from './dto/payload/update-survey-visibility.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
 import { CreateSurveyResponseDto } from './dto/response/create-survey.response.dto';
+import { DeleteSurveyResponseDto } from './dto/response/delete-survey.response.dto';
 import { GetRecentSurveyResponseDto } from './dto/response/get-recent-survey.response.dto';
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
+import { UpdateSurveyVisibilityResponseDto } from './dto/response/update-survey-visibility.response.dto';
 import { UpdateSurveyResponseDto } from './dto/response/update-survey.response.dto';
 import { SurveysService } from './surveys.service';
 
+@ApiTags('설문')
 @Controller('surveys')
 export class SurveysController {
   constructor(private readonly surveysService: SurveysService) {}
@@ -80,11 +85,27 @@ export class SurveysController {
   @CombineResponses(HttpStatus.OK, GetSurveyDetailResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @Transactional()
   @RequiredLogin
   @Get(':id')
-  async getSurveyDetail(@LoginUser() user: LoginUserData, @Param('id') id: string): Promise<GetSurveyDetailResponseDto> {
-    const survey = await this.surveysService.getSurveyDetail(user.id, +id);
+  async getSurveyDetail(@Param('id') id: string): Promise<GetSurveyDetailResponseDto> {
+    const survey = await this.surveysService.getSurveyDetail(+id);
     return new GetSurveyDetailResponseDto(survey);
+  }
+
+  @ApiOperation({ summary: '설문 공개 여부 변경' })
+  @CombineResponses(HttpStatus.OK, UpdateSurveyVisibilityResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Patch(':surveyId/visibility')
+  async toggleSurveyVisibility(
+    @LoginUser() user: LoginUserData,
+    @Param('surveyId') surveyId: string,
+    @Body() updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto,
+  ): Promise<UpdateSurveyVisibilityResponseDto> {
+    await this.surveysService.toggleSurveyVisibility(user.id, +surveyId, updateSurveyVisibilityPayloadDto);
+    return new UpdateSurveyVisibilityResponseDto();
   }
 
   @ApiOperation({ summary: '설문 수정' })
@@ -96,5 +117,16 @@ export class SurveysController {
   async updateSurvey(@Param('id') id: string, @Body() updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<UpdateSurveyResponseDto> {
     await this.surveysService.updateSurvey(+id, updateSurveyPayloadDto);
     return new UpdateSurveyResponseDto();
+  }
+
+  @ApiOperation({ summary: '설문 삭제' })
+  @CombineResponses(HttpStatus.OK, DeleteSurveyResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Delete(':id')
+  async deleteSurvey(@LoginUser() user: LoginUserData, @Param('id') id: string): Promise<DeleteSurveyResponseDto> {
+    await this.surveysService.deleteSurvey(user.id, +id);
+    return new DeleteSurveyResponseDto();
   }
 }

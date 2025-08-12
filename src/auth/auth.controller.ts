@@ -1,14 +1,18 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginToken } from '@common/decorator/login-token.param.decorator';
+import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RefreshToken } from '@common/decorator/refresh-token.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
+import { Transactional } from '@common/decorator/transactional.decorator';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
-import { Controller, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Ip, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
+import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
+import { AlreadyLoggedOutResponseDto } from './dto/response/already-logged-out.response.dto';
 import { LoginResponseDto } from './dto/response/login.response.dto';
 import { LogoutResponseDto } from './dto/response/logout.response.dto';
 import { RefreshResponseDto } from './dto/response/refesh.response.dto';
@@ -26,9 +30,15 @@ export class AuthController {
   @CombineResponses(HttpStatus.OK, LoginResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationExceptionDto)
+  @Transactional()
   @Post('login')
-  async login(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<LoginResponseDto> {
-    const token = await this.authService.login(req.user);
+  async login(
+    @LoginUser() loginUserData: LoginUserData,
+    @Ip() ipAddress: string,
+    @Body() userLoginInformationDto: UserLoginInformationPayloadDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponseDto> {
+    const token = await this.authService.login(loginUserData, ipAddress, userLoginInformationDto);
 
     /* 리프레시만 쿠키 저장 */
     res.cookie('refresh_token', token.refreshToken, {
@@ -67,14 +77,23 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '로그아웃' })
-  @CombineResponses(HttpStatus.OK, LogoutResponseDto)
+  @CombineResponses(HttpStatus.OK, LogoutResponseDto, AlreadyLoggedOutResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, NoMatchUserInformationExceptionDto)
   @RequiredLogin
   @Public()
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
+  async logout(
+    @LoginUser() loginUserData: LoginUserData,
+    @Ip() ipAddress: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LogoutResponseDto> {
     res.clearCookie('refresh_token');
+    if (loginUserData) {
+      await this.authService.logout(loginUserData, ipAddress);
+    } else {
+      return new AlreadyLoggedOutResponseDto();
+    }
     return new LogoutResponseDto();
   }
 

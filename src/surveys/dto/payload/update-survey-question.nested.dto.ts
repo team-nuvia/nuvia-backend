@@ -29,6 +29,7 @@ export class UpdateSurveyQuestionNestedDto {
   description!: string;
 
   @ApiProperty({
+    enum: QuestionType,
     description: '질문 유형',
     example: '질문 유형',
   })
@@ -37,6 +38,7 @@ export class UpdateSurveyQuestionNestedDto {
   questionType!: QuestionType;
 
   @ApiProperty({
+    enum: DataType,
     description: '질문 답변 유형',
     example: '질문 답변 유형',
   })

@@ -4,6 +4,7 @@ import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { ProfilesModule } from './profiles/profiles.module';
+import { UserAccessesModule } from './user-accesses/user-accesses.module';
 import { UserSecretsModule } from './user-secrets/user-secrets.module';
 import { UsersController } from './users.controller';
 import { UsersRepository } from './users.repository';
@@ -14,6 +15,7 @@ import { UsersService } from './users.service';
     TypeOrmModule.forFeature([User, Subscription]),
     ProfilesModule,
     UserSecretsModule,
+    UserAccessesModule,
     RouterModule.register([
       {
         path: 'users',

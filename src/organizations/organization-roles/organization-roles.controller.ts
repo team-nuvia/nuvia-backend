@@ -1,7 +1,11 @@
+import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { UpdateOrganizationRoleDto } from './dto/update-organization-role.dto';
 import { OrganizationRolesService } from './organization-roles.service';
 
+@RequiredLogin
+@ApiTags('조직 역할')
 @Controller(':organizationId/organization-roles')
 export class OrganizationRolesController {
   constructor(private readonly organizationRolesService: OrganizationRolesService) {}

@@ -12,6 +12,7 @@ import { uniqueHash } from '@util/uniqueHash';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
+import { UpdateSurveyVisibilityPayloadDto } from './dto/payload/update-survey-visibility.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
 import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
 import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
@@ -226,23 +227,7 @@ export class SurveysRepository extends BaseRepository {
     };
   }
 
-  async getSurveyDetail(userId: number, id: number): Promise<SurveyDetailNestedResponseDto> {
-    const survey = await this.orm
-      .getManager()
-      .createQueryBuilder(Survey, 's')
-      .leftJoinAndSelect('s.user', 'u')
-      .leftJoinAndSelect('u.profile', 'up')
-      .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.userId = :userId', { userId })
-      .andWhere('s.id = :id', { id })
-      .getOne();
-
-    if (isNil(survey)) {
-      throw new NotFoundSurveyExceptionDto();
-    }
-
+  async viewCountUpdate(id: number): Promise<void> {
     await this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
@@ -252,12 +237,34 @@ export class SurveysRepository extends BaseRepository {
       })
       .where('s.id = :id', { id })
       .execute();
+  }
+
+  async getSurveyDetail(surveyId: number, userId?: number): Promise<SurveyDetailNestedResponseDto> {
+    const query = this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.user', 'u')
+      .leftJoinAndSelect('u.profile', 'up')
+      .leftJoinAndSelect('s.questions', 'sq')
+      .leftJoinAndSelect('sq.questionOptions', 'sqo')
+      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .where('s.id = :surveyId', { surveyId });
+
+    if (userId) {
+      query.andWhere('s.userId = :userId', { userId });
+    }
+
+    const survey = await query.getOne();
+
+    if (isNil(survey)) {
+      throw new NotFoundSurveyExceptionDto();
+    }
 
     return {
       id: survey.id,
       title: survey.title,
       description: survey.description,
-      author: { name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) },
+      author: survey.user ? { id: survey.user.id, name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
       questions: survey.questions.map((question) => ({
@@ -271,6 +278,7 @@ export class SurveysRepository extends BaseRepository {
           id: option.id,
           label: option.label,
         })),
+        sequence: question.sequence,
       })),
       isPublic: survey.isPublic,
       status: survey.status,
@@ -281,6 +289,10 @@ export class SurveysRepository extends BaseRepository {
       createdAt: survey.createdAt,
       updatedAt: survey.updatedAt,
     };
+  }
+
+  async toggleSurveyVisibility(surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
+    await this.orm.getManager().update(Survey, surveyId, { isPublic: updateSurveyVisibilityPayloadDto.isPublic });
   }
 
   async updateSurvey(id: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
@@ -294,5 +306,9 @@ export class SurveysRepository extends BaseRepository {
         await transactionalEntityManager.update(Question, surveyQuestionData.id, surveyQuestionData);
       }
     });
+  }
+
+  async deleteSurvey(surveyId: number, userId: number): Promise<void> {
+    await this.orm.getManager().delete(Survey, { id: surveyId, userId });
   }
 }

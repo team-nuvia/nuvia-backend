@@ -4,8 +4,12 @@ import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { User } from '@users/entities/user.entity';
+import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
+import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
+import { NotFoundUserAccessExceptionDto } from './dto/exception/not-found-user-access.exception.dto';
+import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
@@ -87,5 +91,41 @@ export class AuthRepository extends BaseRepository {
       userSecret: user.userSecret,
     };
     return combinedUser;
+  }
+
+  async addUserAccessLog(
+    id: number,
+    ipAddress: string,
+    userLoginInformationPayloadDto: UserLoginInformationPayloadDto | null,
+    accessStatus: UserAccessStatusType,
+  ) {
+    const userAccess = new UserAccess();
+    userAccess.userId = id;
+    userAccess.accessIp = ipAddress;
+    userAccess.status = accessStatus;
+    userAccess.lastAccessAt = new Date();
+
+    if (userLoginInformationPayloadDto) {
+      userAccess.accessDevice = userLoginInformationPayloadDto.accessDevice;
+      userAccess.accessBrowser = userLoginInformationPayloadDto.accessBrowser;
+      userAccess.accessUserAgent = userLoginInformationPayloadDto.accessUserAgent;
+    } else {
+      const lastUserAccess = await this.orm
+        .getRepo(UserAccess)
+        .createQueryBuilder('ua')
+        .where('ua.userId = :id', { id })
+        .andWhere('ua.lastAccessAt IS NOT NULL AND ua.lastAccessAt > :date', { date: new Date(Date.now() - 1000 * 60 * 60 * 24) })
+        .orderBy('ua.lastAccessAt', 'DESC')
+        .getOne();
+
+      if (isNil(lastUserAccess)) {
+        throw new NotFoundUserAccessExceptionDto(id.toString());
+      }
+
+      userAccess.accessDevice = lastUserAccess.accessDevice;
+      userAccess.accessBrowser = lastUserAccess.accessBrowser;
+      userAccess.accessUserAgent = lastUserAccess.accessUserAgent;
+    }
+    await this.orm.getRepo(UserAccess).save(userAccess);
   }
 }
