@@ -81,6 +81,8 @@ export class GlobalExceptionFilter<T extends BaseException> implements Exception
       }),
     );
     errorResponse.message = exception.message ?? '서버 오류가 발생했습니다.';
+    console.info('🚀 ~ GlobalExceptionFilter ~ catch ~ exception.message:', exception.stack);
+    console.trace('🚀 ~ GlobalExceptionFilter ~ catch ~ exception.message:', exception);
 
     const serialized = serializeResponse(errorResponse);
 

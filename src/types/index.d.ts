@@ -10,7 +10,7 @@ export declare global {
     id: number;
     email: string;
     name: string;
-    // nickname: string;
+    nickname: string;
     role: UserRole;
   }
 

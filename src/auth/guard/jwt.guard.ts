@@ -15,6 +15,21 @@ export class JwtGuard extends AuthGuard('jwt') {
 
   canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+    console.log('🚀 ~ JwtGuard ~ canActivate ~ isPublic:', isPublic);
+
+    // const noValidateJwt = this.reflector.getAllAndOverride<boolean>(NO_VALIDATE_JWT, [context.getHandler(), context.getClass()]);
+
+    // if (noValidateJwt) {
+    //   const req = context.switchToHttp().getRequest() as Request;
+    //   const refreshToken = req.cookies['refresh_token'];
+
+    //   if (refreshToken) {
+    //     const decoded = jwt.decode(refreshToken, { json: true }) as LoginUserData;
+    //     req.user = decoded;
+    //   }
+
+    //   return true;
+    // }
 
     if (isPublic) {
       return true;
@@ -24,9 +39,9 @@ export class JwtGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err: any, user: any, info: any) {
-    // console.log('🚀 ~ JwtGuard ~ handleRequest ~ _info:', info.message);
+    // console.log('🚀 ~ JwtGuard ~ handleRequest ~ _info:', info);
     // console.log('🚀 ~ JwtGuard ~ handleRequest ~ err:', err);
-    // console.log('🚀 ~ JwtGuard ~ handleRequest ~ user:', user);
+    console.log('🚀 ~ JwtGuard ~ handleRequest ~ user:', user);
     if (err || !user) {
       if (info.message.includes('jwt expired')) {
         throw new ExpiredTokenExceptionDto();

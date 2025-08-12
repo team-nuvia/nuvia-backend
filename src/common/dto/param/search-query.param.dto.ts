@@ -17,7 +17,7 @@ export class SearchQueryParamDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  page!: number;
+  page: number = 1;
 
   @ApiProperty({
     description: '페이지 크기',
@@ -27,5 +27,5 @@ export class SearchQueryParamDto {
   @IsNumber()
   @Min(5)
   @Max(20)
-  limit!: number;
+  limit: number = 10;
 }

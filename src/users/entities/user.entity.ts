@@ -8,7 +8,8 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
-import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Entity()
 export class User extends DefaultDateInterface implements IUser {
@@ -24,7 +25,9 @@ export class User extends DefaultDateInterface implements IUser {
   @Column('varchar', { unique: true, length: 50, comment: '닉네임' })
   nickname!: string;
 
-  @OneToOne(() => Profile, (profile) => profile.user)
+  @OneToOne(() => Profile, (profile) => profile.user, {
+    cascade: true,
+  })
   profile!: Relation<Profile>;
 
   @OneToOne(() => UserSecret, (userSecret) => userSecret.user, {
@@ -52,13 +55,18 @@ export class User extends DefaultDateInterface implements IUser {
   })
   payments!: Relation<Payment>[];
 
-  @ManyToOne(() => Subscription, (subscription) => subscription.users, {
-    onDelete: 'NO ACTION',
+  @OneToMany(() => UserAccess, (userAccess) => userAccess.user, {
+    cascade: true,
+  })
+  userAccesses!: Relation<UserAccess>[];
+
+  @OneToOne(() => Subscription, (subscription) => subscription.user, {
+    cascade: true,
   })
   subscription!: Relation<Subscription>;
 
   getProfileUrl(commonService: CommonService): string | null {
     const commonConfig = commonService.getConfig('common');
-    return this.profile.filename ? `${commonConfig.serverUrl}/api/static/image/${this.profile.filename}?t=p&q=100&rs=jpeg` : null;
+    return this.profile ? `${commonConfig.serverUrl}/api/static/image/${this.profile.filename}?t=p&q=100&rs=jpeg` : null;
   }
 }

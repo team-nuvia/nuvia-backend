@@ -25,11 +25,6 @@ export class UsersService {
   ) {}
 
   async create({ password, ...createUserDto }: CreateUserPayloadDto) {
-    // 1. 유저 생성
-    // 2. 플랜 구독 (무료 플랜)
-    // 3. 조직 생성
-    // 4. 조직 역할 생성
-
     const alreadyExistUser = await this.userRepository.existsBy({
       email: createUserDto.email,
     });
@@ -64,7 +59,7 @@ export class UsersService {
 
     const permission = await this.userRepository.orm.getRepo(Permission).findOne({
       where: {
-        role: UserRole.Viewer,
+        role: organization.defaultRole,
       },
     });
 

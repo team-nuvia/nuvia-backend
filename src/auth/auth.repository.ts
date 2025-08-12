@@ -1,15 +1,47 @@
+import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { User } from '@users/entities/user.entity';
+import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
+import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
+import { NotFoundUserAccessExceptionDto } from './dto/exception/not-found-user-access.exception.dto';
+import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
   constructor(protected readonly orm: OrmHelper) {
     super(orm);
+  }
+
+  async findUserById(id: number): Promise<LoginUserData> {
+    const user = await this.orm
+      .getRepo(User)
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.subscription', 'usb')
+      .leftJoinAndSelect('usb.organization', 'uo')
+      .leftJoinAndMapOne('uo.organizationRole', OrganizationRole, 'uor', 'uor.organizationId = uo.id AND uor.userId = u.id')
+      .leftJoinAndMapOne('u.permission', Permission, 'p', 'p.id = uor.permissionId AND uor.organizationId = uo.id AND uor.userId = u.id')
+      .where('u.id = :id', { id })
+      .select(['u.id', 'u.email', 'u.name', 'u.nickname', 'p.role'])
+      .getOne();
+
+    if (isNil(user)) {
+      throw new NotFoundUserExceptionDto(id.toString());
+    }
+
+    const permission = (user as User & { permission: Permission }).permission;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      nickname: user.nickname,
+      role: permission.role,
+    };
   }
 
   async findUserWithSecret(email: string) {
@@ -20,8 +52,26 @@ export class AuthRepository extends BaseRepository {
       .leftJoinAndSelect('u.userSecret', 'us')
       .leftJoinAndSelect('u.subscription', 'usb')
       .leftJoinAndSelect('usb.organization', 'uo')
-      .leftJoinAndMapOne('u.permission', Permission, 'up', 'up.userId = u.id AND up.organizationId = uo.id')
-      .select(['u.id', 'u.email', 'us.salt', 'us.password', 'us.iteration', 'up.id', 'up.role'])
+      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.userId = u.id AND uor.organizationId = uo.id')
+      .leftJoinAndMapOne('u.permission', Permission, 'up', 'up.id = uor.permissionId')
+      .select([
+        'u.id',
+        'u.email',
+        'u.name',
+        'u.nickname',
+        'us.id',
+        'us.salt',
+        'us.password',
+        'us.iteration',
+        'usb.id',
+        'uo.id',
+        'uor.id',
+        'uor.userId',
+        'uor.organizationId',
+        'uor.permissionId',
+        'up.id',
+        'up.role',
+      ])
       .getOne();
 
     console.log('🚀 ~ AuthRepository ~ findUserWithSecret ~ user:', user);
@@ -41,5 +91,41 @@ export class AuthRepository extends BaseRepository {
       userSecret: user.userSecret,
     };
     return combinedUser;
+  }
+
+  async addUserAccessLog(
+    id: number,
+    ipAddress: string,
+    userLoginInformationPayloadDto: UserLoginInformationPayloadDto | null,
+    accessStatus: UserAccessStatusType,
+  ) {
+    const userAccess = new UserAccess();
+    userAccess.userId = id;
+    userAccess.accessIp = ipAddress;
+    userAccess.status = accessStatus;
+    userAccess.lastAccessAt = new Date();
+
+    if (userLoginInformationPayloadDto) {
+      userAccess.accessDevice = userLoginInformationPayloadDto.accessDevice;
+      userAccess.accessBrowser = userLoginInformationPayloadDto.accessBrowser;
+      userAccess.accessUserAgent = userLoginInformationPayloadDto.accessUserAgent;
+    } else {
+      const lastUserAccess = await this.orm
+        .getRepo(UserAccess)
+        .createQueryBuilder('ua')
+        .where('ua.userId = :id', { id })
+        .andWhere('ua.lastAccessAt IS NOT NULL AND ua.lastAccessAt > :date', { date: new Date(Date.now() - 1000 * 60 * 60 * 24) })
+        .orderBy('ua.lastAccessAt', 'DESC')
+        .getOne();
+
+      if (isNil(lastUserAccess)) {
+        throw new NotFoundUserAccessExceptionDto(id.toString());
+      }
+
+      userAccess.accessDevice = lastUserAccess.accessDevice;
+      userAccess.accessBrowser = lastUserAccess.accessBrowser;
+      userAccess.accessUserAgent = lastUserAccess.accessUserAgent;
+    }
+    await this.orm.getRepo(UserAccess).save(userAccess);
   }
 }

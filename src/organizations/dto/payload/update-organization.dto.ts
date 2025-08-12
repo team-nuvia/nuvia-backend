@@ -20,6 +20,7 @@ export class UpdateOrganizationDto {
   description?: string;
 
   @ApiPropertyOptional({
+    enum: UserRole,
     description: '기본 역할',
     example: '기본 역할',
   })
