@@ -27,6 +27,7 @@ export class InputValidationPipeConstraints extends ValidationPipe implements Pi
   /* 검증 예외 처리 커스텀 */
   exceptionFactory = (errors: ValidationError[]) => {
     console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0]);
+    console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0].children?.[0]);
     const { constraints, namespace } = this.getChildrenConstraints(errors);
 
     const values = Object.values(constraints);
@@ -35,19 +36,6 @@ export class InputValidationPipeConstraints extends ValidationPipe implements Pi
     }
     return new InvalidInputValueExceptionDto(namespace.join('.'));
   };
-  // /* 검증 예외 처리 커스텀 */
-  // exceptionFactory = (errors: ValidationError[]) => {
-  //   console.log('🚀 ~ InputValidationPipe ~ errors:', errors);
-  //   const values = Object.values(errors[0].constraints ?? {});
-  //   if (values.length > 1) {
-  //     return new BadRequestException({
-  //       reason: [errors[0].property, values].join('.'),
-  //     });
-  //   }
-  //   return new BadRequestException({
-  //     reason: errors[0].property,
-  //   });
-  // };
 }
 
 export const InputValidationPipe = (options?: ValidationPipeOptions) => {

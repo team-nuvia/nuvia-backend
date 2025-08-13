@@ -31,6 +31,15 @@ export class UsersRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
+  getUserById(userId: number): Promise<User | null> {
+    return this.orm
+      .getRepo(User)
+      .findOne({
+        where: { id: userId },
+        relations: ['subscription', 'subscription.organization', 'subscription.organization.organizationRoles', 'organizationRoles'],
+      });
+  }
+
   async getMe(userId: number): Promise<GetUserMeNestedResponseDto | null> {
     const subscription = await this.orm
       .getRepo(Subscription)

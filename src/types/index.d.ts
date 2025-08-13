@@ -1,5 +1,7 @@
 import { UserRole } from '@common/variable/enums';
 import { HttpStatus } from '@nestjs/common';
+import { DataType } from '@share/enums/data-type';
+import { QuestionType } from '@share/enums/question-type';
 
 export declare global {
   export type StringOrNull = string | null;
@@ -30,6 +32,40 @@ export declare global {
     enum?: any;
     required?: boolean;
     nullable?: boolean;
+  }
+
+  export interface ICreateQuestionOption {
+    label: string;
+    sequence: number;
+  }
+
+  export interface ICreateQuestionAndOption {
+    surveyId: number;
+    title: string;
+    description: string | null;
+    questionType: QuestionType;
+    dataType: DataType;
+    isRequired: boolean;
+    sequence: number;
+    questionOptions: ICreateQuestionOption[];
+  }
+
+  export interface IUpdateQuestion {
+    id: number;
+    surveyId: number;
+    title: string;
+    description: string | null;
+    questionType: QuestionType;
+    dataType: DataType;
+    isRequired: boolean;
+    sequence: number;
+  }
+
+  export interface IUpdateQuestionOption {
+    id: number;
+    questionId: number;
+    label: string;
+    sequence: number;
   }
 }
 export declare module 'express' {

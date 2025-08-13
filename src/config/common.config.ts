@@ -6,7 +6,6 @@ import {
   PORT,
   RUN_MODE,
   RUN_ON,
-  SERVE_HOST,
   SERVER_URL,
   SERVER_VERSION,
 } from '@common/variable/environment';
@@ -14,7 +13,6 @@ import { registerAs } from '@nestjs/config';
 
 const commonConf = {
   version: `V${SERVER_VERSION}.${DEPLOY_VERSION}`,
-  serveHost: SERVE_HOST,
   serverUrl: SERVER_URL,
   host: HOST,
   port: PORT,

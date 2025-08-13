@@ -1,3 +1,4 @@
+import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
@@ -17,8 +18,9 @@ export class CreateSurveyQuestionPayloadNestedDto {
     description: '질문 설명',
     example: '질문 설명',
   })
+  @IsNullable()
   @IsString()
-  description!: string;
+  description!: string | null;
 
   @ApiProperty({
     description: '질문 필수 여부',

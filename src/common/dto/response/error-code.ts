@@ -60,6 +60,9 @@ export const ErrorKey = {
   NOT_FOUND_USER_ACCESS: 'NOT_FOUND_USER_ACCESS',
   SUCCESS_UPDATE_SURVEY_VISIBILITY: 'SUCCESS_UPDATE_SURVEY_VISIBILITY',
   SUCCESS_DELETE_SURVEY: 'SUCCESS_DELETE_SURVEY',
+  SUCCESS_GET_CATEGORY_LIST: 'SUCCESS_GET_CATEGORY_LIST',
+  NOT_ENOUGH_PERMISSION: 'NOT_ENOUGH_PERMISSION',
+  NO_MATCH_ORGANIZATION: 'NO_MATCH_ORGANIZATION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -121,6 +124,9 @@ export const ErrorCode = {
   NOT_FOUND_USER_ACCESS: HttpStatus.NOT_FOUND,
   SUCCESS_UPDATE_SURVEY_VISIBILITY: HttpStatus.OK,
   SUCCESS_DELETE_SURVEY: HttpStatus.OK,
+  SUCCESS_GET_CATEGORY_LIST: HttpStatus.OK,
+  NOT_ENOUGH_PERMISSION: HttpStatus.FORBIDDEN,
+  NO_MATCH_ORGANIZATION: HttpStatus.FORBIDDEN,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -182,6 +188,9 @@ export const ErrorMessage = {
   NOT_FOUND_USER_ACCESS: '사용자 접속 기록을 찾을 수 없습니다.',
   SUCCESS_UPDATE_SURVEY_VISIBILITY: '설문 공개 여부 변경 성공',
   SUCCESS_DELETE_SURVEY: '설문 삭제 성공',
+  SUCCESS_GET_CATEGORY_LIST: '카테고리 목록 조회 성공',
+  NOT_ENOUGH_PERMISSION: '권한이 부족합니다.',
+  NO_MATCH_ORGANIZATION: '조직이 일치하지 않습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

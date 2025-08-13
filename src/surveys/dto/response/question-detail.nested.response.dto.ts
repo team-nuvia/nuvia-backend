@@ -72,5 +72,5 @@ export class QuestionDetailNestedResponseDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionOptionDetailNestedResponseDto)
-  options: QuestionOptionDetailNestedResponseDto[] = [new QuestionOptionDetailNestedResponseDto()];
+  questionOptions: QuestionOptionDetailNestedResponseDto[] = [new QuestionOptionDetailNestedResponseDto()];
 }
