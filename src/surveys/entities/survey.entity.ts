@@ -1,25 +1,17 @@
+import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
 import { uniqueHash } from '@util/uniqueHash';
-import {
-  BeforeInsert,
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  Relation,
-  UpdateDateColumn,
-} from 'typeorm';
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { Question } from '../questions/entities/question.entity';
+import { Category } from './category.entity';
 
+@Index('category_id', ['categoryId'])
 @Entity()
-export class Survey {
+export class Survey extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -29,8 +21,8 @@ export class Survey {
   @Column('varchar', { length: 64, comment: '설문 고유 키', unique: true })
   hashedUniqueKey!: string;
 
-  @Column('varchar', { length: 50, comment: '설문 카테고리' })
-  category!: string;
+  @Column('int', { comment: '설문 카테고리 PK' })
+  categoryId!: number;
 
   @Column('varchar', { length: 50, comment: '설문 제목' })
   title!: string;
@@ -42,22 +34,13 @@ export class Survey {
   isPublic!: boolean;
 
   @Column('varchar', { length: 50, comment: '설문 상태', default: SurveyStatus.Draft })
-  status!: SurveyStatus;  
+  status!: SurveyStatus;
 
   @Column('int', { comment: '조회 수', default: 0 })
   viewCount!: number;
 
   @Column('datetime', { nullable: true, comment: '만료일시', default: null })
   expiresAt!: Date | null;
-
-  @CreateDateColumn({ type: 'datetime', comment: '생성일시' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ type: 'datetime', comment: '수정일시' })
-  updatedAt!: Date;
-
-  @DeleteDateColumn({ type: 'datetime', select: false, nullable: true, comment: '삭제일시' })
-  deletedAt!: Date | null;
 
   @OneToMany(() => Question, (question) => question.survey, {
     cascade: true,
@@ -68,6 +51,10 @@ export class Survey {
     onDelete: 'NO ACTION',
   })
   user!: Relation<User>;
+
+  @ManyToOne(() => Category, (category) => category.surveys, { onDelete: 'NO ACTION', createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'category_id' })
+  category!: Relation<Category>;
 
   get respondentCount(): number {
     const uniqueRespondentCount = new Set<number>();

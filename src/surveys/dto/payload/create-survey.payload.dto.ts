@@ -3,10 +3,18 @@ import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { DateFormat } from '@util/dateFormat';
-import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CreateSurveyQuestionPayloadNestedDto } from './create-survey-question.payload.nested.dto';
 
 export class CreateSurveyPayloadDto {
+  @ApiProperty({
+    description: '설문 카테고리 ID',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId!: number;
+
   @ApiProperty({
     description: '설문 제목',
     example: '설문 제목',
@@ -19,8 +27,9 @@ export class CreateSurveyPayloadDto {
     description: '설문 설명',
     example: '설문 설명',
   })
+  @IsNullable()
   @IsString()
-  description!: string;
+  description!: string | null;
 
   @ApiProperty({
     description: '설문 공개 여부',

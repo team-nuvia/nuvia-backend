@@ -12,6 +12,7 @@ import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto'
 import { CreateSurveyResponseDto } from './dto/response/create-survey.response.dto';
 import { DeleteSurveyResponseDto } from './dto/response/delete-survey.response.dto';
 import { GetRecentSurveyResponseDto } from './dto/response/get-recent-survey.response.dto';
+import { GetSurveyCategoryResponseDto } from './dto/response/get-survey-category.response.dto';
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
@@ -58,6 +59,17 @@ export class SurveysController {
     return new GetSurveyMetadataResponseDto(metadata);
   }
 
+  @ApiOperation({ summary: '카테고리 조회' })
+  @CombineResponses(HttpStatus.OK, GetSurveyCategoryResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Get('categories')
+  async getSurveyCategories(): Promise<GetSurveyCategoryResponseDto> {
+    const categories = await this.surveysService.getSurveyCategories();
+    return new GetSurveyCategoryResponseDto(categories);
+  }
+
   @ApiOperation({ summary: '설문 조회' })
   @CombineResponses(HttpStatus.OK, GetSurveyListResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
@@ -81,15 +93,26 @@ export class SurveysController {
     return new GetRecentSurveyResponseDto(survey);
   }
 
+  @ApiOperation({ summary: '설문 상세 조회 (유니크 키로 조회)' })
+  @CombineResponses(HttpStatus.OK, GetSurveyDetailResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @Transactional()
+  @Get('view/:hashedUniqueKey')
+  async getSurveyDetailAndViewCountUpdate(@Param('hashedUniqueKey') hashedUniqueKey: string): Promise<GetSurveyDetailResponseDto> {
+    const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey);
+    return new GetSurveyDetailResponseDto(survey);
+  }
+
   @ApiOperation({ summary: '설문 상세 조회' })
   @CombineResponses(HttpStatus.OK, GetSurveyDetailResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Transactional()
   @RequiredLogin
-  @Get(':id')
-  async getSurveyDetail(@Param('id') id: string): Promise<GetSurveyDetailResponseDto> {
-    const survey = await this.surveysService.getSurveyDetail(+id);
+  @Get(':surveyId')
+  async getSurveyDetail(@LoginUser() user: LoginUserData, @Param('surveyId') surveyId: string): Promise<GetSurveyDetailResponseDto> {
+    const survey = await this.surveysService.getSurveyDetail(+surveyId, user.id);
     return new GetSurveyDetailResponseDto(survey);
   }
 
@@ -112,10 +135,15 @@ export class SurveysController {
   @CombineResponses(HttpStatus.OK, UpdateSurveyResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @Transactional()
   @RequiredLogin
   @Put(':id')
-  async updateSurvey(@Param('id') id: string, @Body() updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<UpdateSurveyResponseDto> {
-    await this.surveysService.updateSurvey(+id, updateSurveyPayloadDto);
+  async updateSurvey(
+    @LoginUser() user: LoginUserData,
+    @Param('id') id: string,
+    @Body() updateSurveyPayloadDto: UpdateSurveyPayloadDto,
+  ): Promise<UpdateSurveyResponseDto> {
+    await this.surveysService.updateSurvey(+id, user.id, updateSurveyPayloadDto);
     return new UpdateSurveyResponseDto();
   }
 

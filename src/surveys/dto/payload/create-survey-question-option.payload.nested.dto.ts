@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateSurveyQuestionOptionPayloadNestedDto {
   @ApiProperty({
@@ -9,4 +9,12 @@ export class CreateSurveyQuestionOptionPayloadNestedDto {
   @IsNotEmpty()
   @IsString()
   label!: string;
+
+  @ApiProperty({
+    description: '질문 옵션 순서',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  sequence!: number;
 }

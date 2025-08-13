@@ -7,5 +7,4 @@ export class SubscriptionsRepository extends BaseRepository {
   constructor(readonly orm: OrmHelper) {
     super(orm);
   }
-
 }

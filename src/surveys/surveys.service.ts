@@ -8,6 +8,7 @@ import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto'
 import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
 import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
+import { GetCategoryNestedResponseDto } from './dto/response/get-category.nested.response.dto';
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { SurveysRepository } from './surveys.repository';
@@ -18,6 +19,10 @@ export class SurveysService {
 
   async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<void> {
     await this.surveyRepository.createSurvey(userId, createSurveyPayloadDto);
+  }
+
+  getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {
+    return this.surveyRepository.getSurveyCategories();
   }
 
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
@@ -36,9 +41,13 @@ export class SurveysService {
     return await this.surveyRepository.getRecentSurvey(userId);
   }
 
-  async getSurveyDetail(surveyId: number): Promise<SurveyDetailNestedResponseDto> {
-    await this.surveyRepository.viewCountUpdate(surveyId);
-    return await this.surveyRepository.getSurveyDetail(surveyId);
+  async getSurveyDetail(surveyId: number, userId?: number): Promise<SurveyDetailNestedResponseDto> {
+    return await this.surveyRepository.getSurveyDetail(surveyId, userId);
+  }
+
+  async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string): Promise<SurveyDetailNestedResponseDto> {
+    await this.surveyRepository.viewCountUpdate(hashedUniqueKey);
+    return await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey);
   }
 
   async toggleSurveyVisibility(userId: number, surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
@@ -57,8 +66,8 @@ export class SurveysService {
     await this.surveyRepository.toggleSurveyVisibility(surveyId, updateSurveyVisibilityPayloadDto);
   }
 
-  async updateSurvey(id: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
-    await this.surveyRepository.updateSurvey(id, updateSurveyPayloadDto);
+  async updateSurvey(id: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
+    await this.surveyRepository.updateSurvey(id, userId, updateSurveyPayloadDto);
   }
 
   async deleteSurvey(userId: number, surveyId: number): Promise<void> {

@@ -1,10 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
+import { GetCategoryNestedResponseDto } from './get-category.nested.response.dto';
 import { QuestionDetailNestedResponseDto } from './question-detail.nested.response.dto';
 
 export class SurveyDetailNestedResponseDto {
   @ApiProperty({ description: '설문조사 ID', example: 1 })
   id: number = 1;
+
+  @ApiProperty({ description: '설문 유니크 키', example: '1234567890' })
+  hashedUniqueKey: string = '1234567890';
+
+  @ApiProperty({ description: '설문 카테고리', type: () => GetCategoryNestedResponseDto })
+  category: GetCategoryNestedResponseDto = new GetCategoryNestedResponseDto();
+
+  @ApiProperty({ description: '조회 수', example: 100 })
+  viewCount: number = 100;
 
   @ApiProperty({ description: '설문조사 제목', example: '고객 만족도 조사' })
   title: string = '고객 만족도 조사';

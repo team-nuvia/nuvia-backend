@@ -1,16 +1,19 @@
+import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { UpdateSurveyQuestionOptionNestedDto } from './update-survey-question-option.nested.payload.dto';
 
 export class UpdateSurveyQuestionNestedDto {
   @ApiProperty({
     description: '질문 PK',
     example: 1,
   })
-  @IsNotEmpty()
+  @IsNullable()
   @IsNumber()
-  id!: number;
+  id!: number | null;
 
   @ApiProperty({
     description: '질문 제목',
@@ -24,9 +27,9 @@ export class UpdateSurveyQuestionNestedDto {
     description: '질문 설명',
     example: '질문 설명',
   })
-  @IsNotEmpty()
+  @IsNullable()
   @IsString()
-  description!: string;
+  description!: string | null;
 
   @ApiProperty({
     enum: QuestionType,
@@ -61,4 +64,16 @@ export class UpdateSurveyQuestionNestedDto {
   @IsNotEmpty()
   @IsNumber()
   sequence!: number;
+
+  @ApiProperty({
+    description: '질문 옵션 데이터',
+    type: () => UpdateSurveyQuestionOptionNestedDto,
+    isArray: true,
+  })
+  @IsOptional({ each: true })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(0)
+  @Type(() => UpdateSurveyQuestionOptionNestedDto)
+  questionOptions!: UpdateSurveyQuestionOptionNestedDto[];
 }

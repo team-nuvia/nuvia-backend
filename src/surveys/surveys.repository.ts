@@ -1,14 +1,20 @@
+import { NoMatchOrganizationExceptionDto } from '@/organizations/dto/exception/no-match-organization.exception.dto';
+import { NotEnoughPermissionExceptionDto } from '@/permissions/dto/exception/not-enough-permission.exception.dto';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { SurveyStatus } from '@share/enums/survey-status';
+import { UserRole, UserRoleList } from '@share/enums/user-role';
+import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
+import { In } from 'typeorm';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -17,11 +23,14 @@ import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto'
 import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
 import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
+import { GetCategoryNestedResponseDto } from './dto/response/get-category.nested.response.dto';
 import { GetSurveyListNestedResponseDto } from './dto/response/get-survey-list.nested.response.dto';
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
+import { Category } from './entities/category.entity';
 import { Survey } from './entities/survey.entity';
 import { Question } from './questions/entities/question.entity';
+import { QuestionOption } from './questions/options/entities/question-option.entity';
 
 @Injectable()
 export class SurveysRepository extends BaseRepository {
@@ -43,6 +52,7 @@ export class SurveysRepository extends BaseRepository {
       .values({
         userId,
         hashedUniqueKey,
+        categoryId: createSurveyPayloadDto.categoryId,
         title: createSurveyPayloadDto.title,
         description: createSurveyPayloadDto.description,
         expiresAt: createSurveyPayloadDto.expiresAt ?? new Date(),
@@ -50,6 +60,10 @@ export class SurveysRepository extends BaseRepository {
         status: createSurveyPayloadDto.status,
       })
       .execute();
+  }
+
+  getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {
+    return this.orm.getRepo(Category).createQueryBuilder('c').select(['c.id', 'c.name']).getMany();
   }
 
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
@@ -78,6 +92,10 @@ export class SurveysRepository extends BaseRepository {
 
     const composedSurveyList = surveyList.map<DashboardSurveyNestedResponseDto>((survey) => ({
       id: survey.id,
+      category: {
+        id: survey.category.id,
+        name: survey.category.name,
+      },
       title: survey.title,
       description: survey.description,
       questionCount: survey.questions.length,
@@ -161,13 +179,20 @@ export class SurveysRepository extends BaseRepository {
     const surveyList = await this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .where('s.userId = :userId', { userId })
       .orderBy('s.createdAt', 'DESC')
       .getMany();
-    return surveyList.map((survey) => ({
+
+    return surveyList.map<DashboardRecentSurveyNestedResponseDto>((survey) => ({
       id: survey.id,
+      category: {
+        id: survey.category.id,
+        name: survey.category.name,
+      },
+      hashedUniqueKey: survey.hashedUniqueKey,
       title: survey.title,
       description: survey.description,
       status: survey.status,
@@ -184,6 +209,7 @@ export class SurveysRepository extends BaseRepository {
     const surveyQuery = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .leftJoinAndSelect('sqa.user', 'u')
@@ -208,7 +234,10 @@ export class SurveysRepository extends BaseRepository {
       title: survey.title,
       description: survey.description,
       hashedUniqueKey: survey.hashedUniqueKey,
-      category: survey.category,
+      category: {
+        id: survey.category.id,
+        name: survey.category.name,
+      },
       isPublic: survey.isPublic,
       status: survey.status,
       viewCount: survey.viewCount,
@@ -227,15 +256,15 @@ export class SurveysRepository extends BaseRepository {
     };
   }
 
-  async viewCountUpdate(id: number): Promise<void> {
+  async viewCountUpdate(hashedUniqueKey: string): Promise<void> {
     await this.orm
       .getManager()
-      .createQueryBuilder(Survey, 's')
-      .update()
+      .createQueryBuilder()
+      .update(Survey)
       .set({
         viewCount: () => 'viewCount + 1',
       })
-      .where('s.id = :id', { id })
+      .where('hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
       .execute();
   }
 
@@ -243,6 +272,7 @@ export class SurveysRepository extends BaseRepository {
     const query = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.user', 'u')
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
@@ -262,6 +292,12 @@ export class SurveysRepository extends BaseRepository {
 
     return {
       id: survey.id,
+      hashedUniqueKey: survey.hashedUniqueKey,
+      category: {
+        id: survey.category.id,
+        name: survey.category.name,
+      },
+      viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
       author: survey.user ? { id: survey.user.id, name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
@@ -274,9 +310,11 @@ export class SurveysRepository extends BaseRepository {
         isRequired: Boolean(question.isRequired),
         questionType: question.questionType,
         dataType: question.dataType,
-        options: question.questionOptions.map((option) => ({
+        questionOptions: question.questionOptions.map((option) => ({
           id: option.id,
           label: option.label,
+          description: option.description,
+          sequence: option.sequence,
         })),
         sequence: question.sequence,
       })),
@@ -291,24 +329,220 @@ export class SurveysRepository extends BaseRepository {
     };
   }
 
+  async getSurveyDetailByHashedUniqueKey(hashedUniqueKey: string): Promise<SurveyDetailNestedResponseDto> {
+    const query = this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.category', 'sc')
+      .leftJoinAndSelect('s.user', 'u')
+      .leftJoinAndSelect('u.profile', 'up')
+      .leftJoinAndSelect('s.questions', 'sq')
+      .leftJoinAndSelect('sq.questionOptions', 'sqo')
+      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
+
+    const survey = await query.getOne();
+
+    if (isNil(survey)) {
+      throw new NotFoundSurveyExceptionDto();
+    }
+
+    return {
+      id: survey.id,
+      hashedUniqueKey: survey.hashedUniqueKey,
+      category: {
+        id: survey.category.id,
+        name: survey.category.name,
+      },
+      viewCount: survey.viewCount,
+      title: survey.title,
+      description: survey.description,
+      author: survey.user ? { id: survey.user.id, name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
+      estimatedTime: survey.estimatedTime,
+      totalResponses: survey.respondentCount,
+      questions: survey.questions.map((question) => ({
+        id: question.id,
+        title: question.title,
+        description: question.description,
+        isRequired: Boolean(question.isRequired),
+        questionType: question.questionType,
+        dataType: question.dataType,
+        questionOptions: question.questionOptions.map((option) => ({
+          id: option.id,
+          label: option.label,
+          description: option.description,
+          sequence: option.sequence,
+        })),
+        sequence: question.sequence,
+      })),
+      isPublic: survey.isPublic,
+      status: survey.status,
+      questionCount: survey.questions.length,
+      respondentCount: survey.respondentCount,
+      isOwner: survey.hashedUniqueKey === hashedUniqueKey,
+      expiresAt: survey.expiresAt,
+      createdAt: survey.createdAt,
+      updatedAt: survey.updatedAt,
+    };
+  }
+
   async toggleSurveyVisibility(surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
     await this.orm.getManager().update(Survey, surveyId, { isPublic: updateSurveyVisibilityPayloadDto.isPublic });
   }
 
-  async updateSurvey(id: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
+  async updateSurvey(id: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
+    // 권한 체크
+    // 1. 설문을 작성한 사람의 조직과 현재 수정하려는 사람이 참여했는지 검증
+    // 2. 해당 조직에서 수정 가능한 권한인지 검증
+    const deleteQuestionQueue: number[] = [];
+    const deleteQuestionOptionQueue: number[] = [];
+    const createQuestionAndOptionQueue: ICreateQuestionAndOption[] = [];
+    const updateQuestionQueue: IUpdateQuestion[] = [];
+    const updateQuestionOptionQueue: IUpdateQuestionOption[] = [];
+
+    /* 수정할 설문 정보 */
+    const survey = await this.orm.getRepo(Survey).findOne({ where: { id }, relations: { user: { subscription: { organization: true } } } });
+
+    if (!survey) {
+      throw new NotFoundSurveyExceptionDto();
+    }
+
+    /* 수정 시도하는 사용자 정보 */
+    const user = await this.orm.getRepo(User).findOne({
+      where: { id: userId },
+      relations: [
+        'subscription',
+        'subscription.organization',
+        'subscription.organization.organizationRoles',
+        'organizationRoles',
+        'organizationRoles.permission',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundUserExceptionDto();
+    }
+
+    /* 수정 시도하는 사용자와 동일 조직인지 검증 */
+    if (survey.user.subscription.organization.id !== user.subscription.organization.id) {
+      throw new NoMatchOrganizationExceptionDto();
+    }
+
+    /* 수정 시도하는 사용자의 조직 내 권한 검증 */
+    const userRole = user.organizationRoles.find((role) => role.organizationId === survey.user.subscription.organization.id);
+    if (userRole && UserRoleList.indexOf(userRole.permission.role) < UserRoleList.indexOf(UserRole.Editor)) {
+      throw new NotEnoughPermissionExceptionDto();
+    }
+
+    /* 설문 폼 데이터 */
     const surveyFormData = updateSurveyPayloadDto.surveyFormData;
+
+    /* 설문 질문 데이터 */
     const surveyQuestionDataList = updateSurveyPayloadDto.surveyQuestionData;
 
-    await this.orm.getManager().transaction(async (transactionalEntityManager) => {
-      await transactionalEntityManager.update(Survey, id, surveyFormData);
+    /* 수정할 질문 아이디 리스트 */
+    const updateIdList = surveyQuestionDataList.map((question) => question.id).filter((id) => !isNil(id));
 
-      for (const surveyQuestionData of surveyQuestionDataList) {
-        await transactionalEntityManager.update(Question, surveyQuestionData.id, surveyQuestionData);
+    /* 삭제할 질문 리스트 */
+    const deleteTargetQuestionList =
+      updateIdList.length > 0
+        ? await this.orm
+            .getManager()
+            .createQueryBuilder(Question, 'q')
+            .where('q.surveyId = :surveyId', { surveyId: id })
+            .andWhere('q.id NOT IN (:...updateIdList)', { updateIdList })
+            .getMany()
+        : [];
+    deleteQuestionQueue.push(...deleteTargetQuestionList.map((question) => question.id));
+
+    /* 삭제, 수정할 질문 옵션 쿼리 생성 */
+    const deleteTargetQueryQueue: Promise<QuestionOption[]>[] = [];
+    for (const question of surveyQuestionDataList) {
+      /* 수정할 질문 데이터 */
+      if (isNil(question.id)) {
+        const createQuestion = {
+          surveyId: id,
+          title: question.title,
+          description: question.description,
+          questionType: question.questionType,
+          dataType: question.dataType,
+          isRequired: question.isRequired,
+          sequence: question.sequence,
+          questionOptions: question.questionOptions.map((questionOption) => ({
+            label: questionOption.label,
+            sequence: questionOption.sequence,
+          })),
+        };
+        createQuestionAndOptionQueue.push(createQuestion);
+      } else {
+        const updateQuestion = {
+          id: question.id as number,
+          surveyId: id,
+          title: question.title,
+          description: question.description,
+          questionType: question.questionType,
+          dataType: question.dataType,
+          isRequired: question.isRequired,
+          sequence: question.sequence,
+        };
+        updateQuestionQueue.push(updateQuestion);
+
+        /* 수정할 질문 옵션 데이터 */
+        const updateQuestionOptionList = question.questionOptions.map((questionOption) => ({
+          id: questionOption.id as number,
+          questionId: question.id as number,
+          label: questionOption.label,
+          sequence: questionOption.sequence,
+        }));
+        updateQuestionOptionQueue.push(...updateQuestionOptionList);
+
+        /* 삭제할 질문 옵션 쿼리 생성 */
+        const questionOptionIdList = question.questionOptions.map((questionOption) => questionOption.id).filter((id) => !isNil(id));
+        if (questionOptionIdList.length > 0) {
+          deleteTargetQueryQueue.push(
+            this.orm
+              .getManager()
+              .createQueryBuilder(QuestionOption, 'qo')
+              .where('qo.questionId = :questionId', { questionId: question.id })
+              .andWhere('qo.id NOT IN (:...questionOptionIdList)', { questionOptionIdList })
+              .getMany(),
+          );
+        }
       }
-    });
+    }
+
+    /* 질문, 질문 옵션 추가 */
+    await this.orm.getManager().save(Question, createQuestionAndOptionQueue);
+
+    /* 삭제할 질문 옵션 쿼리 실행 */
+    const deleteTargetOptionList = await Promise.all(deleteTargetQueryQueue);
+    deleteQuestionOptionQueue.push(...deleteTargetOptionList.flatMap((option) => option.map((option) => option.id)));
+
+    /* upsert, delete, update 쿼리 실행 */
+    await this.orm.getManager().softDelete(Question, { surveyId: id, id: In(deleteQuestionQueue) });
+    await this.orm.getManager().softDelete(QuestionOption, { questionId: In(deleteQuestionOptionQueue) });
+
+    /* 질문, 질문 옵션 수정 */
+    await this.orm.getManager().upsert(Question, updateQuestionQueue, { conflictPaths: ['id'], skipUpdateIfNoValuesChanged: true });
+    await this.orm.getManager().upsert(QuestionOption, updateQuestionOptionQueue, { conflictPaths: ['id'], skipUpdateIfNoValuesChanged: true });
+
+    /* 설문 정보 수정 */
+    await this.orm.getManager().update(
+      Survey,
+      { id },
+      {
+        userId,
+        categoryId: surveyFormData.categoryId,
+        title: surveyFormData.title,
+        description: surveyFormData.description,
+        expiresAt: surveyFormData.expiresAt,
+        isPublic: surveyFormData.isPublic,
+        status: surveyFormData.status,
+      },
+    );
   }
 
   async deleteSurvey(surveyId: number, userId: number): Promise<void> {
-    await this.orm.getManager().delete(Survey, { id: surveyId, userId });
+    await this.orm.getManager().softDelete(Survey, { id: surveyId, userId });
   }
 }
