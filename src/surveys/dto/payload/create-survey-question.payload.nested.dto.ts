@@ -2,7 +2,7 @@ import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
-import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CreateSurveyQuestionOptionPayloadNestedDto } from './create-survey-question-option.payload.nested.dto';
 
 export class CreateSurveyQuestionPayloadNestedDto {
@@ -36,7 +36,7 @@ export class CreateSurveyQuestionPayloadNestedDto {
     example: '질문 유형',
   })
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(QuestionType)
   questionType!: QuestionType;
 
   @ApiProperty({
@@ -45,8 +45,16 @@ export class CreateSurveyQuestionPayloadNestedDto {
     example: '질문 답변 유형',
   })
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(DataType)
   dataType!: DataType;
+
+  @ApiProperty({
+    description: '질문 순서',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  sequence!: number;
 
   @ApiProperty({
     description: '질문 옵션 목록',
@@ -54,5 +62,5 @@ export class CreateSurveyQuestionPayloadNestedDto {
   })
   @ArrayMinSize(0)
   @IsArray()
-  options!: CreateSurveyQuestionOptionPayloadNestedDto[];
+  questionOptions!: CreateSurveyQuestionOptionPayloadNestedDto[];
 }

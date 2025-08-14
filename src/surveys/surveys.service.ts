@@ -1,5 +1,7 @@
 import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-access.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { UserRole } from '@share/enums/user-role';
+import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -18,7 +20,7 @@ export class SurveysService {
   constructor(private readonly surveyRepository: SurveysRepository) {}
 
   async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<void> {
-    const subscription = await this.surveyRepository.getCurrentSubscription(userId);
+    const subscription = await this.surveyRepository.getCurrentOrganization(userId);
 
     await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
@@ -53,6 +55,8 @@ export class SurveysService {
   }
 
   async toggleSurveyVisibility(userId: number, surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
+    const subscription = await this.surveyRepository.getCurrentOrganization(userId);
+
     const survey = await this.surveyRepository.getSurveyDetail(surveyId, userId);
 
     if (!survey) {
@@ -61,7 +65,11 @@ export class SurveysService {
 
     // TODO: 권한 체크 로직 변경 (동일 조직인지 확인)
     // TODO: Editor 이상 권한인지 확인
-    if (survey.author?.id !== userId) {
+    if (survey.subscriptionId !== subscription.id) {
+      throw new ForbiddenAccessExceptionDto();
+    }
+
+    if (!isRoleAtLeast(subscription.permission.role, UserRole.Editor)) {
       throw new ForbiddenAccessExceptionDto();
     }
 

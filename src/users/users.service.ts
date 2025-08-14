@@ -1,6 +1,7 @@
 import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-user-organizations.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { DEFAULT_ORGANIZATION_NAME } from '@common/variable/globals';
@@ -14,7 +15,6 @@ import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-us
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
-import { GetUserOrganizationsDataDto } from './dto/response/get-user-organizations.response.dto';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
@@ -82,7 +82,7 @@ export class UsersService {
     return newUser;
   }
 
-  async getUserOrganizations(userId: number): Promise<GetUserOrganizationsDataDto> {
+  async getUserOrganizations(userId: number): Promise<GetUserOrganizationsNestedResponseDto> {
     const userOrganizations = await this.userRepository.getUserOrganizations(userId);
     return userOrganizations;
   }
