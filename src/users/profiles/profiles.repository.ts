@@ -1,13 +1,25 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
-import { DeleteResult } from 'typeorm';
+import { DeleteResult, FindOptionsWhere } from 'typeorm';
 import { Profile } from './entities/profile.entity';
 
 @Injectable()
 export class ProfilesRepository extends BaseRepository {
   constructor(protected readonly orm: OrmHelper) {
     super(orm);
+  }
+
+  softDelete(id: number): Promise<DeleteResult> {
+    return this.orm.getRepo(Profile).softDelete(id);
+  }
+
+  existsByWithDeleted(condition: FindOptionsWhere<Profile>): Promise<boolean> {
+    return this.orm.getRepo(Profile).exists({ where: condition, withDeleted: true });
+  }
+
+  existsBy(condition: FindOptionsWhere<Profile>): Promise<boolean> {
+    return this.orm.getRepo(Profile).exists({ where: condition });
   }
 
   async findByUserId(userId: number) {

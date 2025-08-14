@@ -1,5 +1,5 @@
-import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
@@ -8,6 +8,7 @@ import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
+import { DeleteResult, FindOptionsWhere } from 'typeorm';
 import { NotFoundUserAccessExceptionDto } from './dto/exception/not-found-user-access.exception.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 
@@ -17,14 +18,25 @@ export class AuthRepository extends BaseRepository {
     super(orm);
   }
 
+  softDelete(id: number): Promise<DeleteResult> {
+    return this.orm.getRepo(User).softDelete(id);
+  }
+
+  existsByWithDeleted(condition: FindOptionsWhere<User>): Promise<boolean> {
+    return this.orm.getRepo(User).exists({ where: condition, withDeleted: true });
+  }
+
+  existsBy(condition: FindOptionsWhere<User>): Promise<boolean> {
+    return this.orm.getRepo(User).exists({ where: condition });
+  }
+
   async findUserById(id: number): Promise<LoginUserData> {
     const user = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.subscription', 'usb')
-      .leftJoinAndSelect('usb.organization', 'uo')
-      .leftJoinAndMapOne('uo.organizationRole', OrganizationRole, 'uor', 'uor.organizationId = uo.id AND uor.userId = u.id')
-      .leftJoinAndMapOne('u.permission', Permission, 'p', 'p.id = uor.permissionId AND uor.organizationId = uo.id AND uor.userId = u.id')
+      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.subscriptionId = usb.id AND uor.userId = u.id')
+      .leftJoinAndMapOne('u.permission', Permission, 'p', 'p.id = uor.permissionId AND uor.subscriptionId = usb.id AND uor.userId = u.id')
       .where('u.id = :id', { id })
       .select(['u.id', 'u.email', 'u.name', 'u.nickname', 'p.role'])
       .getOne();
@@ -51,8 +63,7 @@ export class AuthRepository extends BaseRepository {
       .where('u.email = :email', { email })
       .leftJoinAndSelect('u.userSecret', 'us')
       .leftJoinAndSelect('u.subscription', 'usb')
-      .leftJoinAndSelect('usb.organization', 'uo')
-      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.userId = u.id AND uor.organizationId = uo.id')
+      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.userId = u.id AND uor.subscriptionId = usb.id')
       .leftJoinAndMapOne('u.permission', Permission, 'up', 'up.id = uor.permissionId')
       .select([
         'u.id',
@@ -64,10 +75,9 @@ export class AuthRepository extends BaseRepository {
         'us.password',
         'us.iteration',
         'usb.id',
-        'uo.id',
         'uor.id',
         'uor.userId',
-        'uor.organizationId',
+        'uor.subscriptionId',
         'uor.permissionId',
         'up.id',
         'up.role',

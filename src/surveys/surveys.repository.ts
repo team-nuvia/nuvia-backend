@@ -1,9 +1,10 @@
-import { NoMatchOrganizationExceptionDto } from '@/organizations/dto/exception/no-match-organization.exception.dto';
 import { NotEnoughPermissionExceptionDto } from '@/permissions/dto/exception/not-enough-permission.exception.dto';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
@@ -14,7 +15,8 @@ import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
-import { In } from 'typeorm';
+import { DeleteResult, FindOptionsWhere, In } from 'typeorm';
+import { NoMatchSubscriptionExceptionDto } from './dto/exception/no-match-subscription.exception.dto';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -41,15 +43,40 @@ export class SurveysRepository extends BaseRepository {
     super(orm);
   }
 
-  async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
-    console.log('🚀 ~ SurveysRepository ~ createSurvey ~ createSurveyPayloadDto:', createSurveyPayloadDto);
+  softDelete(id: number): Promise<DeleteResult> {
+    return this.orm.getRepo(Survey).softDelete(id);
+  }
+
+  existsByWithDeleted(condition: FindOptionsWhere<Survey>): Promise<boolean> {
+    return this.orm.getRepo(Survey).exists({ where: condition, withDeleted: true });
+  }
+
+  existsBy(condition: FindOptionsWhere<Survey>): Promise<boolean> {
+    return this.orm.getRepo(Survey).exists({ where: condition });
+  }
+
+  async getCurrentSubscription(userId: number) {
+    const organizationRole = await this.orm
+      .getRepo(OrganizationRole)
+      .findOne({ where: { userId, isActive: true }, relations: { subscription: true } });
+
+    if (!organizationRole) {
+      throw new NotFoundOrganizationRoleExceptionDto();
+    }
+
+    return organizationRole.subscription;
+  }
+
+  async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     const hashedUniqueKey = uniqueHash();
+
     await this.orm
       .getManager()
       .createQueryBuilder()
       .insert()
-      .into('survey')
+      .into(Survey)
       .values({
+        subscriptionId,
         userId,
         hashedUniqueKey,
         categoryId: createSurveyPayloadDto.categoryId,
@@ -401,7 +428,7 @@ export class SurveysRepository extends BaseRepository {
     const updateQuestionOptionQueue: IUpdateQuestionOption[] = [];
 
     /* 수정할 설문 정보 */
-    const survey = await this.orm.getRepo(Survey).findOne({ where: { id }, relations: { user: { subscription: { organization: true } } } });
+    const survey = await this.orm.getRepo(Survey).findOne({ where: { id }, relations: { user: { subscription: true } } });
 
     if (!survey) {
       throw new NotFoundSurveyExceptionDto();
@@ -410,13 +437,7 @@ export class SurveysRepository extends BaseRepository {
     /* 수정 시도하는 사용자 정보 */
     const user = await this.orm.getRepo(User).findOne({
       where: { id: userId },
-      relations: [
-        'subscription',
-        'subscription.organization',
-        'subscription.organization.organizationRoles',
-        'organizationRoles',
-        'organizationRoles.permission',
-      ],
+      relations: ['subscription', 'subscription.organizationRoles', 'organizationRoles', 'organizationRoles.permission'],
     });
 
     if (!user) {
@@ -424,12 +445,12 @@ export class SurveysRepository extends BaseRepository {
     }
 
     /* 수정 시도하는 사용자와 동일 조직인지 검증 */
-    if (survey.user.subscription.organization.id !== user.subscription.organization.id) {
-      throw new NoMatchOrganizationExceptionDto();
+    if (survey.user.subscription.id !== user.subscription.id) {
+      throw new NoMatchSubscriptionExceptionDto();
     }
 
     /* 수정 시도하는 사용자의 조직 내 권한 검증 */
-    const userRole = user.organizationRoles.find((role) => role.organizationId === survey.user.subscription.organization.id);
+    const userRole = user.organizationRoles.find((role) => role.subscriptionId === survey.user.subscription.id);
     if (userRole && UserRoleList.indexOf(userRole.permission.role) < UserRoleList.indexOf(UserRole.Editor)) {
       throw new NotEnoughPermissionExceptionDto();
     }

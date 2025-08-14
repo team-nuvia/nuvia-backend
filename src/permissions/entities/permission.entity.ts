@@ -1,4 +1,4 @@
-import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserRole } from '@share/enums/user-role';
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';

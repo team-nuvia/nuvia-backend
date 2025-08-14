@@ -1,17 +1,17 @@
-import { Organization } from '@/organizations/entities/organization.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation, Unique } from 'typeorm';
 
-@Unique(['organizationId', 'userId', 'permissionId'])
+@Unique(['subscriptionId', 'userId', 'permissionId'])
 @Entity()
 export class OrganizationRole extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column('int', { comment: '조직 아이디' })
-  organizationId!: number;
+  @Column('int', { comment: '구독/조직 아이디' })
+  subscriptionId!: number;
 
   @Column('int', { comment: '사용자 아이디' })
   userId!: number;
@@ -19,8 +19,11 @@ export class OrganizationRole extends DefaultDateInterface {
   @Column('int', { comment: '권한 아이디' })
   permissionId!: number;
 
-  @ManyToOne(() => Organization, (organization) => organization.organizationRoles)
-  organization!: Relation<Organization>;
+  @Column('tinyint', { default: false, comment: '활성 여부' })
+  isActive!: boolean;
+
+  @ManyToOne(() => Subscription, (subscription) => subscription.organizationRoles)
+  subscription!: Relation<Subscription>;
 
   @ManyToOne(() => User, (user) => user.organizationRoles)
   user!: Relation<User>;

@@ -1,14 +1,13 @@
 import { ErrorKey, ErrorMessage, ForbiddenException } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NoMatchOrganizationExceptionDto extends ForbiddenException {
+export class NoMatchSubscriptionExceptionDto extends ForbiddenException {
   @ApiProperty({
-    description: '에러 메시지',
-    example: ErrorMessage.NO_MATCH_ORGANIZATION,
+    example: ErrorMessage.NO_MATCH_SUBSCRIPTION,
   })
   declare message: string;
 
   constructor(reason: StringOrNull = null) {
-    super({ code: ErrorKey.NO_MATCH_ORGANIZATION, reason });
+    super({ code: ErrorKey.NO_MATCH_SUBSCRIPTION, reason });
   }
 }
