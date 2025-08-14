@@ -1,8 +1,7 @@
-import { Organization } from '@/organizations/entities/organization.entity';
-import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { DEFAULT_ORGANIZATION_NAME } from '@common/variable/globals';
 import { Injectable } from '@nestjs/common';
@@ -15,6 +14,7 @@ import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-us
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
+import { GetUserOrganizationsDataDto } from './dto/response/get-user-organizations.response.dto';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
@@ -25,12 +25,20 @@ export class UsersService {
   ) {}
 
   async create({ password, ...createUserDto }: CreateUserPayloadDto) {
-    const alreadyExistUser = await this.userRepository.existsBy({
+    const alreadyExistUserEmail = await this.userRepository.existsBy({
       email: createUserDto.email,
     });
 
-    if (alreadyExistUser) {
-      throw new AlreadyExistsUserExceptionDto(createUserDto.email);
+    if (alreadyExistUserEmail) {
+      throw new AlreadyExistsUserExceptionDto('email');
+    }
+
+    const alreadyExistUserNickname = await this.userRepository.existsBy({
+      nickname: createUserDto.nickname,
+    });
+
+    if (alreadyExistUserNickname) {
+      throw new AlreadyExistsUserExceptionDto('nickname');
     }
 
     const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
@@ -42,24 +50,20 @@ export class UsersService {
     });
 
     /* 구독 생성 & 조직 생성 */
-    const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target'> & { organization: Partial<Organization> }> = {
+    const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
       userId: newUser.id,
       planId: 1,
-      status: SubscriptionStatusType.ACTIVE,
-      target: SubscriptionTargetType.USER,
-      organization: {
-        name: DEFAULT_ORGANIZATION_NAME,
-        description: null,
-        defaultRole: UserRole.Owner,
-      },
+      name: DEFAULT_ORGANIZATION_NAME,
+      description: null,
+      defaultRole: UserRole.Owner,
+      status: SubscriptionStatusType.Active,
+      target: SubscriptionTargetType.Individual,
     };
     const subscription = await this.userRepository.orm.getRepo(Subscription).save(subscriptionData);
 
-    const organization = subscription.organization;
-
     const permission = await this.userRepository.orm.getRepo(Permission).findOne({
       where: {
-        role: organization.defaultRole,
+        role: subscription.defaultRole,
       },
     });
 
@@ -70,11 +74,17 @@ export class UsersService {
     /* 조직 역할 생성 */
     await this.userRepository.orm.getRepo(OrganizationRole).insert({
       userId: newUser.id,
-      organizationId: organization.id,
+      subscriptionId: subscription.id,
       permissionId: permission.id,
+      isActive: true,
     });
 
     return newUser;
+  }
+
+  async getUserOrganizations(userId: number): Promise<GetUserOrganizationsDataDto> {
+    const userOrganizations = await this.userRepository.getUserOrganizations(userId);
+    return userOrganizations;
   }
 
   async getMe(id: number): Promise<GetUserMeNestedResponseDto> {
@@ -85,6 +95,11 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async updateUserOrganization(userId: number, organizationId: number): Promise<void> {
+    await this.userRepository.updateUserOrganization(userId, organizationId);
+    return;
   }
 
   async update(id: number, updateUserDto: UpdateUserPayloadDto) {

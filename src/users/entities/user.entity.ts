@@ -1,28 +1,27 @@
-import { OrganizationRole } from '@/organizations/organization-roles/entities/organization-role.entity';
 import { Payment } from '@/payments/entities/payment.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
 import { QuestionAnswer } from '@/surveys/questions/answers/entities/question-answer.entity';
 import { CommonService } from '@common/common.service';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
-import { IUser } from '@share/interface/iuser';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Entity()
-export class User extends DefaultDateInterface implements IUser {
+export class User extends DefaultDateInterface {
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
 
   @Column('varchar', { length: 50, comment: '이름' })
   name!: string;
 
-  @Column('varchar', { unique: true, length: 50, comment: '이메일' })
+  @Column('varchar', { length: 50, comment: '이메일 (코드레벨에서 unique 검증)' })
   email!: string;
 
-  @Column('varchar', { unique: true, length: 50, comment: '닉네임' })
+  @Column('varchar', { length: 50, comment: '닉네임 (코드레벨에서 unique 검증)' })
   nickname!: string;
 
   @OneToOne(() => Profile, (profile) => profile.user, {

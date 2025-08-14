@@ -13,10 +13,27 @@ import { Seeder, SeederFactoryManager } from 'typeorm-extension';
 
 export default class DataSeeder implements Seeder {
   public async run(dataSource: DataSource, _factoryManager: SeederFactoryManager): Promise<any> {
-    // await this.seedPermissionGrants(dataSource);
-    // await this.seedPermissions(dataSource);
-    // await this.seedPlans(dataSource);
+    const manager = dataSource.manager;
+
+    /* 관계형 역순 데이터 제거 */
+    await manager.createQueryBuilder().delete().from(PlanGrant).execute();
+
+    await manager.createQueryBuilder().delete().from(Plan).execute();
+
+    await manager.createQueryBuilder().delete().from(PermissionGrant).execute();
+
+    await manager.createQueryBuilder().delete().from(Permission).execute();
+
+    /* 시퀀스 초기화 */
+    await manager.query(`ALTER TABLE \`plan_grant\` AUTO_INCREMENT = 1`);
+    await manager.query(`ALTER TABLE \`plan\` AUTO_INCREMENT = 1`);
+    await manager.query(`ALTER TABLE \`permission_grant\` AUTO_INCREMENT = 1`);
+    await manager.query(`ALTER TABLE \`permission\` AUTO_INCREMENT = 1`);
+
     await this.seedCategories(dataSource);
+    await this.seedPermissions(dataSource);
+    await this.seedPermissionGrants(dataSource);
+    await this.seedPlans(dataSource);
   }
 
   //@ts-ignore
@@ -33,11 +50,6 @@ export default class DataSeeder implements Seeder {
 
   //@ts-ignore
   private async seedPermissionGrants(dataSource: DataSource) {
-    const manager = dataSource.manager;
-
-    await manager.createQueryBuilder().delete().from(PermissionGrant).execute();
-    await manager.query(`ALTER TABLE \`permission_grant\` AUTO_INCREMENT = 1`);
-
     const permissionGrantRepository = dataSource.getRepository(PermissionGrant);
 
     const createPermissions = (permissionId: number, grants: { type: PermissionGrantType; description: string; isAllowed: boolean }[]) => {
@@ -308,11 +320,6 @@ export default class DataSeeder implements Seeder {
 
   //@ts-ignore
   private async seedPermissions(dataSource: DataSource) {
-    const manager = dataSource.manager;
-
-    await manager.createQueryBuilder().delete().from(Permission).execute();
-    await manager.query(`ALTER TABLE \`permission\` AUTO_INCREMENT = 1`);
-
     const permissionRepository = dataSource.getRepository(Permission);
 
     permissionRepository.insert([
@@ -349,18 +356,8 @@ export default class DataSeeder implements Seeder {
 
   //@ts-ignore
   private async seedPlans(dataSource: DataSource) {
-    const manager = dataSource.manager;
-
     const planRepository = dataSource.getRepository(Plan);
     const planGrantRepository = dataSource.getRepository(PlanGrant);
-
-    await manager.createQueryBuilder().delete().from(PlanGrant).execute();
-    await manager.query(`ALTER TABLE \`plan_grant\` AUTO_INCREMENT = 1`);
-
-    await planRepository.manager.connection.transaction(async (manager) => {
-      await manager.createQueryBuilder().delete().from(Plan).execute();
-      await manager.query(`ALTER TABLE \`plan\` AUTO_INCREMENT = 1`);
-    });
 
     await planRepository.insert([
       {

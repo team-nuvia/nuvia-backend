@@ -18,7 +18,9 @@ export class SurveysService {
   constructor(private readonly surveyRepository: SurveysRepository) {}
 
   async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<void> {
-    await this.surveyRepository.createSurvey(userId, createSurveyPayloadDto);
+    const subscription = await this.surveyRepository.getCurrentSubscription(userId);
+
+    await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
 
   getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {

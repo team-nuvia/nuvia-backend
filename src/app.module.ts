@@ -12,7 +12,6 @@ import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 import { ErrorCodeModule } from './error-code/error-code.module';
 import { LoggerModule } from './logger/logger.module';
-import { OrganizationsModule } from './organizations/organizations.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { PlansModule } from './plans/plans.module';
@@ -40,7 +39,6 @@ import { UtilModule } from './util/util.module';
     ErrorCodeModule,
     PaymentsModule,
     PermissionsModule,
-    OrganizationsModule,
     SubscriptionsModule,
   ],
   controllers: [AppController],

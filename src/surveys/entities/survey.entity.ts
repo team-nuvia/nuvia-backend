@@ -1,3 +1,4 @@
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
@@ -15,14 +16,17 @@ export class Survey extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column('int', { comment: '설문 조직 PK' })
+  subscriptionId!: number;
+
   @Column('int', { comment: '유저 PK' })
   userId!: number;
 
-  @Column('varchar', { length: 64, comment: '설문 고유 키', unique: true })
-  hashedUniqueKey!: string;
-
   @Column('int', { comment: '설문 카테고리 PK' })
   categoryId!: number;
+
+  @Column('varchar', { length: 64, comment: '설문 고유 키', unique: true })
+  hashedUniqueKey!: string;
 
   @Column('varchar', { length: 50, comment: '설문 제목' })
   title!: string;
@@ -47,13 +51,16 @@ export class Survey extends DefaultDateInterface {
   })
   questions!: Relation<Question>[];
 
+  @ManyToOne(() => Subscription, (subscription) => subscription.surveys, { onDelete: 'NO ACTION' })
+  subscription!: Relation<Subscription>;
+
   @ManyToOne(() => User, (user) => user.surveys, {
     onDelete: 'NO ACTION',
   })
   user!: Relation<User>;
 
   @ManyToOne(() => Category, (category) => category.surveys, { onDelete: 'NO ACTION', createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'category_id' })
+  @JoinColumn()
   category!: Relation<Category>;
 
   get respondentCount(): number {

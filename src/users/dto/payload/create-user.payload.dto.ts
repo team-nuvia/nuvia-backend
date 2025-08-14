@@ -22,6 +22,13 @@ export class CreateUserPayloadDto {
   name!: string;
 
   @ApiProperty({
+    description: '닉네임',
+    example: faker.person.firstName(),
+  })
+  @IsString()
+  nickname!: string;
+
+  @ApiProperty({
     description: '최소 5자 이상, 숫자, 대/소문자, 특수문자 1개씩 포함되어야 합니다.',
     example: 'qweQQ!!1',
   })

@@ -7,40 +7,40 @@ import { OrganizationRolesRepository } from './organization-roles.repository';
 export class OrganizationRolesService {
   constructor(private readonly organizationRolesRepository: OrganizationRolesRepository) {}
 
-  findAll(organizationId: number) {
+  findAll(subscriptionId: number) {
     return this.organizationRolesRepository.orm
       .getManager()
       .createQueryBuilder(OrganizationRole, 'organizationRole')
-      .where('organizationRole.organizationId = :organizationId', { organizationId })
+      .where('organizationRole.subscriptionId = :subscriptionId', { subscriptionId })
       .getMany();
   }
 
-  findOne(organizationId: number, id: number) {
+  findOne(subscriptionId: number, id: number) {
     return this.organizationRolesRepository.orm
       .getManager()
       .createQueryBuilder(OrganizationRole, 'organizationRole')
-      .where('organizationRole.organizationId = :organizationId', { organizationId })
+      .where('organizationRole.subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('organizationRole.id = :id', { id })
       .getOne();
   }
 
-  update(organizationId: number, id: number, updateOrganizationRoleDto: UpdateOrganizationRoleDto) {
+  update(subscriptionId: number, id: number, updateOrganizationRoleDto: UpdateOrganizationRoleDto) {
     return this.organizationRolesRepository.orm
       .getManager()
       .createQueryBuilder(OrganizationRole, 'organizationRole')
       .update()
       .set(updateOrganizationRoleDto)
-      .where('organizationRole.organizationId = :organizationId', { organizationId })
+      .where('organizationRole.subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('organizationRole.id = :id', { id })
       .execute();
   }
 
-  remove(organizationId: number, id: number) {
+  remove(subscriptionId: number, id: number) {
     return this.organizationRolesRepository.orm
       .getManager()
       .createQueryBuilder(OrganizationRole, 'organizationRole')
       .softDelete()
-      .where('organizationRole.organizationId = :organizationId', { organizationId })
+      .where('organizationRole.subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('organizationRole.id = :id', { id })
       .execute();
   }

@@ -1,18 +1,30 @@
+import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { OrmHelper } from '@util/orm.helper';
+import { DeleteResult, FindOptionsWhere } from 'typeorm';
 import { GetUserAccessNestedDto } from './dto/response/get-user-access.nested.dto';
 import { UserAccess } from './entities/user-access.entity';
 
 @Injectable()
-export class UserAccessRepository {
-  constructor(
-    @InjectRepository(UserAccess)
-    private readonly userAccessRepository: Repository<UserAccess>,
-  ) {}
+export class UserAccessRepository extends BaseRepository {
+  constructor(readonly orm: OrmHelper) {
+    super(orm);
+  }
+
+  softDelete(id: number): Promise<DeleteResult> {
+    return this.orm.getRepo(UserAccess).softDelete(id);
+  }
+
+  existsByWithDeleted(condition: FindOptionsWhere<UserAccess>): Promise<boolean> {
+    return this.orm.getRepo(UserAccess).exists({ where: condition, withDeleted: true });
+  }
+
+  existsBy(condition: FindOptionsWhere<UserAccess>): Promise<boolean> {
+    return this.orm.getRepo(UserAccess).exists({ where: condition });
+  }
 
   async findAll(): Promise<GetUserAccessNestedDto[]> {
-    const userAccessList = await this.userAccessRepository.find({
+    const userAccessList = await this.orm.getRepo(UserAccess).find({
       relations: ['user'],
     });
 
@@ -33,6 +45,6 @@ export class UserAccessRepository {
   }
 
   findByUserId(userId: number): Promise<GetUserAccessNestedDto[]> {
-    return this.userAccessRepository.find({ where: { userId } });
+    return this.orm.getRepo(UserAccess).find({ where: { userId } });
   }
 }
