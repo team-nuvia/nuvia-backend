@@ -10,6 +10,9 @@ export class SurveyDetailNestedResponseDto {
   @ApiProperty({ description: '설문 유니크 키', example: '1234567890' })
   hashedUniqueKey: string = '1234567890';
 
+  @ApiProperty({ description: '설문 조직 ID', example: 1 })
+  subscriptionId: number = 1;
+
   @ApiProperty({ description: '설문 카테고리', type: () => GetCategoryNestedResponseDto })
   category: GetCategoryNestedResponseDto = new GetCategoryNestedResponseDto();
 

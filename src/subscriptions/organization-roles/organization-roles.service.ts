@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateOrganizationRoleDto } from './dto/update-organization-role.dto';
+import { UpdateOrganizationRoleDto } from './dto/payload/update-organization-role.dto';
 import { OrganizationRole } from './entities/organization-role.entity';
 import { OrganizationRolesRepository } from './organization-roles.repository';
 

@@ -1,6 +1,3 @@
-import { Permission } from '@/permissions/entities/permission.entity';
-import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
-import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
@@ -12,7 +9,6 @@ import { OrmHelper } from '@util/orm.helper';
 import { DeepPartial, DeleteResult, FindOptionsWhere } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
-import { GetUserOrganizationsDataDto } from './dto/response/get-user-organizations.response.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -36,53 +32,8 @@ export class UsersRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
-  // getUserById(userId: number): Promise<User | null> {
-  //   return this.orm.getRepo(User).findOne({
-  //     where: { id: userId },
-  //     relations: ['subscription', 'subscription.organizationRoles', 'organizationRoles', 'organizationRoles.subscription'],
-  //   });
-  // }
-
-  async getUserOrganizations(userId: number): Promise<GetUserOrganizationsDataDto> {
-    const organizationRoles = await this.orm
-      .getRepo(OrganizationRole)
-      .createQueryBuilder('or')
-      .leftJoinAndSelect('or.subscription', 's')
-      .where('or.userId = :userId', { userId })
-      .getMany();
-
-    let currentOrganization: Subscription = organizationRoles[0].subscription;
-    const organizations: Subscription[] = [];
-    for (const organizationRole of organizationRoles) {
-      const subscription = organizationRole.subscription;
-
-      if (organizationRole.isActive) {
-        currentOrganization = subscription;
-      }
-
-      organizations.push(subscription);
-    }
-
-    return {
-      currentOrganization,
-      organizations,
-    };
-  }
-
   async getMe(userId: number): Promise<GetUserMeNestedResponseDto | null> {
-    const subscription = await this.orm
-      .getRepo(Subscription)
-      .createQueryBuilder('s')
-      .where('s.userId = :userId', { userId })
-      .leftJoinAndSelect('s.organizationRoles', 'or')
-      .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId AND or.userId = s.userId')
-      .getOne();
-
-    if (isNil(subscription)) {
-      throw new NotFoundSubscriptionExceptionDto();
-    }
-
-    const permission: Permission = (subscription as Subscription & { permission: Permission }).permission;
+    const subscription = await this.getCurrentOrganization(userId);
 
     const userMeData = await this.orm
       .getRepo(User)
@@ -103,7 +54,7 @@ export class UsersRepository extends BaseRepository {
       email: userMeData.email,
       name: userMeData.name,
       nickname: userMeData.nickname,
-      role: permission.role,
+      role: subscription.permission.role,
       createdAt: userMeData.createdAt,
       profileImageUrl,
     };

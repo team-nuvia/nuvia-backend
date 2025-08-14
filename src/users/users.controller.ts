@@ -8,6 +8,7 @@ import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.e
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@common/dto/response/exception.interface';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { GetUserOrganizationsResponseDto } from '../subscriptions/organization-roles/dto/response/get-user-organizations.response.dto';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserOrganizationPayloadDto } from './dto/payload/update-user-organization.payload.dto';
@@ -15,7 +16,6 @@ import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { CreateUserResponseDto } from './dto/response/create-user.response.dto';
 import { DeleteUserResponseDto } from './dto/response/delete-user.response.dto';
 import { GetUserMeResponseDto } from './dto/response/get-user-me.response.dto';
-import { GetUserOrganizationsResponseDto } from './dto/response/get-user-organizations.response.dto';
 import { UpdateUserOrganizationResponseDto } from './dto/response/update-user-organization.response.dto';
 import { UpdateUserResponseDto } from './dto/response/update-user.response.dto';
 import { UsersService } from './users.service';
@@ -49,17 +49,6 @@ export class UsersController {
     return new GetUserOrganizationsResponseDto(userOrganizations);
   }
 
-  @ApiOperation({ summary: '사용자 조직 조회' })
-  @CombineResponses(HttpStatus.OK, GetUserOrganizationsResponseDto)
-  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
-  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
-  @RequiredLogin
-  @Patch('me/organizations')
-  async updateUserOrganization(@LoginUser() user: LoginUserData, @Body() updateUserOrganizationDto: UpdateUserOrganizationPayloadDto) {
-    await this.usersService.updateUserOrganization(user.id, updateUserOrganizationDto.organizationId);
-    return new UpdateUserOrganizationResponseDto();
-  }
-
   @ApiOperation({ summary: '사용자 정보 조회' })
   @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
@@ -69,6 +58,17 @@ export class UsersController {
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
     const getMe = await this.usersService.getMe(user.id);
     return new GetUserMeResponseDto(getMe);
+  }
+
+  @ApiOperation({ summary: '사용자 조직 조회' })
+  @CombineResponses(HttpStatus.OK, GetUserOrganizationsResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Patch('me/organizations')
+  async updateUserOrganization(@LoginUser() user: LoginUserData, @Body() updateUserOrganizationDto: UpdateUserOrganizationPayloadDto) {
+    await this.usersService.updateUserOrganization(user.id, updateUserOrganizationDto.organizationId);
+    return new UpdateUserOrganizationResponseDto();
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })

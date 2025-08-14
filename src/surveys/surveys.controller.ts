@@ -30,6 +30,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.CREATED, CreateSurveyResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @Transactional()
   @RequiredLogin
   @Post()
   async createSurvey(@LoginUser() user: LoginUserData, @Body() createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<CreateSurveyResponseDto> {
@@ -77,7 +78,6 @@ export class SurveysController {
   @RequiredLogin
   @Get()
   async getSurveyList(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyListResponseDto> {
-    console.log('🚀 ~ SurveysController ~ getSurveyList ~ searchQuery:', searchQuery);
     const survey = await this.surveysService.getSurveyList(user.id, searchQuery);
     return new GetSurveyListResponseDto(survey);
   }

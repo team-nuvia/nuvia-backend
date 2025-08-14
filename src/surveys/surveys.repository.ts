@@ -2,9 +2,6 @@ import { NotEnoughPermissionExceptionDto } from '@/permissions/dto/exception/not
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
-import { Subscription } from '@/subscriptions/entities/subscription.entity';
-import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
-import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
@@ -55,22 +52,22 @@ export class SurveysRepository extends BaseRepository {
     return this.orm.getRepo(Survey).exists({ where: condition });
   }
 
-  async getCurrentSubscription(userId: number) {
-    const organizationRole = await this.orm
-      .getRepo(OrganizationRole)
-      .findOne({ where: { userId, isActive: true }, relations: { subscription: true } });
+  // async getCurrentSubscription(userId: number) {
+  //   const organizationRole = await this.orm
+  //     .getRepo(OrganizationRole)
+  //     .findOne({ where: { userId, isActive: true }, relations: { subscription: true } });
 
-    if (!organizationRole) {
-      throw new NotFoundOrganizationRoleExceptionDto();
-    }
+  //   if (!organizationRole) {
+  //     throw new NotFoundOrganizationRoleExceptionDto();
+  //   }
 
-    return organizationRole.subscription;
-  }
+  //   return organizationRole.subscription;
+  // }
 
   async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     const hashedUniqueKey = uniqueHash();
 
-    await this.orm
+    const survey = await this.orm
       .getManager()
       .createQueryBuilder()
       .insert()
@@ -87,6 +84,25 @@ export class SurveysRepository extends BaseRepository {
         status: createSurveyPayloadDto.status,
       })
       .execute();
+
+    const surveyId = survey.identifiers[0].id;
+
+    const questions = createSurveyPayloadDto.questions.map((question) => ({
+      surveyId,
+      title: question.title,
+      description: question.description,
+      questionType: question.questionType,
+      dataType: question.dataType,
+      isRequired: question.isRequired,
+      sequence: question.sequence,
+      questionOptions: question.questionOptions.map((questionOption) => ({
+        label: questionOption.label,
+        description: questionOption.description,
+        sequence: questionOption.sequence,
+      })),
+    }));
+
+    await this.orm.getManager().save(Question, questions);
   }
 
   getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {
@@ -96,7 +112,13 @@ export class SurveysRepository extends BaseRepository {
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
     const { search, page, limit, status } = searchQuery;
 
-    const query = this.orm.getManager().createQueryBuilder(Survey, 's').where('s.userId = :userId', { userId });
+    const subscription = await this.getCurrentOrganization(userId);
+
+    const query = this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .where('s.userId = :userId', { userId })
+      .andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
     if (search) {
       query.andWhere('s.title LIKE :search', { search: `%${search}%` });
@@ -138,6 +160,12 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async getSurveyMetadata(userId: number): Promise<DashboardSurveryMetadataNestedResponseDto> {
+    const subscription = await this.getCurrentOrganization(userId);
+
+    if (isNil(subscription)) {
+      throw new NotFoundSubscriptionExceptionDto();
+    }
+
     const year = new Date().getFullYear();
     const month = new Date().getMonth();
     const prevMonthFirstDay = new Date(year, month - 1, 1, 0, 0, 0, 0);
@@ -150,7 +178,7 @@ export class SurveysRepository extends BaseRepository {
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.userId = :userId', { userId })
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .getManyAndCount();
 
     const surveyListPerMonth = surveyList.filter((survey) => {
@@ -168,18 +196,6 @@ export class SurveysRepository extends BaseRepository {
     const previousMonthRespondentCount = prevSurveyListPerMonth.reduce((acc, survey) => acc + survey.respondentCount, 0);
 
     const totalRespondentCount = surveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
-
-    const subscription = await this.orm
-      .getManager()
-      .createQueryBuilder(Subscription, 's')
-      .leftJoinAndSelect('s.plan', 'p')
-      .leftJoinAndSelect('p.planGrants', 'pg')
-      .where('s.userId = :userId', { userId })
-      .getOne();
-
-    if (isNil(subscription)) {
-      throw new NotFoundSubscriptionExceptionDto();
-    }
 
     const planLimitPerMonth = subscription.plan.planGrants.find(
       (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
@@ -203,13 +219,15 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async getRecentSurvey(userId: number): Promise<DashboardRecentSurveyNestedResponseDto[]> {
+    const subscription = await this.getCurrentOrganization(userId);
+
     const surveyList = await this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.userId = :userId', { userId })
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .orderBy('s.createdAt', 'DESC')
       .getMany();
 
@@ -230,8 +248,9 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async getSurveyList(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<ListResponseDto> {
+    const subscription = await this.getCurrentOrganization(userId);
+
     const { search, page, limit, status } = searchQuery;
-    console.log('🚀 ~ SurveysRepository ~ getSurveyList ~ searchQuery:', searchQuery);
 
     const surveyQuery = this.orm
       .getManager()
@@ -240,7 +259,8 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .leftJoinAndSelect('sqa.user', 'u')
-      .where('s.userId = :userId', { userId });
+      // .where('s.userId = :userId', { userId });
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
     if (search) {
       surveyQuery.andWhere('s.title LIKE :search', { search: `%${search}%` });
@@ -296,6 +316,8 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async getSurveyDetail(surveyId: number, userId?: number): Promise<SurveyDetailNestedResponseDto> {
+    const subscription = userId ? await this.getCurrentOrganization(userId) : null;
+
     const query = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
@@ -307,8 +329,8 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .where('s.id = :surveyId', { surveyId });
 
-    if (userId) {
-      query.andWhere('s.userId = :userId', { userId });
+    if (subscription) {
+      query.andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
     }
 
     const survey = await query.getOne();
@@ -320,6 +342,7 @@ export class SurveysRepository extends BaseRepository {
     return {
       id: survey.id,
       hashedUniqueKey: survey.hashedUniqueKey,
+      subscriptionId: survey.subscriptionId,
       category: {
         id: survey.category.id,
         name: survey.category.name,
@@ -368,7 +391,12 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
 
-    const survey = await query.getOne();
+    const survey = await query
+      .orderBy('sq.id', 'ASC')
+      .addOrderBy('sq.sequence', 'ASC')
+      .addOrderBy('sqo.id', 'ASC')
+      .addOrderBy('sqo.sequence', 'ASC')
+      .getOne();
 
     if (isNil(survey)) {
       throw new NotFoundSurveyExceptionDto();
@@ -377,6 +405,7 @@ export class SurveysRepository extends BaseRepository {
     return {
       id: survey.id,
       hashedUniqueKey: survey.hashedUniqueKey,
+      subscriptionId: survey.subscriptionId,
       category: {
         id: survey.category.id,
         name: survey.category.name,
