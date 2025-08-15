@@ -1,4 +1,3 @@
-import { UserRole } from '@common/variable/enums';
 import { HttpStatus } from '@nestjs/common';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
@@ -9,6 +8,10 @@ export declare global {
   export type ValueOrEmpty<T> = T | null | undefined | unknown;
 
   export declare interface LoginUserData {
+    id: number;
+  }
+
+  export declare interface UserMinimumInformation {
     id: number;
     email: string;
     name: string;

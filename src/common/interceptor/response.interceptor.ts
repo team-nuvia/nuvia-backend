@@ -1,10 +1,10 @@
+import { RequestMethod } from '@common/variable/enums/request-method.enum';
 import { LoggerService } from '@logger/logger.service';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { serializeResponse } from '@util/serializeResponse';
 import { instanceToPlain } from 'class-transformer';
 import { Request, Response } from 'express';
 import { map, Observable } from 'rxjs';
-import { RequestMethod } from '../variable/enums';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {

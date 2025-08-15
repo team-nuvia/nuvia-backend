@@ -1,7 +1,7 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
-import { DeleteResult, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { GetUserAccessNestedDto } from './dto/response/get-user-access.nested.dto';
 import { UserAccess } from './entities/user-access.entity';
 
@@ -11,8 +11,8 @@ export class UserAccessRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(UserAccess).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(UserAccess).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<UserAccess>): Promise<boolean> {

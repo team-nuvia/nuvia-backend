@@ -1,8 +1,10 @@
 import { Plan } from '@/plans/entities/plan.entity';
+import { PlanGrantConstraintsTypeList } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
+@Index(['constraints'], { fulltext: true })
 @Entity()
 export class PlanGrant extends DefaultDateInterface {
   @PrimaryGeneratedColumn({ comment: '플랜 권한 PK' })
@@ -17,7 +19,7 @@ export class PlanGrant extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 200, nullable: true, comment: '권한 설명' })
   description!: string | null;
 
-  @Column('varchar', { default: null, length: 100, nullable: true, comment: '권한 제약 여부' })
+  @Column('varchar', { default: null, length: 100, nullable: true, comment: `권한 제약 여부\n\n${PlanGrantConstraintsTypeList.join('\n')}` })
   constraints!: string | null;
 
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '허용 개수' })

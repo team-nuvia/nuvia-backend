@@ -1,9 +1,10 @@
 import { IsDatetimeString } from '@common/decorator/is-datetime-string.decorator';
 import { IsNullable } from '@common/decorator/is-nullable.decorator';
+import { ErrorMessage } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { DateFormat } from '@util/dateFormat';
-import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CreateSurveyQuestionPayloadNestedDto } from './create-survey-question.payload.nested.dto';
 
 export class CreateSurveyPayloadDto {
@@ -62,5 +63,6 @@ export class CreateSurveyPayloadDto {
   })
   @IsNotEmpty()
   @IsArray()
+  @ArrayMinSize(1, { message: ErrorMessage.REQUIRED_QUESTION_AT_LEAST_ONE })
   questions!: CreateSurveyQuestionPayloadNestedDto[];
 }

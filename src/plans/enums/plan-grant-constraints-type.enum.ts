@@ -36,3 +36,5 @@ export const PlanGrantConstraintsType = {
   // DownloadMultipleAll: 'download.multiple.all',
 } as const;
 export type PlanGrantConstraintsType = (typeof PlanGrantConstraintsType)[keyof typeof PlanGrantConstraintsType];
+
+export const PlanGrantConstraintsTypeList = Object.values(PlanGrantConstraintsType);

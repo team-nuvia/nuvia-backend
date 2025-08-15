@@ -19,6 +19,8 @@ import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
 import { UpdateSurveyVisibilityResponseDto } from './dto/response/update-survey-visibility.response.dto';
 import { UpdateSurveyResponseDto } from './dto/response/update-survey.response.dto';
+import { SurveyCreateConstraintValidation } from './survey-create-constraint.guard';
+import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
 
 @ApiTags('설문')
@@ -30,6 +32,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.CREATED, CreateSurveyResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @SurveyCreateConstraintValidation()
   @Transactional()
   @RequiredLogin
   @Post()
@@ -135,6 +138,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.OK, UpdateSurveyResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @SurveyUpdateConstraintValidation()
   @Transactional()
   @RequiredLogin
   @Put(':id')

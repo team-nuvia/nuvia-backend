@@ -3,7 +3,7 @@ import { InputValidationPipe } from '@common/decorator/input-validate-pipe.decor
 import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
 import { ResponseInterceptor } from '@common/interceptor/response.interceptor';
 import { TransactionalInterceptor } from '@common/interceptor/transactional.interceptor';
-import { RunMode } from '@common/variable/enums';
+import { RunMode } from '@common/variable/enums/run-mode.enum';
 import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';

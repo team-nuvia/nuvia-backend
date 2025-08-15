@@ -1,4 +1,5 @@
 import { Payment } from '@/payments/entities/payment.entity';
+import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscription.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
@@ -39,4 +40,9 @@ export class Plan extends DefaultDateInterface {
     cascade: true,
   })
   payments!: Relation<Payment>[];
+
+  @OneToMany(() => LogUsageSubscription, (logUsageSubscription) => logUsageSubscription.plan, {
+    cascade: true,
+  })
+  logUsageSubscriptions!: Relation<LogUsageSubscription>[];
 }

@@ -1,5 +1,3 @@
-import { Permission } from '@/permissions/entities/permission.entity';
-import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
@@ -8,7 +6,7 @@ import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
-import { DeleteResult, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { NotFoundUserAccessExceptionDto } from './dto/exception/not-found-user-access.exception.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 
@@ -18,8 +16,8 @@ export class AuthRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(User).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(User).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<User>): Promise<boolean> {
@@ -30,29 +28,26 @@ export class AuthRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
-  async findUserById(id: number): Promise<LoginUserData> {
+  async findUserById(id: number): Promise<UserMinimumInformation> {
     const user = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
-      .leftJoinAndSelect('u.subscription', 'usb')
-      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.subscriptionId = usb.id AND uor.userId = u.id')
-      .leftJoinAndMapOne('u.permission', Permission, 'p', 'p.id = uor.permissionId AND uor.subscriptionId = usb.id AND uor.userId = u.id')
       .where('u.id = :id', { id })
-      .select(['u.id', 'u.email', 'u.name', 'u.nickname', 'p.role'])
+      .select(['u.id', 'u.email', 'u.name', 'u.nickname'])
       .getOne();
 
     if (isNil(user)) {
       throw new NotFoundUserExceptionDto(id.toString());
     }
 
-    const permission = (user as User & { permission: Permission }).permission;
+    const subscription = await this.getCurrentOrganization(user.id);
 
     return {
       id: user.id,
       email: user.email,
       name: user.name,
       nickname: user.nickname,
-      role: permission.role,
+      role: subscription.permission.role,
     };
   }
 
@@ -62,42 +57,21 @@ export class AuthRepository extends BaseRepository {
       .createQueryBuilder('u')
       .where('u.email = :email', { email })
       .leftJoinAndSelect('u.userSecret', 'us')
-      .leftJoinAndSelect('u.subscription', 'usb')
-      .leftJoinAndMapOne('u.organizationRole', OrganizationRole, 'uor', 'uor.userId = u.id AND uor.subscriptionId = usb.id')
-      .leftJoinAndMapOne('u.permission', Permission, 'up', 'up.id = uor.permissionId')
-      .select([
-        'u.id',
-        'u.email',
-        'u.name',
-        'u.nickname',
-        'us.id',
-        'us.salt',
-        'us.password',
-        'us.iteration',
-        'usb.id',
-        'uor.id',
-        'uor.userId',
-        'uor.subscriptionId',
-        'uor.permissionId',
-        'up.id',
-        'up.role',
-      ])
+      .select(['u.id', 'u.email', 'u.name', 'u.nickname', 'us.id', 'us.salt', 'us.password', 'us.iteration'])
       .getOne();
 
-    console.log('🚀 ~ AuthRepository ~ findUserWithSecret ~ user:', user);
     if (isNil(user) || isNil(user.userSecret)) {
       throw new NotFoundUserExceptionDto(email);
     }
 
-    const permission = (user as User & { permission: Permission }).permission;
-    console.log('🚀 ~ AuthRepository ~ findUserWithSecret ~ permission:', permission);
+    const subscription = await this.getCurrentOrganization(user.id);
 
     const combinedUser = {
       id: user.id,
       email: user.email,
       name: user.name,
       nickname: user.nickname,
-      role: permission.role,
+      role: subscription.permission.role,
       userSecret: user.userSecret,
     };
     return combinedUser;

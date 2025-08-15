@@ -1,3 +1,4 @@
+import { Survey } from '@/surveys/entities/survey.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
@@ -8,6 +9,9 @@ import { QuestionOption } from '../../options/entities/question-option.entity';
 export class QuestionAnswer extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
   id!: number;
+
+  @Column('int', { comment: '설문 PK' })
+  surveyId!: number;
 
   @Column('int', { default: null, nullable: true, comment: '사용자 PK' })
   userId!: number | null;
@@ -25,6 +29,11 @@ export class QuestionAnswer extends DefaultDateInterface {
     onDelete: 'NO ACTION',
   })
   user!: Relation<User>;
+
+  @ManyToOne(() => Survey, (survey) => survey.questionAnswers, {
+    onDelete: 'NO ACTION',
+  })
+  survey!: Relation<Survey>;
 
   @ManyToOne(() => Question, (question) => question.questionAnswers, {
     onDelete: 'NO ACTION',

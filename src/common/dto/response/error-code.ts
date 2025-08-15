@@ -65,6 +65,7 @@ export const ErrorKey = {
   NOT_FOUND_ORGANIZATION_ROLE: 'NOT_FOUND_ORGANIZATION_ROLE',
   SUCCESS_GET_USER_ORGANIZATIONS: 'SUCCESS_GET_USER_ORGANIZATIONS',
   SUCCESS_UPDATE_USER_ORGANIZATION: 'SUCCESS_UPDATE_USER_ORGANIZATION',
+  REQUIRED_QUESTION_AT_LEAST_ONE: 'REQUIRED_QUESTION_AT_LEAST_ONE',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -131,6 +132,7 @@ export const ErrorCode = {
   NOT_FOUND_ORGANIZATION_ROLE: HttpStatus.NOT_FOUND,
   SUCCESS_GET_USER_ORGANIZATIONS: HttpStatus.OK,
   SUCCESS_UPDATE_USER_ORGANIZATION: HttpStatus.OK,
+  REQUIRED_QUESTION_AT_LEAST_ONE: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -197,6 +199,7 @@ export const ErrorMessage = {
   NOT_FOUND_ORGANIZATION_ROLE: '존재하지 않는 조직 역할입니다.',
   SUCCESS_GET_USER_ORGANIZATIONS: '사용자 조직 조회 성공',
   SUCCESS_UPDATE_USER_ORGANIZATION: '사용자 조직 수정 성공',
+  REQUIRED_QUESTION_AT_LEAST_ONE: '질문은 최소 1개 이상 입력해야 합니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

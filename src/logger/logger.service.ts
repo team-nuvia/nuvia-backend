@@ -1,5 +1,6 @@
 import { CommonService } from '@common/common.service';
-import { LogLevel, RunMode } from '@common/variable/enums';
+import { LogLevel } from '@common/variable/enums/log-level.enum';
+import { RunMode } from '@common/variable/enums/run-mode.enum';
 import { Injectable } from '@nestjs/common';
 import { DateFormat } from '@util/dateFormat';
 import path from 'path';
