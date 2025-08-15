@@ -4,11 +4,10 @@ import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { User } from '@users/entities/user.entity';
-import { isNil } from '@util/isNil';
 import { uniqueHash } from '@util/uniqueHash';
 import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
-import { QuestionAnswer } from '../questions/answers/entities/question-answer.entity';
 import { Question } from '../questions/entities/question.entity';
+import { Answer } from './answer.entity';
 import { Category } from './category.entity';
 
 @Index('category_id', ['categoryId'])
@@ -52,10 +51,10 @@ export class Survey extends DefaultDateInterface {
   })
   questions!: Relation<Question>[];
 
-  @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.survey, {
+  @OneToMany(() => Answer, (answer) => answer.survey, {
     cascade: true,
   })
-  questionAnswers!: Relation<QuestionAnswer>[];
+  answers!: Relation<Answer>[];
 
   @ManyToOne(() => Subscription, (subscription) => subscription.surveys, { onDelete: 'NO ACTION' })
   subscription!: Relation<Subscription>;
@@ -70,15 +69,7 @@ export class Survey extends DefaultDateInterface {
   category!: Relation<Category>;
 
   get respondentCount(): number {
-    const uniqueRespondentCount = new Set<number>();
-    for (const question of this.questions) {
-      for (const questionAnswer of question.questionAnswers) {
-        if (!isNil(questionAnswer.userId)) {
-          uniqueRespondentCount.add(questionAnswer.userId);
-        }
-      }
-    }
-    return uniqueRespondentCount.size;
+    return this.answers.length;
   }
 
   /**

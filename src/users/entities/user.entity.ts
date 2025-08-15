@@ -2,8 +2,8 @@ import { Payment } from '@/payments/entities/payment.entity';
 import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscription.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
+import { Answer } from '@/surveys/entities/answer.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
-import { QuestionAnswer } from '@/surveys/questions/answers/entities/question-answer.entity';
 import { CommonService } from '@common/common.service';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
@@ -40,10 +40,10 @@ export class User extends DefaultDateInterface {
   })
   surveys!: Relation<Survey>[];
 
-  @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.user, {
+  @OneToMany(() => Answer, (answer) => answer.user, {
     cascade: true,
   })
-  questionAnswers!: Relation<QuestionAnswer>[];
+  answers!: Relation<Answer>[];
 
   @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.user, {
     cascade: true,

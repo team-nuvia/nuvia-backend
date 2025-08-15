@@ -29,7 +29,6 @@ import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { Category } from './entities/category.entity';
 import { Survey } from './entities/survey.entity';
-import { QuestionAnswer } from './questions/answers/entities/question-answer.entity';
 import { Question } from './questions/entities/question.entity';
 import { QuestionOption } from './questions/options/entities/question-option.entity';
 
@@ -53,18 +52,6 @@ export class SurveysRepository extends BaseRepository {
   existsBy(condition: FindOptionsWhere<Survey>): Promise<boolean> {
     return this.orm.getRepo(Survey).exists({ where: condition });
   }
-
-  // async getCurrentSubscription(userId: number) {
-  //   const organizationRole = await this.orm
-  //     .getRepo(OrganizationRole)
-  //     .findOne({ where: { userId, isActive: true }, relations: { subscription: true } });
-
-  //   if (!organizationRole) {
-  //     throw new NotFoundOrganizationRoleExceptionDto();
-  //   }
-
-  //   return organizationRole.subscription;
-  // }
 
   async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     const hashedUniqueKey = uniqueHash();
@@ -133,8 +120,8 @@ export class SurveysRepository extends BaseRepository {
     query
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .leftJoinAndSelect('sqa.user', 'u')
+      .leftJoinAndSelect('sq.answers', 'sa')
+      .leftJoinAndSelect('sa.user', 'u')
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('s.createdAt', 'DESC');
@@ -176,24 +163,18 @@ export class SurveysRepository extends BaseRepository {
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .getManyAndCount();
+    console.log('🚀 ~ SurveysRepository ~ getSurveyMetadata ~ surveyList:', surveyList);
 
-    const totalRespondentCountRawOne = await this.orm
-      .getManager()
-      .createQueryBuilder(QuestionAnswer, 'qa')
-      .where('qa.surveyId IN (:...surveyIds)', { surveyIds: surveyList.map((survey) => survey.id) })
-      .select('IFNULL(COUNT(DISTINCT qa.userId), 0)', 'totalRespondentCount')
-      .getRawOne();
-
-    const totalRespondentCount = +(totalRespondentCountRawOne.totalRespondentCount ?? 0);
+    const totalRespondentCount = surveyList.reduce((acc, cur) => acc + cur.respondentCount, 0);
 
     const [currentMonthSurveyList, currentMonthSurveyCount] = await this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .andWhere('s.createdAt >= :currentFirstDay', { currentFirstDay })
       .andWhere('s.createdAt <= :currentLastDay', { currentLastDay })
@@ -203,7 +184,7 @@ export class SurveysRepository extends BaseRepository {
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .andWhere('s.createdAt >= :prevFirstDay', { prevFirstDay })
       .andWhere('s.createdAt <= :prevLastDay', { prevLastDay })
@@ -244,7 +225,7 @@ export class SurveysRepository extends BaseRepository {
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .orderBy('s.createdAt', 'DESC')
       .getMany();
@@ -275,8 +256,8 @@ export class SurveysRepository extends BaseRepository {
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .leftJoinAndSelect('sqa.user', 'u')
+      .leftJoinAndSelect('s.answers', 'sa')
+      .leftJoinAndSelect('sa.user', 'u')
       // .where('s.userId = :userId', { userId });
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
@@ -344,7 +325,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo', 'sqo.deletedAt IS NULL')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.id = :surveyId', { surveyId });
 
     if (subscription) {
@@ -406,7 +387,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
       .andWhere('s.isPublic = :isPublic', { isPublic: true })
       .andWhere('s.status = :status', { status: SurveyStatus.Active });

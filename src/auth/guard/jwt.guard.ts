@@ -5,6 +5,8 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 @ApiBearerAuth()
 @Injectable()
@@ -32,6 +34,14 @@ export class JwtGuard extends AuthGuard('jwt') {
     // }
 
     if (isPublic) {
+      const request = context.switchToHttp().getRequest() as Request;
+      const accessToken = request.headers['authorization']?.split(' ')[1];
+
+      if (accessToken) {
+        const decoded = jwt.decode(accessToken, { json: true }) as unknown as LoginUserData;
+        request.user = decoded;
+      }
+
       return true;
     }
 

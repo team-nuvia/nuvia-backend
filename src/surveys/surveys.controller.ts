@@ -1,5 +1,6 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
+import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
@@ -101,6 +102,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Transactional()
+  @Public()
   @Get('view/:hashedUniqueKey')
   async getSurveyDetailAndViewCountUpdate(@Param('hashedUniqueKey') hashedUniqueKey: string): Promise<GetSurveyDetailResponseDto> {
     const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey);
