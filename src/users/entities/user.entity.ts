@@ -1,4 +1,5 @@
 import { Payment } from '@/payments/entities/payment.entity';
+import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscription.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
@@ -63,6 +64,11 @@ export class User extends DefaultDateInterface {
     cascade: true,
   })
   subscription!: Relation<Subscription>;
+
+  @OneToMany(() => LogUsageSubscription, (logUsageSubscription) => logUsageSubscription.user, {
+    cascade: true,
+  })
+  logUsageSubscriptions!: Relation<LogUsageSubscription>[];
 
   getProfileUrl(commonService: CommonService): string | null {
     const commonConfig = commonService.getConfig('common');

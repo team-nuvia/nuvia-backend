@@ -1,20 +1,19 @@
 import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-access.exception.dto';
-import { NoRoleInformationExceptionDto } from '@common/dto/exception/no-role-information.exception.dto';
 import { ROLES_KEY } from '@common/variable/globals';
-import { LoggerService } from '@logger/logger.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@share/enums/user-role';
+import { UtilRepository } from '@util/util.repository';
 import { Request } from 'express';
-  
+
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private readonly logger: LoggerService,
+    private readonly reflector: Reflector,
+    private readonly utilRepository: UtilRepository,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
 
     if (!requiredRoles || requiredRoles.length === 0) {
@@ -22,12 +21,10 @@ export class RoleGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest<Request>();
-    if (!user?.role) {
-      throw new NoRoleInformationExceptionDto();
-    }
 
-    this.logger.log(`user.role: ${user.role}`);
-    if (!requiredRoles.includes(user.role)) {
+    const subscription = await this.utilRepository.getCurrentOrganization(user.id);
+
+    if (!requiredRoles.includes(subscription.permission.role)) {
       throw new ForbiddenAccessExceptionDto();
     }
 

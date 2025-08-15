@@ -2,7 +2,8 @@ import { envConsumer } from '@util/envConsumer';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { RunMode, RunOn } from './enums';
+import { RunMode } from './enums/run-mode.enum';
+import { RunOn } from './enums/run-on.enum';
 
 const getOriginEnvAs = envConsumer(process.env);
 

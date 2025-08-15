@@ -10,8 +10,8 @@ export class ProfilesRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(Profile).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(Profile).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<Profile>): Promise<boolean> {

@@ -9,10 +9,11 @@ import { Injectable } from '@nestjs/common';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { UserRole, UserRoleList } from '@share/enums/user-role';
 import { User } from '@users/entities/user.entity';
+import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
-import { DeleteResult, FindOptionsWhere, In } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { NoMatchSubscriptionExceptionDto } from './dto/exception/no-match-subscription.exception.dto';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
@@ -28,6 +29,7 @@ import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { Category } from './entities/category.entity';
 import { Survey } from './entities/survey.entity';
+import { QuestionAnswer } from './questions/answers/entities/question-answer.entity';
 import { Question } from './questions/entities/question.entity';
 import { QuestionOption } from './questions/options/entities/question-option.entity';
 
@@ -40,8 +42,8 @@ export class SurveysRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(Survey).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(Survey).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<Survey>): Promise<boolean> {
@@ -168,10 +170,7 @@ export class SurveysRepository extends BaseRepository {
 
     const year = new Date().getFullYear();
     const month = new Date().getMonth();
-    const prevMonthFirstDay = new Date(year, month - 1, 1, 0, 0, 0, 0);
-    const prevMonthLastDay = new Date(year, month, 0, 23, 59, 59, 999);
-    const monthFirstDay = new Date(year, month, 1, 0, 0, 0, 0);
-    const monthLastDay = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    const { prevFirstDay, prevLastDay, currentFirstDay, currentLastDay } = getRangeOfMonth(year, month);
 
     const [surveyList, totalSurveyCount] = await this.orm
       .getManager()
@@ -181,21 +180,40 @@ export class SurveysRepository extends BaseRepository {
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .getManyAndCount();
 
-    const surveyListPerMonth = surveyList.filter((survey) => {
-      const surveyCreatedAt = new Date(survey.createdAt);
-      return surveyCreatedAt >= monthFirstDay && surveyCreatedAt <= monthLastDay;
-    });
+    const totalRespondentCountRawOne = await this.orm
+      .getManager()
+      .createQueryBuilder(QuestionAnswer, 'qa')
+      .where('qa.surveyId IN (:...surveyIds)', { surveyIds: surveyList.map((survey) => survey.id) })
+      .select('IFNULL(COUNT(DISTINCT qa.userId), 0)', 'totalRespondentCount')
+      .getRawOne();
 
-    const prevSurveyListPerMonth = surveyList.filter((survey) => {
-      const surveyCreatedAt = new Date(survey.createdAt);
-      return surveyCreatedAt >= prevMonthFirstDay && surveyCreatedAt <= prevMonthLastDay;
-    });
+    const totalRespondentCount = +(totalRespondentCountRawOne.totalRespondentCount ?? 0);
 
-    const currentMonthRespondentCount = surveyListPerMonth.reduce((acc, survey) => acc + survey.respondentCount, 0);
+    const [currentMonthSurveyList, currentMonthSurveyCount] = await this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.questions', 'sq')
+      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('s.createdAt >= :currentFirstDay', { currentFirstDay })
+      .andWhere('s.createdAt <= :currentLastDay', { currentLastDay })
+      .getManyAndCount();
 
-    const previousMonthRespondentCount = prevSurveyListPerMonth.reduce((acc, survey) => acc + survey.respondentCount, 0);
+    const prevMonthSurveyList = await this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.questions', 'sq')
+      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('s.createdAt >= :prevFirstDay', { prevFirstDay })
+      .andWhere('s.createdAt <= :prevLastDay', { prevLastDay })
+      .getMany();
 
-    const totalRespondentCount = surveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+    const currentMonthRespondentCount = currentMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+
+    const previousMonthRespondentCount = prevMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+
+    // const totalRespondentCount = surveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
 
     const planLimitPerMonth = subscription.plan.planGrants.find(
       (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
@@ -212,7 +230,7 @@ export class SurveysRepository extends BaseRepository {
       },
       planUsage: {
         plan: subscription.plan.name,
-        usage: currentMonthRespondentCount,
+        usage: currentMonthSurveyCount,
         limit: planUsagePerMonth,
       },
     };
@@ -325,7 +343,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.user', 'u')
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionOptions', 'sqo')
+      .leftJoinAndSelect('sq.questionOptions', 'sqo', 'sqo.deletedAt IS NULL')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
       .where('s.id = :surveyId', { surveyId });
 
@@ -389,7 +407,9 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo')
       .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
+      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
+      .andWhere('s.isPublic = :isPublic', { isPublic: true })
+      .andWhere('s.status = :status', { status: SurveyStatus.Active });
 
     const survey = await query
       .orderBy('sq.id', 'ASC')
@@ -446,7 +466,7 @@ export class SurveysRepository extends BaseRepository {
     await this.orm.getManager().update(Survey, surveyId, { isPublic: updateSurveyVisibilityPayloadDto.isPublic });
   }
 
-  async updateSurvey(id: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
+  async updateSurvey(surveyId: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
     // 권한 체크
     // 1. 설문을 작성한 사람의 조직과 현재 수정하려는 사람이 참여했는지 검증
     // 2. 해당 조직에서 수정 가능한 권한인지 검증
@@ -457,7 +477,7 @@ export class SurveysRepository extends BaseRepository {
     const updateQuestionOptionQueue: IUpdateQuestionOption[] = [];
 
     /* 수정할 설문 정보 */
-    const survey = await this.orm.getRepo(Survey).findOne({ where: { id }, relations: { user: { subscription: true } } });
+    const survey = await this.orm.getRepo(Survey).findOne({ where: { id: surveyId }, relations: { user: { subscription: true } } });
 
     if (!survey) {
       throw new NotFoundSurveyExceptionDto();
@@ -499,7 +519,7 @@ export class SurveysRepository extends BaseRepository {
         ? await this.orm
             .getManager()
             .createQueryBuilder(Question, 'q')
-            .where('q.surveyId = :surveyId', { surveyId: id })
+            .where('q.surveyId = :surveyId', { surveyId })
             .andWhere('q.id NOT IN (:...updateIdList)', { updateIdList })
             .getMany()
         : [];
@@ -511,7 +531,7 @@ export class SurveysRepository extends BaseRepository {
       /* 수정할 질문 데이터 */
       if (isNil(question.id)) {
         const createQuestion = {
-          surveyId: id,
+          surveyId,
           title: question.title,
           description: question.description,
           questionType: question.questionType,
@@ -527,7 +547,7 @@ export class SurveysRepository extends BaseRepository {
       } else {
         const updateQuestion = {
           id: question.id as number,
-          surveyId: id,
+          surveyId,
           title: question.title,
           description: question.description,
           questionType: question.questionType,
@@ -548,6 +568,7 @@ export class SurveysRepository extends BaseRepository {
 
         /* 삭제할 질문 옵션 쿼리 생성 */
         const questionOptionIdList = question.questionOptions.map((questionOption) => questionOption.id).filter((id) => !isNil(id));
+        console.log('🚀 ~ SurveysRepository ~ updateSurvey ~ questionOptionIdList:', questionOptionIdList);
         if (questionOptionIdList.length > 0) {
           deleteTargetQueryQueue.push(
             this.orm
@@ -566,11 +587,12 @@ export class SurveysRepository extends BaseRepository {
 
     /* 삭제할 질문 옵션 쿼리 실행 */
     const deleteTargetOptionList = await Promise.all(deleteTargetQueryQueue);
+    console.log('🚀 ~ SurveysRepository ~ updateSurvey ~ deleteTargetOptionList:', deleteTargetOptionList);
     deleteQuestionOptionQueue.push(...deleteTargetOptionList.flatMap((option) => option.map((option) => option.id)));
 
     /* upsert, delete, update 쿼리 실행 */
-    await this.orm.getManager().softDelete(Question, { surveyId: id, id: In(deleteQuestionQueue) });
-    await this.orm.getManager().softDelete(QuestionOption, { questionId: In(deleteQuestionOptionQueue) });
+    await this.orm.getManager().softDelete(Question, { surveyId, id: In(deleteQuestionQueue) });
+    await this.orm.getManager().softDelete(QuestionOption, { id: In(deleteQuestionOptionQueue) });
 
     /* 질문, 질문 옵션 수정 */
     await this.orm.getManager().upsert(Question, updateQuestionQueue, { conflictPaths: ['id'], skipUpdateIfNoValuesChanged: true });
@@ -579,7 +601,7 @@ export class SurveysRepository extends BaseRepository {
     /* 설문 정보 수정 */
     await this.orm.getManager().update(
       Survey,
-      { id },
+      { id: surveyId },
       {
         userId,
         categoryId: surveyFormData.categoryId,

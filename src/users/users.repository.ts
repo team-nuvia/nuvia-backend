@@ -6,7 +6,7 @@ import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
-import { DeepPartial, DeleteResult, FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
 import { User } from './entities/user.entity';
@@ -20,8 +20,8 @@ export class UsersRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(User).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(User).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<User>): Promise<boolean> {

@@ -22,6 +22,10 @@ export class SurveysService {
   async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<void> {
     const subscription = await this.surveyRepository.getCurrentOrganization(userId);
 
+    if (!isRoleAtLeast(subscription.permission.role, UserRole.Editor)) {
+      throw new ForbiddenAccessExceptionDto();
+    }
+
     await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
 
@@ -50,8 +54,9 @@ export class SurveysService {
   }
 
   async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string): Promise<SurveyDetailNestedResponseDto> {
+    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey);
     await this.surveyRepository.viewCountUpdate(hashedUniqueKey);
-    return await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey);
+    return survey;
   }
 
   async toggleSurveyVisibility(userId: number, surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
@@ -76,8 +81,14 @@ export class SurveysService {
     await this.surveyRepository.toggleSurveyVisibility(surveyId, updateSurveyVisibilityPayloadDto);
   }
 
-  async updateSurvey(id: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
-    await this.surveyRepository.updateSurvey(id, userId, updateSurveyPayloadDto);
+  async updateSurvey(surveyId: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
+    const survey = await this.surveyRepository.existsByWithDeleted({ id: surveyId });
+
+    if (!survey) {
+      throw new NotFoundSurveyExceptionDto();
+    }
+
+    await this.surveyRepository.updateSurvey(surveyId, userId, updateSurveyPayloadDto);
   }
 
   async deleteSurvey(userId: number, surveyId: number): Promise<void> {
@@ -87,7 +98,9 @@ export class SurveysService {
       throw new NotFoundSurveyExceptionDto();
     }
 
-    if (survey.author?.id !== userId) {
+    const subscription = await this.surveyRepository.getCurrentOrganization(userId);
+
+    if (survey.subscriptionId !== subscription.id) {
       throw new ForbiddenAccessExceptionDto();
     }
 

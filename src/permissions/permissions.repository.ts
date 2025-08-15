@@ -1,7 +1,7 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
-import { DeleteResult, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { Permission } from './entities/permission.entity';
 
 @Injectable()
@@ -10,8 +10,8 @@ export class PermissionsRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(Permission).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(Permission).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<Permission>): Promise<boolean> {

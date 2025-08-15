@@ -1,7 +1,7 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
-import { DeleteResult, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { PlanDiscount } from './entities/plan-discount.entity';
 
 @Injectable()
@@ -10,8 +10,8 @@ export class PlanDiscountsRepository extends BaseRepository {
     super(orm);
   }
 
-  softDelete(id: number): Promise<DeleteResult> {
-    return this.orm.getRepo(PlanDiscount).softDelete(id);
+  async softDelete(id: number): Promise<void> {
+    await this.orm.getRepo(PlanDiscount).softDelete(id);
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<PlanDiscount>): Promise<boolean> {

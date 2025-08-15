@@ -7,6 +7,7 @@ import { User } from '@users/entities/user.entity';
 import { isNil } from '@util/isNil';
 import { uniqueHash } from '@util/uniqueHash';
 import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { QuestionAnswer } from '../questions/answers/entities/question-answer.entity';
 import { Question } from '../questions/entities/question.entity';
 import { Category } from './category.entity';
 
@@ -50,6 +51,11 @@ export class Survey extends DefaultDateInterface {
     cascade: true,
   })
   questions!: Relation<Question>[];
+
+  @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.survey, {
+    cascade: true,
+  })
+  questionAnswers!: Relation<QuestionAnswer>[];
 
   @ManyToOne(() => Subscription, (subscription) => subscription.surveys, { onDelete: 'NO ACTION' })
   subscription!: Relation<Subscription>;

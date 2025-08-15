@@ -43,6 +43,16 @@ export class GlobalExceptionFilter<T extends BaseException> implements Exception
     return serialized;
   }
 
+  private printLog(req: Request, serialized: IBaseResponse<null>) {
+    this.loggerService.error(
+      `⬅️ RES. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${serialized.message}${serialized.reason ? ` [${serialized.reason}]` : ''}`,
+    );
+
+    this.loggerService.error(`⬅️ RES.BODY. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${JSON.stringify(req.body, null)}`);
+
+    this.loggerService.error(`⬅️ RES.PAYLOAD. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${JSON.stringify(serialized, null)}`);
+  }
+
   catch(exception: T, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
@@ -51,26 +61,38 @@ export class GlobalExceptionFilter<T extends BaseException> implements Exception
     if (exception instanceof BadRequestException || exception instanceof NestBadRequestException) {
       const errorResponse = this.handleException(exception);
       res.status(errorResponse.httpStatus).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     } else if (exception instanceof UnauthorizedException || exception instanceof NestUnauthorizedException) {
       const errorResponse = this.handleException(exception);
       res.status(HttpStatus.UNAUTHORIZED).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     } else if (exception instanceof ForbiddenException || exception instanceof NestForbiddenException) {
       const errorResponse = this.handleException(exception);
       res.status(HttpStatus.FORBIDDEN).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     } else if (exception instanceof NotFoundException || exception instanceof NestNotFoundException) {
       const errorResponse = this.handleException(exception);
       res.status(HttpStatus.NOT_FOUND).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     } else if (exception instanceof MethodNotAllowedException || exception instanceof NestMethodNotAllowedException) {
       const errorResponse = this.handleException(exception);
       res.status(HttpStatus.METHOD_NOT_ALLOWED).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     } else if (exception instanceof ConflictException || exception instanceof NestConflictException) {
       const errorResponse = this.handleException(exception);
       res.status(HttpStatus.CONFLICT).json(errorResponse);
+      const serialized = serializeResponse(errorResponse);
+      this.printLog(req, serialized);
       return;
     }
 
@@ -85,14 +107,7 @@ export class GlobalExceptionFilter<T extends BaseException> implements Exception
     console.trace('🚀 ~ GlobalExceptionFilter ~ catch ~ exception.message:', exception);
 
     const serialized = serializeResponse(errorResponse);
-
-    this.loggerService.error(
-      `⬅️ RES. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${serialized.message}${serialized.reason ? ` [${serialized.reason}]` : ''}`,
-    );
-
-    this.loggerService.error(`⬅️ RES.BODY. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${JSON.stringify(req.body, null)}`);
-
-    this.loggerService.error(`⬅️ RES.PAYLOAD. [${req.method}] ${req.originalUrl} ${serialized.httpStatus} --- ${JSON.stringify(serialized, null)}`);
+    this.printLog(req, serialized);
 
     res.status(serialized.httpStatus).json(serialized);
   }
