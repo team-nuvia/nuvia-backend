@@ -1,11 +1,11 @@
 import { ErrorMessage, GetResponse } from '@common/dto/response';
-import { DefaultListResponseDto } from '@common/interface/default-list.response.dto';
+import { PaginatedResponseDto } from '@common/interface/paginated.response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { GetSurveyListNestedResponseDto } from './get-survey-list.nested.response.dto';
 
-export class ListResponseDto implements DefaultListResponseDto<GetSurveyListNestedResponseDto> {
+export class ListResponseDto implements PaginatedResponseDto<GetSurveyListNestedResponseDto> {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()

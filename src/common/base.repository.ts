@@ -148,13 +148,24 @@ export abstract class BaseRepository {
       callback?.({ [PlanGrantConstraintsType.SurveyCreate]: userSurveyCountAtMonth });
     }
 
+    /* 설문 응답 제약사항 검증 */
+    if (planGrantConstraints.includes(PlanGrantConstraintsType.SurveyAnswerCreate)) {
+      const surveyAnswerCreateAtMonth = userPlan.planGrants.find(
+        (planGrant) => planGrant.constraints === PlanGrantConstraintsType.SurveyAnswerCreate && planGrant.isAllowed,
+      );
+
+      const allowSurveyAnswerCount = surveyAnswerCreateAtMonth?.amount ?? 0;
+
+      callback?.({ [PlanGrantConstraintsType.SurveyAnswerCreate]: allowSurveyAnswerCount });
+    }
+
     /* 설문 당 질문 최대 개수 검증 */
     if (planGrantConstraints.includes(PlanGrantConstraintsType.PerQuestionForSurvey)) {
-      const userSurveyCountAtMonth = userPlan.planGrants.find(
+      const perQuestionForSurveyAtMonth = userPlan.planGrants.find(
         (planGrant) => planGrant.constraints === PlanGrantConstraintsType.PerQuestionForSurvey && planGrant.isAllowed,
       );
 
-      const allowPerQuestionForSurveyAmount = userSurveyCountAtMonth?.amount;
+      const allowPerQuestionForSurveyAmount = perQuestionForSurveyAtMonth?.amount ?? 0;
 
       callback?.({ [PlanGrantConstraintsType.PerQuestionForSurvey]: allowPerQuestionForSurveyAmount });
     }

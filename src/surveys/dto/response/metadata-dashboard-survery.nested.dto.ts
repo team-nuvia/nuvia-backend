@@ -1,4 +1,5 @@
 import { PlanNameType } from '@/plans/enums/plan-name-type.enum';
+import { MetadataCommonInterface } from '@common/interface/metadata-common.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PlanUsageNestedResponseDto {
@@ -20,13 +21,7 @@ export class RespondentIncreaseRateNestedResponseDto {
   currentMonthRespondentCount!: number;
 }
 
-export class DashboardSurveryMetadataNestedResponseDto {
-  @ApiProperty({ description: '총 설문 수', example: 5 })
-  totalSurveyCount!: number;
-
-  @ApiProperty({ description: '총 응답자 수', example: 25 })
-  totalRespondentCount!: number;
-
+export class MetadataDashboardSurveryNestedResponseDto extends MetadataCommonInterface {
   @ApiProperty({ description: '응답자 증가율', type: () => RespondentIncreaseRateNestedResponseDto })
   respondentIncreaseRate!: RespondentIncreaseRateNestedResponseDto;
 

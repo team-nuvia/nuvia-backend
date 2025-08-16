@@ -72,6 +72,10 @@ export class Survey extends DefaultDateInterface {
     return this.answers.length;
   }
 
+  get realtimeStatus(): SurveyStatus {
+    return this.expiresAt && this.expiresAt < new Date() ? SurveyStatus.Closed : this.status;
+  }
+
   /**
    * 예상 소요시간 계산
    * @returns 예상 소요시간 (분, 소수점 1자리까지)

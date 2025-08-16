@@ -24,9 +24,12 @@ export class DashboardRecentSurveyNestedResponseDto {
   @ApiProperty({ description: '응답자 수', example: 10 })
   responses: number = 10;
 
-  @ApiProperty({ description: '생성일시', example: '2024-01-15T09:00:00.000Z' })
-  createdAt: Date = new Date('2024-01-15T09:00:00.000Z');
+  @ApiProperty({ description: '만료일시', example: null, nullable: true })
+  expiresAt: Date | null = null;
 
-  @ApiProperty({ description: '수정일시', example: '2024-01-15T09:00:00.000Z' })
-  updatedAt: Date = new Date('2024-01-15T09:00:00.000Z');
+  @ApiProperty({ description: '생성일시', example: new Date() })
+  createdAt: Date = new Date();
+
+  @ApiProperty({ description: '수정일시', example: new Date() })
+  updatedAt: Date = new Date();
 }
