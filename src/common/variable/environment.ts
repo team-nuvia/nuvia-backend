@@ -50,3 +50,4 @@ export const LOG_ACTIVATE = getEnvAs(Boolean, 'LOG_ACTIVATE', true);
 export const LOG_SAVE_ACTIVATE = getEnvAs(Boolean, 'LOG_SAVE_ACTIVATE', true);
 
 export const SECRET_JWT = getEnvAs(String, 'SECRET_JWT');
+export const SECRET_ANSWER_JWT = getEnvAs(String, 'SECRET_ANSWER_JWT');

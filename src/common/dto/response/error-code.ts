@@ -70,6 +70,10 @@ export const ErrorKey = {
   SUCCESS_CREATE_ANSWER: 'SUCCESS_CREATE_ANSWER',
   SUCCESS_GET_SURVEY_BIN: 'SUCCESS_GET_SURVEY_BIN',
   SUCCESS_UPDATE_SURVEY_STATUS: 'SUCCESS_UPDATE_SURVEY_STATUS',
+  SUCCESS_START_ANSWER: 'SUCCESS_START_ANSWER',
+  SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: 'SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER',
+  NO_VALIDATE_FIRST_SURVEY_ANSWER: 'NO_VALIDATE_FIRST_SURVEY_ANSWER',
+  NOT_FOUND_ANSWER: 'NOT_FOUND_ANSWER',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -141,6 +145,10 @@ export const ErrorCode = {
   SUCCESS_CREATE_ANSWER: HttpStatus.CREATED,
   SUCCESS_GET_SURVEY_BIN: HttpStatus.OK,
   SUCCESS_UPDATE_SURVEY_STATUS: HttpStatus.OK,
+  SUCCESS_START_ANSWER: HttpStatus.OK,
+  SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: HttpStatus.OK,
+  NO_VALIDATE_FIRST_SURVEY_ANSWER: HttpStatus.BAD_REQUEST,
+  NOT_FOUND_ANSWER: HttpStatus.NOT_FOUND,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -212,6 +220,10 @@ export const ErrorMessage = {
   SUCCESS_CREATE_ANSWER: '답변 생성 성공',
   SUCCESS_GET_SURVEY_BIN: '삭제된 설문 조회 성공',
   SUCCESS_UPDATE_SURVEY_STATUS: '설문 상태 변경 성공',
+  SUCCESS_START_ANSWER: '설문 답변 시작 성공',
+  SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: '설문 답변 첫 번째 질문 유효성 검사 성공',
+  NO_VALIDATE_FIRST_SURVEY_ANSWER: '설문 답변 첫 번째 질문 유효성 검사 실패',
+  NOT_FOUND_ANSWER: '답변을 찾을 수 없습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

@@ -13,16 +13,13 @@ export class Answer extends DefaultDateInterface {
   @Column('int', { comment: '설문 PK' })
   surveyId!: number;
 
-  @Column('int', { nullable: true, comment: '유저 PK' })
+  /* 응답자 정보 - 비회원은 null */
+  @Column('int', { nullable: true, comment: '유저(응답자) PK' })
   userId!: number | null;
 
-  /* 응답자 정보 - 비회원은 null */
-  @Column('int', { nullable: true, comment: '응답자 PK' })
-  respondentId!: number | null;
-
   /* 응답자 쿠키, 링크 토큰 - 회원은 null */
-  @Column('varchar', { nullable: true, length: 100, comment: '비회원 해시' })
-  guestHash!: string | null;
+  @Column('varchar', { length: 255, nullable: true, comment: '비회원 해시' })
+  submissionHash!: string | null;
 
   /* 응답자 디바이스 정보보 - 응답자 전부 저장 */
   @Column('varchar', { length: 255, nullable: true, comment: '유저 에이전트' })
