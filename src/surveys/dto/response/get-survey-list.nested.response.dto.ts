@@ -36,6 +36,12 @@ export class GetSurveyListNestedResponseDto {
   @ApiProperty({ description: '설문 응답자 수', example: 10 })
   responseAmount: number = 10;
 
+  @ApiProperty({ description: '설문 만료 여부', example: false })
+  isExpired: boolean = false;
+
+  @ApiProperty({ description: '설문 만료일시', example: null, nullable: true })
+  expiresAt: Date | null = null;
+
   @ApiProperty({ description: '설문 생성일시', example: '2024-01-15T09:00:00.000Z' })
   createdAt: Date = new Date('2024-01-15T09:00:00.000Z');
 

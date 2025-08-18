@@ -28,5 +28,5 @@ export class QuestionOption extends DefaultDateInterface {
   @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.questionOption, {
     cascade: true,
   })
-  questionAnswers!: Relation<QuestionAnswer>[];
+  answers!: Relation<QuestionAnswer>[];
 }

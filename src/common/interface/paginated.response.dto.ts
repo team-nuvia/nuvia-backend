@@ -1,4 +1,4 @@
-export interface DefaultListResponseDto<T> {
+export interface PaginatedResponseDto<T> {
   page: number;
   limit: number;
   total: number;

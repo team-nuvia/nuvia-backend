@@ -1,26 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAnswerDto } from './dto/create-answer.dto';
-import { UpdateAnswerDto } from './dto/update-answer.dto';
+import { AnswersRepository } from './answers.repository';
+import { CreateAnswerPayloadDto } from './dto/payload/create-answer.payload.dto';
+import { StartAnswerPayloadDto } from './dto/payload/start-answer.payload.dto';
+import { StartAnswerNestedResponseDto } from './dto/response/start-answer.nested.response.dto';
 
 @Injectable()
 export class AnswersService {
-  create(_createAnswerDto: CreateAnswerDto) {
-    return 'This action adds a new answer';
+  constructor(private readonly answersRepository: AnswersRepository) {}
+
+  async startAnswer(surveyId: number, startAnswerPayloadDto: StartAnswerPayloadDto, userId?: number): Promise<StartAnswerNestedResponseDto> {
+    return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, userId);
   }
 
-  findAll() {
-    return `This action returns all answers`;
+  async validateFirstSurveyAnswer(submissionHash: string, jws: string, surveyId: number): Promise<void> {
+    await this.answersRepository.validateFirstSurveyAnswer(submissionHash, jws, surveyId);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} answer`;
-  }
-
-  update(id: number, _updateAnswerDto: UpdateAnswerDto) {
-    return `This action updates a #${id} answer`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} answer`;
+  async create(createAnswerDto: CreateAnswerPayloadDto, surveyId: number, submissionHash: string, userId?: number) {
+    await this.answersRepository.createAnswer(createAnswerDto, surveyId, submissionHash, userId);
   }
 }

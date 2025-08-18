@@ -3,15 +3,19 @@ import { Injectable } from '@nestjs/common';
 import { UserRole } from '@share/enums/user-role';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
+import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
+import { UpdateSurveyStatusPayloadDto } from './dto/payload/update-survey-status.payload.dto';
 import { UpdateSurveyVisibilityPayloadDto } from './dto/payload/update-survey-visibility.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
 import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
-import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
 import { GetCategoryNestedResponseDto } from './dto/response/get-category.nested.response.dto';
+import { GetSurveyBinPaginatedResponseDto } from './dto/response/get-survey-bin.response.dto';
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
+import { MetadataDashboardSurveryNestedResponseDto } from './dto/response/metadata-dashboard-survery.nested.dto';
+import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { SurveysRepository } from './surveys.repository';
 
@@ -29,8 +33,16 @@ export class SurveysService {
     await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
 
+  async restoreSurvey(surveyId: number): Promise<void> {
+    await this.surveyRepository.restoreSurvey(surveyId);
+  }
+
   getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {
     return this.surveyRepository.getSurveyCategories();
+  }
+
+  async getDeletedSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyBinPaginatedResponseDto> {
+    return await this.surveyRepository.getDeletedSurvey(userId, searchQuery);
   }
 
   async getSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<DashboardSurveyNestedResponseDto[]> {
@@ -41,8 +53,11 @@ export class SurveysService {
     return await this.surveyRepository.getSurveyList(userId, searchQuery);
   }
 
-  async getSurveyMetadata(userId: number): Promise<DashboardSurveryMetadataNestedResponseDto> {
-    return await this.surveyRepository.getSurveyMetadata(userId);
+  async getSurveyMetadata(
+    userId: number,
+    searchQuery: SurveyMetadataQueryParamDto,
+  ): Promise<MetadataDashboardSurveryNestedResponseDto | MetadataSurveyListNestedResponseDto> {
+    return await this.surveyRepository.getSurveyMetadata(userId, searchQuery);
   }
 
   async getRecentSurvey(userId: number): Promise<DashboardRecentSurveyNestedResponseDto[]> {
@@ -53,8 +68,8 @@ export class SurveysService {
     return await this.surveyRepository.getSurveyDetail(surveyId, userId);
   }
 
-  async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string): Promise<SurveyDetailNestedResponseDto> {
-    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey);
+  async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string, userId?: number): Promise<SurveyDetailNestedResponseDto> {
+    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey, userId);
     await this.surveyRepository.viewCountUpdate(hashedUniqueKey);
     return survey;
   }
@@ -79,6 +94,16 @@ export class SurveysService {
     }
 
     await this.surveyRepository.toggleSurveyVisibility(surveyId, updateSurveyVisibilityPayloadDto);
+  }
+
+  async updateSurveyStatus(surveyId: number, userId: number, updateSurveyStatusPayloadDto: UpdateSurveyStatusPayloadDto): Promise<void> {
+    const survey = await this.surveyRepository.getSurveyDetail(surveyId, userId);
+
+    if (!survey) {
+      throw new NotFoundSurveyExceptionDto();
+    }
+
+    await this.surveyRepository.updateSurveyStatus(surveyId, updateSurveyStatusPayloadDto);
   }
 
   async updateSurvey(surveyId: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {

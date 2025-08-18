@@ -10,8 +10,8 @@ import {
   Relation
 } from 'typeorm';
 import { Survey } from '../../entities/survey.entity';
-import { QuestionOption } from '../options/entities/question-option.entity';
 import { QuestionAnswer } from '../answers/entities/question-answer.entity';
+import { QuestionOption } from '../options/entities/question-option.entity';
 
 @Entity()
 export class Question extends DefaultDateInterface {
@@ -52,5 +52,5 @@ export class Question extends DefaultDateInterface {
   @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.question, {
     cascade: true,
   })
-  questionAnswers!: Relation<QuestionAnswer>[];
+  answers!: Relation<QuestionAnswer>[];
 }

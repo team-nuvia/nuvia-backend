@@ -6,30 +6,36 @@ import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { MetadataStatusType } from '@share/enums/metadata-status-type';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { UserRole, UserRoleList } from '@share/enums/user-role';
 import { User } from '@users/entities/user.entity';
+import { DateFormat } from '@util/dateFormat';
 import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
-import { FindOptionsWhere, In } from 'typeorm';
+import { Brackets, FindOptionsWhere, In } from 'typeorm';
 import { NoMatchSubscriptionExceptionDto } from './dto/exception/no-match-subscription.exception.dto';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
+import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
+import { UpdateSurveyStatusPayloadDto } from './dto/payload/update-survey-status.payload.dto';
 import { UpdateSurveyVisibilityPayloadDto } from './dto/payload/update-survey-visibility.payload.dto';
 import { UpdateSurveyPayloadDto } from './dto/payload/update-survey.payload.dto';
 import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard-recent-survey.nested.response.dto';
-import { DashboardSurveryMetadataNestedResponseDto } from './dto/response/dashboard-survery-metadata.nested.dto';
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
 import { GetCategoryNestedResponseDto } from './dto/response/get-category.nested.response.dto';
+import { GetSurveyBinPaginatedNestedResponseDto } from './dto/response/get-survey-bin-paginated.nested.response.dto';
+import { GetSurveyBinPaginatedResponseDto } from './dto/response/get-survey-bin.response.dto';
 import { GetSurveyListNestedResponseDto } from './dto/response/get-survey-list.nested.response.dto';
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
+import { MetadataDashboardSurveryNestedResponseDto } from './dto/response/metadata-dashboard-survery.nested.dto';
+import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { Category } from './entities/category.entity';
 import { Survey } from './entities/survey.entity';
-import { QuestionAnswer } from './questions/answers/entities/question-answer.entity';
 import { Question } from './questions/entities/question.entity';
 import { QuestionOption } from './questions/options/entities/question-option.entity';
 
@@ -53,18 +59,6 @@ export class SurveysRepository extends BaseRepository {
   existsBy(condition: FindOptionsWhere<Survey>): Promise<boolean> {
     return this.orm.getRepo(Survey).exists({ where: condition });
   }
-
-  // async getCurrentSubscription(userId: number) {
-  //   const organizationRole = await this.orm
-  //     .getRepo(OrganizationRole)
-  //     .findOne({ where: { userId, isActive: true }, relations: { subscription: true } });
-
-  //   if (!organizationRole) {
-  //     throw new NotFoundOrganizationRoleExceptionDto();
-  //   }
-
-  //   return organizationRole.subscription;
-  // }
 
   async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     const hashedUniqueKey = uniqueHash();
@@ -107,6 +101,61 @@ export class SurveysRepository extends BaseRepository {
     await this.orm.getManager().save(Question, questions);
   }
 
+  async restoreSurvey(surveyId: number): Promise<void> {
+    await this.orm
+      .getManager()
+      .createQueryBuilder()
+      .update(Survey)
+      .set({
+        deletedAt: null,
+        isPublic: false,
+      })
+      .where('id = :surveyId', { surveyId })
+      .execute();
+  }
+
+  async getDeletedSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyBinPaginatedResponseDto> {
+    const { search, page, limit, status } = searchQuery;
+
+    const subscription = await this.getCurrentOrganization(userId);
+
+    const query = this.orm
+      .getManager()
+      .createQueryBuilder(Survey, 's')
+      .withDeleted()
+      .where('s.userId = :userId', { userId })
+      .andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('s.deletedAt IS NOT NULL');
+
+    if (search) {
+      query.andWhere('s.title LIKE :search', { search: `%${search}%` });
+    }
+
+    if (status) {
+      query.andWhere('s.status IN (:...status)', { status: status.split(',') as SurveyStatus[] });
+    }
+
+    const [surveyList, total] = await query.getManyAndCount();
+
+    const composedSurveyList = surveyList.map<GetSurveyBinPaginatedNestedResponseDto>((survey) => ({
+      id: survey.id,
+      title: survey.title,
+      description: survey.description,
+      isPublic: survey.isPublic,
+      status: survey.realtimeStatus,
+      createdAt: survey.createdAt,
+      updatedAt: survey.updatedAt,
+      deletedAt: survey.deletedAt,
+    }));
+
+    return {
+      page,
+      limit,
+      total,
+      data: composedSurveyList,
+    };
+  }
+
   getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {
     return this.orm.getRepo(Category).createQueryBuilder('c').select(['c.id', 'c.name']).getMany();
   }
@@ -133,8 +182,8 @@ export class SurveysRepository extends BaseRepository {
     query
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .leftJoinAndSelect('sqa.user', 'u')
+      .leftJoinAndSelect('sq.answers', 'sa')
+      .leftJoinAndSelect('sa.user', 'u')
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('s.createdAt', 'DESC');
@@ -153,7 +202,7 @@ export class SurveysRepository extends BaseRepository {
       respondentCount: survey.respondentCount,
       expiresAt: survey.expiresAt,
       isPublic: survey.isPublic,
-      status: survey.status,
+      status: survey.realtimeStatus,
       createdAt: survey.createdAt,
       updatedAt: survey.updatedAt,
     }));
@@ -161,7 +210,10 @@ export class SurveysRepository extends BaseRepository {
     return composedSurveyList;
   }
 
-  async getSurveyMetadata(userId: number): Promise<DashboardSurveryMetadataNestedResponseDto> {
+  async getSurveyMetadata(
+    userId: number,
+    searchQuery: SurveyMetadataQueryParamDto,
+  ): Promise<MetadataDashboardSurveryNestedResponseDto | MetadataSurveyListNestedResponseDto> {
     const subscription = await this.getCurrentOrganization(userId);
 
     if (isNil(subscription)) {
@@ -176,78 +228,83 @@ export class SurveysRepository extends BaseRepository {
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .getManyAndCount();
 
-    const totalRespondentCountRawOne = await this.orm
-      .getManager()
-      .createQueryBuilder(QuestionAnswer, 'qa')
-      .where('qa.surveyId IN (:...surveyIds)', { surveyIds: surveyList.map((survey) => survey.id) })
-      .select('IFNULL(COUNT(DISTINCT qa.userId), 0)', 'totalRespondentCount')
-      .getRawOne();
+    const totalRespondentCount = surveyList.reduce((acc, cur) => acc + cur.respondentCount, 0);
 
-    const totalRespondentCount = +(totalRespondentCountRawOne.totalRespondentCount ?? 0);
+    if (searchQuery.status === MetadataStatusType.Dashboard) {
+      const [currentMonthSurveyList, currentMonthSurveyCount] = await this.orm
+        .getManager()
+        .createQueryBuilder(Survey, 's')
+        .leftJoinAndSelect('s.questions', 'sq')
+        .leftJoinAndSelect('s.answers', 'sa')
+        .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+        .andWhere('s.createdAt >= :currentFirstDay', { currentFirstDay })
+        .andWhere('s.createdAt <= :currentLastDay', { currentLastDay })
+        .getManyAndCount();
 
-    const [currentMonthSurveyList, currentMonthSurveyCount] = await this.orm
-      .getManager()
-      .createQueryBuilder(Survey, 's')
-      .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
-      .andWhere('s.createdAt >= :currentFirstDay', { currentFirstDay })
-      .andWhere('s.createdAt <= :currentLastDay', { currentLastDay })
-      .getManyAndCount();
+      const prevMonthSurveyList = await this.orm
+        .getManager()
+        .createQueryBuilder(Survey, 's')
+        .leftJoinAndSelect('s.questions', 'sq')
+        .leftJoinAndSelect('s.answers', 'sa')
+        .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+        .andWhere('s.createdAt >= :prevFirstDay', { prevFirstDay })
+        .andWhere('s.createdAt <= :prevLastDay', { prevLastDay })
+        .getMany();
 
-    const prevMonthSurveyList = await this.orm
-      .getManager()
-      .createQueryBuilder(Survey, 's')
-      .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
-      .andWhere('s.createdAt >= :prevFirstDay', { prevFirstDay })
-      .andWhere('s.createdAt <= :prevLastDay', { prevLastDay })
-      .getMany();
+      const currentMonthRespondentCount = currentMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
 
-    const currentMonthRespondentCount = currentMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+      const previousMonthRespondentCount = prevMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
 
-    const previousMonthRespondentCount = prevMonthSurveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+      const planLimitPerMonth = subscription.plan.planGrants.find(
+        (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
+      );
 
-    // const totalRespondentCount = surveyList.reduce((acc, survey) => acc + survey.respondentCount, 0);
+      const planUsagePerMonth = planLimitPerMonth?.amount ?? 0;
 
-    const planLimitPerMonth = subscription.plan.planGrants.find(
-      (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
-    );
+      const metadata = {
+        totalSurveyCount,
+        totalRespondentCount,
+        respondentIncreaseRate: {
+          previousMonthRespondentCount,
+          currentMonthRespondentCount,
+        },
+        planUsage: {
+          plan: subscription.plan.name,
+          usage: currentMonthSurveyCount,
+          limit: planUsagePerMonth,
+        },
+      };
+      return metadata as MetadataDashboardSurveryNestedResponseDto;
+    } else {
+      /* 진행중 또는 만료기간이 없거나 만료되지 않은 설문 개수 */
+      const activeSurveyCount = surveyList.filter((survey) => survey.realtimeStatus === SurveyStatus.Active).length;
 
-    const planUsagePerMonth = planLimitPerMonth?.amount ?? 0;
-
-    return {
-      totalSurveyCount,
-      totalRespondentCount,
-      respondentIncreaseRate: {
-        previousMonthRespondentCount,
-        currentMonthRespondentCount,
-      },
-      planUsage: {
-        plan: subscription.plan.name,
-        usage: currentMonthSurveyCount,
-        limit: planUsagePerMonth,
-      },
-    };
+      const metadata = {
+        totalSurveyCount,
+        totalRespondentCount,
+        activeSurveyCount,
+        totalViewCount: surveyList.reduce((acc, survey) => acc + survey.viewCount, 0),
+      } as MetadataSurveyListNestedResponseDto;
+      return metadata;
+    }
   }
 
   async getRecentSurvey(userId: number): Promise<DashboardRecentSurveyNestedResponseDto[]> {
     const subscription = await this.getCurrentOrganization(userId);
 
-    const surveyList = await this.orm
+    const query = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
-      .orderBy('s.createdAt', 'DESC')
-      .getMany();
+      .leftJoinAndSelect('s.answers', 'sa')
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
+
+    const surveyList = await query.orderBy('s.createdAt', 'DESC').getMany();
 
     return surveyList.map<DashboardRecentSurveyNestedResponseDto>((survey) => ({
       id: survey.id,
@@ -258,8 +315,9 @@ export class SurveysRepository extends BaseRepository {
       hashedUniqueKey: survey.hashedUniqueKey,
       title: survey.title,
       description: survey.description,
-      status: survey.status,
+      status: survey.realtimeStatus,
       responses: survey.respondentCount,
+      expiresAt: survey.expiresAt,
       createdAt: survey.createdAt,
       updatedAt: survey.updatedAt,
     }));
@@ -275,8 +333,8 @@ export class SurveysRepository extends BaseRepository {
       .createQueryBuilder(Survey, 's')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .leftJoinAndSelect('sqa.user', 'u')
+      .leftJoinAndSelect('s.answers', 'sa')
+      .leftJoinAndSelect('sa.user', 'u')
       // .where('s.userId = :userId', { userId });
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
@@ -285,7 +343,22 @@ export class SurveysRepository extends BaseRepository {
     }
 
     if (status !== 'all') {
-      surveyQuery.andWhere('s.status IN (:...status)', { status: status.split(',') as SurveyStatus[] });
+      const splittedStatus = status.split(',') as SurveyStatus[];
+      const filteredStatus = splittedStatus.filter((status) => status !== SurveyStatus.Closed);
+      if (filteredStatus.length > 0) {
+        surveyQuery.andWhere('s.status IN (:...status)', { status: splittedStatus.filter((status) => status !== SurveyStatus.Closed) });
+      }
+
+      if (splittedStatus.includes(SurveyStatus.Closed)) {
+        surveyQuery.andWhere(
+          new Brackets((qb) => {
+            qb.where('(s.expiresAt IS NOT NULL AND s.expiresAt < :now)', { now: DateFormat.toUTC() });
+            qb.orWhere('s.status = :status', { status: SurveyStatus.Closed });
+          }),
+        );
+      } else {
+        surveyQuery.andWhere('s.expiresAt IS NULL');
+      }
     }
 
     const [surveyList, total] = await surveyQuery
@@ -304,11 +377,13 @@ export class SurveysRepository extends BaseRepository {
         name: survey.category.name,
       },
       isPublic: survey.isPublic,
-      status: survey.status,
+      status: survey.realtimeStatus,
       viewCount: survey.viewCount,
       estimatedTime: survey.estimatedTime,
       questionAmount: survey.questions.length,
       responseAmount: survey.respondentCount,
+      isExpired: survey.realtimeStatus === SurveyStatus.Closed,
+      expiresAt: survey.expiresAt,
       createdAt: survey.createdAt,
       updatedAt: survey.updatedAt,
     }));
@@ -344,7 +419,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo', 'sqo.deletedAt IS NULL')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
+      .leftJoinAndSelect('s.answers', 'sa')
       .where('s.id = :surveyId', { surveyId });
 
     if (subscription) {
@@ -397,7 +472,9 @@ export class SurveysRepository extends BaseRepository {
     };
   }
 
-  async getSurveyDetailByHashedUniqueKey(hashedUniqueKey: string): Promise<SurveyDetailNestedResponseDto> {
+  async getSurveyDetailByHashedUniqueKey(hashedUniqueKey: string, userId?: number): Promise<SurveyDetailNestedResponseDto> {
+    const user = userId ? await this.orm.getRepo(User).findOne({ where: { id: userId }, relations: ['subscription'] }) : null;
+
     const query = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
@@ -406,10 +483,16 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('u.profile', 'up')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.questionAnswers', 'sqa')
-      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
-      .andWhere('s.isPublic = :isPublic', { isPublic: true })
-      .andWhere('s.status = :status', { status: SurveyStatus.Active });
+      .leftJoinAndSelect('s.answers', 'sa')
+      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
+
+    // 보려는 사용자가 해당 조직 일원이면, 공개 여부, 설문 상태 상관없이 보여야한다.
+    // 보려는 사용자가 해당 조직 일원이 아니면, 공개 여부, 설문 상태 조건을 만족해야한다.
+    if (user) {
+      query.andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: user.subscription.id }).withDeleted();
+    } else {
+      query.andWhere('s.isPublic = :isPublic', { isPublic: true }).andWhere('s.status = :status', { status: SurveyStatus.Active });
+    }
 
     const survey = await query
       .orderBy('sq.id', 'ASC')
@@ -452,7 +535,7 @@ export class SurveysRepository extends BaseRepository {
         sequence: question.sequence,
       })),
       isPublic: survey.isPublic,
-      status: survey.status,
+      status: survey.realtimeStatus,
       questionCount: survey.questions.length,
       respondentCount: survey.respondentCount,
       isOwner: survey.hashedUniqueKey === hashedUniqueKey,
@@ -464,6 +547,10 @@ export class SurveysRepository extends BaseRepository {
 
   async toggleSurveyVisibility(surveyId: number, updateSurveyVisibilityPayloadDto: UpdateSurveyVisibilityPayloadDto): Promise<void> {
     await this.orm.getManager().update(Survey, surveyId, { isPublic: updateSurveyVisibilityPayloadDto.isPublic });
+  }
+
+  async updateSurveyStatus(surveyId: number, updateSurveyStatusPayloadDto: UpdateSurveyStatusPayloadDto): Promise<void> {
+    await this.orm.getManager().update(Survey, surveyId, { status: updateSurveyStatusPayloadDto.status });
   }
 
   async updateSurvey(surveyId: number, userId: number, updateSurveyPayloadDto: UpdateSurveyPayloadDto): Promise<void> {
