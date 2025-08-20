@@ -1,4 +1,5 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { ExtractSubmissionHash } from '@common/decorator/extract-submission-hash.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
@@ -17,6 +18,7 @@ import { DeleteSurveyResponseDto } from './dto/response/delete-survey.response.d
 import { GetRecentSurveyResponseDto } from './dto/response/get-recent-survey.response.dto';
 import { GetSurveyBinResponseDto } from './dto/response/get-survey-bin.response.dto';
 import { GetSurveyCategoryResponseDto } from './dto/response/get-survey-category.response.dto';
+import { GetSurveyDetailViewResponseDto } from './dto/response/get-survey-detail-view.response.dto';
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
@@ -132,7 +134,7 @@ export class SurveysController {
   }
 
   @ApiOperation({ summary: '설문 상세 조회 (유니크 키로 조회)' })
-  @CombineResponses(HttpStatus.OK, GetSurveyDetailResponseDto)
+  @CombineResponses(HttpStatus.OK, GetSurveyDetailViewResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Transactional()
@@ -141,9 +143,10 @@ export class SurveysController {
   async getSurveyDetailAndViewCountUpdate(
     @LoginUser() user: LoginUserData,
     @Param('hashedUniqueKey') hashedUniqueKey: string,
-  ): Promise<GetSurveyDetailResponseDto> {
-    const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, user?.id);
-    return new GetSurveyDetailResponseDto(survey);
+    @ExtractSubmissionHash() submissionHash?: string,
+  ): Promise<GetSurveyDetailViewResponseDto> {
+    const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, submissionHash, user?.id);
+    return new GetSurveyDetailViewResponseDto(survey);
   }
 
   @ApiOperation({ summary: '설문 상세 조회' })

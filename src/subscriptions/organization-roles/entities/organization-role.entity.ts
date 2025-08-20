@@ -22,6 +22,9 @@ export class OrganizationRole extends DefaultDateInterface {
   @Column('tinyint', { default: false, comment: '활성 여부' })
   isActive!: boolean;
 
+  @Column('tinyint', { default: false, comment: '초대 수락 여부' })
+  isJoined!: boolean;
+
   @ManyToOne(() => Subscription, (subscription) => subscription.organizationRoles)
   subscription!: Relation<Subscription>;
 

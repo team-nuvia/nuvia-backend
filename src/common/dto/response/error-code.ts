@@ -74,6 +74,10 @@ export const ErrorKey = {
   SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: 'SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER',
   NO_VALIDATE_FIRST_SURVEY_ANSWER: 'NO_VALIDATE_FIRST_SURVEY_ANSWER',
   NOT_FOUND_ANSWER: 'NOT_FOUND_ANSWER',
+  EXPIRED_ANSWER: 'EXPIRED_ANSWER',
+  NO_VERIFY_ACCESS_TOKEN: 'NO_VERIFY_ACCESS_TOKEN',
+  EXPIRED_JWS: 'EXPIRED_JWS',
+  REQUIRED_REFRESH_JWS: 'REQUIRED_REFRESH_JWS',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -149,6 +153,10 @@ export const ErrorCode = {
   SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: HttpStatus.OK,
   NO_VALIDATE_FIRST_SURVEY_ANSWER: HttpStatus.BAD_REQUEST,
   NOT_FOUND_ANSWER: HttpStatus.NOT_FOUND,
+  EXPIRED_ANSWER: HttpStatus.BAD_REQUEST,
+  NO_VERIFY_ACCESS_TOKEN: HttpStatus.BAD_REQUEST,
+  EXPIRED_JWS: HttpStatus.BAD_REQUEST,
+  REQUIRED_REFRESH_JWS: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -224,6 +232,10 @@ export const ErrorMessage = {
   SUCCESS_VALIDATE_FIRST_SURVEY_ANSWER: '설문 답변 첫 번째 질문 유효성 검사 성공',
   NO_VALIDATE_FIRST_SURVEY_ANSWER: '설문 답변 첫 번째 질문 유효성 검사 실패',
   NOT_FOUND_ANSWER: '답변을 찾을 수 없습니다.',
+  EXPIRED_ANSWER: '답변이 만료되었습니다. 참여하시려면 다시 시작해주세요.',
+  NO_VERIFY_ACCESS_TOKEN: '인증 토큰이 유효하지 않습니다.',
+  EXPIRED_JWS: '인증 토큰이 만료되었습니다.',
+  REQUIRED_REFRESH_JWS: '인증 토큰이 필요합니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

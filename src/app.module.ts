@@ -8,6 +8,7 @@ import { UsersRepository } from '@users/users.repository';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { BatchesModule } from './batches/batches.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 import { ErrorCodeModule } from './error-code/error-code.module';
@@ -20,6 +21,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
+import { EmailsModule } from './emails/emails.module';
 
 @Module({
   imports: [
@@ -34,12 +36,14 @@ import { UtilModule } from './util/util.module';
     CommonModule,
     LoggerModule,
     StaticModule,
+    BatchesModule,
     SurveysModule,
     DatabaseModule,
     ErrorCodeModule,
     PaymentsModule,
     PermissionsModule,
     SubscriptionsModule,
+    EmailsModule,
   ],
   controllers: [AppController],
   providers: [AppService, UsersRepository],

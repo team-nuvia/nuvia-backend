@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
+import { AnswerDetailQuestionAnswerNestedResponseDto } from './answer-detail-question-answer.nested.response.dto';
 import { GetCategoryNestedResponseDto } from './get-category.nested.response.dto';
 import { QuestionDetailNestedResponseDto } from './question-detail.nested.response.dto';
 
-export class SurveyDetailNestedResponseDto {
+export class SurveyDetailViewNestedResponseDto {
   @ApiProperty({ description: '설문조사 ID', example: 1 })
   id: number = 1;
 
@@ -49,6 +50,14 @@ export class SurveyDetailNestedResponseDto {
     example: [new QuestionDetailNestedResponseDto(), new QuestionDetailNestedResponseDto()],
   })
   questions: QuestionDetailNestedResponseDto[] = [];
+
+  @ApiProperty({
+    description: '응답 정보',
+    type: () => AnswerDetailQuestionAnswerNestedResponseDto,
+    isArray: true,
+    example: new AnswerDetailQuestionAnswerNestedResponseDto(),
+  })
+  questionAnswers: AnswerDetailQuestionAnswerNestedResponseDto[] = [new AnswerDetailQuestionAnswerNestedResponseDto()];
 
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean = true;

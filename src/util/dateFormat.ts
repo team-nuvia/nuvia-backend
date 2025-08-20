@@ -39,9 +39,20 @@ export class DateFormat {
     });
   }
 
+  static toOnlyDateUTC(date: string | Date = new Date()) {
+    const base = new Date(date);
+    return this.convert('YYYY-MM-ddTHH:mm:ss.SSSZ', base);
+  }
+
   static toUTC(format: string = 'YYYY-MM-dd HH:mm:ss.SSS', date: string | Date = new Date()) {
     const base = new Date(date);
     return this.convert(format, base);
+  }
+
+  static toOnlyDateKST(date: string | Date = new Date()) {
+    const base = new Date(date);
+    base.setHours(base.getHours() + 9);
+    return this.convert('YYYY-MM-ddTHH:mm:ss.SSSZ', base);
   }
 
   static toKST(format: string = 'YYYY-MM-dd HH:mm:ss.SSS', date: string | Date = new Date()) {

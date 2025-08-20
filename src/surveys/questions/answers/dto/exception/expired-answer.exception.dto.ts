@@ -1,14 +1,14 @@
 import { BadRequestException, ErrorKey, ErrorMessage } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NoValidateFirstSurveyAnswerExceptionDto extends BadRequestException {
+export class ExpiredAnswerExceptionDto extends BadRequestException {
   @ApiProperty({
     description: '예외 메시지',
-    example: ErrorMessage.NO_VALIDATE_FIRST_SURVEY_ANSWER,
+    example: ErrorMessage.EXPIRED_ANSWER,
   })
   declare message: string;
 
   constructor(reason: StringOrNull = null) {
-    super({ code: ErrorKey.NO_VALIDATE_FIRST_SURVEY_ANSWER, reason });
+    super({ code: ErrorKey.EXPIRED_ANSWER, reason });
   }
 }

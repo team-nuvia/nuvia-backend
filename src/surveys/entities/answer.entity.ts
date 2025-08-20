@@ -21,18 +21,22 @@ export class Answer extends DefaultDateInterface {
   @Column('varchar', { length: 255, nullable: true, comment: '비회원 해시' })
   submissionHash!: string | null;
 
-  /* 응답자 디바이스 정보보 - 응답자 전부 저장 */
+  /* 응답자 디바이스 정보 - 응답자 전부 저장 */
   @Column('varchar', { length: 255, nullable: true, comment: '유저 에이전트' })
   userAgent!: string | null;
 
   @Column('varchar', { default: AnswerStatus.Started, length: 50, comment: '설문 상태' })
   status!: AnswerStatus;
 
+  /* 실제 만료 일시 - 쿠키 만료 시간 초과 시 설정 */
+  @Column('datetime', { comment: '실제 만료 일시' })
+  expiredAt!: Date;
+
   @Column('datetime', { default: null, nullable: true, comment: '완료 일시' })
   completedAt!: Date | null;
 
   @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.answer, { cascade: true })
-  questionAnswers!: Relation<QuestionAnswer>;
+  questionAnswers!: Relation<QuestionAnswer>[];
 
   @ManyToOne(() => User, (user) => user.answers, { onDelete: 'NO ACTION' })
   user!: Relation<User>;

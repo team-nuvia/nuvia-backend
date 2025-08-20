@@ -21,7 +21,7 @@ export class QuestionAnswer extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 300, comment: '답변 내용', nullable: true })
   value!: string | null;
 
-  @ManyToOne(() => Question, (question) => question.answers, {
+  @ManyToOne(() => Question, (question) => question.questionAnswers, {
     onDelete: 'NO ACTION',
   })
   question!: Relation<Question>;

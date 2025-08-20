@@ -22,7 +22,7 @@ export const datasourceOptions: DataSourceOptions = {
   username: DB_USERNAME,
   password: DB_PASSWORD,
   database: IS_TEST ? ['test', DB_NAME].join('_') : DB_NAME,
-  timezone: '+09:00',
+  timezone: 'UTC',
   logger: 'advanced-console',
   logging: DB_LOG
     ? IS_TEST || IS_DEV

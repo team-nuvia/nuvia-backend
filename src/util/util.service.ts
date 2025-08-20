@@ -58,7 +58,7 @@ export class UtilService {
 
     const secretConfig = this.commonService.getConfig('secret');
     const jws = jwt.sign(data, secretConfig.answerJwt, {
-      expiresIn: secretConfig.tokenExpireTime,
+      expiresIn: secretConfig.answerJwtExpireTime,
       algorithm: alg,
       // KID(Key ID)는 여러 키를 관리할 때 어떤 키로 서명했는지 식별하는 용도
       // 날짜를 포함하여 키 로테이션을 명시적으로 표현
@@ -77,14 +77,9 @@ export class UtilService {
     return jws;
   }
 
-  verifySurveyJWS(jws: string): boolean {
-    try {
-      const secretConfig = this.commonService.getConfig('secret');
-      const decoded = jwt.verify(jws, secretConfig.answerJwt, { algorithms: ['HS256'] });
-      return !!decoded;
-    } catch (error) {
-      return false;
-    }
+  verifySurveyJWS(jws: string): void {
+    const secretConfig = this.commonService.getConfig('secret');
+    jwt.verify(jws, secretConfig.answerJwt, { algorithms: ['HS256'] });
   }
 
   createJWT(payload: LoginUserData) {

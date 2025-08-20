@@ -16,6 +16,7 @@ import { GetSurveyBinPaginatedResponseDto } from './dto/response/get-survey-bin.
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { MetadataDashboardSurveryNestedResponseDto } from './dto/response/metadata-dashboard-survery.nested.dto';
 import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
+import { SurveyDetailViewNestedResponseDto } from './dto/response/survey-detail-view.nested.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { SurveysRepository } from './surveys.repository';
 
@@ -68,8 +69,12 @@ export class SurveysService {
     return await this.surveyRepository.getSurveyDetail(surveyId, userId);
   }
 
-  async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string, userId?: number): Promise<SurveyDetailNestedResponseDto> {
-    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey, userId);
+  async getSurveyDetailAndViewCountUpdate(
+    hashedUniqueKey: string,
+    submissionHash?: string,
+    userId?: number,
+  ): Promise<SurveyDetailViewNestedResponseDto> {
+    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey, submissionHash, userId);
     await this.surveyRepository.viewCountUpdate(hashedUniqueKey);
     return survey;
   }

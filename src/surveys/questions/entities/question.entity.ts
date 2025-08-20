@@ -1,14 +1,7 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  Relation
-} from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { Survey } from '../../entities/survey.entity';
 import { QuestionAnswer } from '../answers/entities/question-answer.entity';
 import { QuestionOption } from '../options/entities/question-option.entity';
@@ -52,5 +45,5 @@ export class Question extends DefaultDateInterface {
   @OneToMany(() => QuestionAnswer, (questionAnswer) => questionAnswer.question, {
     cascade: true,
   })
-  answers!: Relation<QuestionAnswer>[];
+  questionAnswers!: Relation<QuestionAnswer>[];
 }
