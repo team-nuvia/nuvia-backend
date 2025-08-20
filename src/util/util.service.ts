@@ -111,4 +111,51 @@ export class UtilService {
       return false;
     }
   }
+
+  encodeToken(data: string): string {
+    try {
+      this.loggerService.debug(`🚀 ~ 암호화 데이터: ${data}`);
+
+      const secretConfig = this.commonService.getConfig('secret');
+      const key = crypto.scryptSync(secretConfig.encrypt, secretConfig.encryptSalt, 32);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+
+      const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+
+      // IV와 암호화된 데이터를 함께 base64로 인코딩
+      return Buffer.concat([iv, encrypted]).toString('base64url');
+    } catch (error: any) {
+      this.loggerService.error(`토큰 암호화 실패: ${error.message}`);
+      throw new Error('토큰 암호화에 실패했습니다.');
+    }
+  }
+
+  decodeToken(token: string): string {
+    try {
+      const secretConfig = this.commonService.getConfig('secret');
+      const key = crypto.scryptSync(secretConfig.encrypt, secretConfig.encryptSalt, 32);
+
+      const encoding: BufferEncoding = token.includes('-') || token.includes('_') ? 'base64url' : 'base64';
+
+      // base64 디코딩
+      const combined = Buffer.from(token, encoding);
+      if (combined.length < 17) throw new Error('토큰 길이가 비정상입니다.');
+
+      // IV 추출 (처음 16바이트)
+      const iv = combined.subarray(0, 16);
+
+      // 암호화된 데이터 추출 (16바이트 이후)
+      const encrypted = combined.subarray(16);
+
+      // 복호화
+      const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+      const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+
+      return decrypted.toString('utf8');
+    } catch (error: any) {
+      this.loggerService.error(`토큰 복호화 실패: ${error.message}`);
+      throw new Error('토큰 복호화에 실패했습니다. 잘못된 토큰이거나 만료되었습니다.');
+    }
+  }
 }

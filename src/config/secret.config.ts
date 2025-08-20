@@ -1,4 +1,4 @@
-import { SECRET_ANSWER_JWT, SECRET_JWT } from '@common/variable/environment';
+import { SECRET_ANSWER_JWT, SECRET_ENCRYPT, SECRET_ENCRYPT_SALT, SECRET_JWT } from '@common/variable/environment';
 import { refreshExpireTime, tokenExpireTime, VERIFY_JWS_EXPIRED_AT } from '@common/variable/globals';
 import { registerAs } from '@nestjs/config';
 
@@ -8,6 +8,8 @@ const secretConf = {
   tokenExpireTime,
   answerJwtExpireTime: VERIFY_JWS_EXPIRED_AT,
   refreshExpireTime,
+  encrypt: SECRET_ENCRYPT,
+  encryptSalt: SECRET_ENCRYPT_SALT,
 } as const;
 
 export default registerAs('secret', () => secretConf);

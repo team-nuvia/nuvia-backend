@@ -1,4 +1,5 @@
 import {
+  CLIENT_URL,
   DEPLOY_VERSION,
   HOST,
   LOG_ACTIVATE,
@@ -13,6 +14,7 @@ import { registerAs } from '@nestjs/config';
 
 const commonConf = {
   version: `V${SERVER_VERSION}.${DEPLOY_VERSION}`,
+  clientUrl: CLIENT_URL,
   serverUrl: SERVER_URL,
   host: HOST,
   port: PORT,
