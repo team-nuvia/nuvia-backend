@@ -79,6 +79,14 @@ export const ErrorKey = {
   EXPIRED_JWS: 'EXPIRED_JWS',
   REQUIRED_REFRESH_JWS: 'REQUIRED_REFRESH_JWS',
   SUCCESS_INVITE_SUBSCRIPTION: 'SUCCESS_INVITE_SUBSCRIPTION',
+  SUCCESS_VERIFY_INVITE_TOKEN: 'SUCCESS_VERIFY_INVITE_TOKEN',
+  EXPIRED_INVITATION_TOKEN: 'EXPIRED_INVITATION_TOKEN',
+  ALREADY_JOINED_USER: 'ALREADY_JOINED_USER',
+  FAIL_DECODE_TOKEN: 'FAIL_DECODE_TOKEN',
+  INVALID_TOKEN_LENGTH: 'INVALID_TOKEN_LENGTH',
+  FAIL_ENCODE_TOKEN: 'FAIL_ENCODE_TOKEN',
+  NOT_ALLOWED_INVITE: 'NOT_ALLOWED_INVITE',
+  EXCEEDED_TEAM_INVITE_LIMIT: 'EXCEEDED_TEAM_INVITE_LIMIT',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -159,6 +167,14 @@ export const ErrorCode = {
   EXPIRED_JWS: HttpStatus.BAD_REQUEST,
   REQUIRED_REFRESH_JWS: HttpStatus.BAD_REQUEST,
   SUCCESS_INVITE_SUBSCRIPTION: HttpStatus.OK,
+  SUCCESS_VERIFY_INVITE_TOKEN: HttpStatus.OK,
+  EXPIRED_INVITATION_TOKEN: HttpStatus.BAD_REQUEST,
+  ALREADY_JOINED_USER: HttpStatus.BAD_REQUEST,
+  FAIL_DECODE_TOKEN: HttpStatus.BAD_REQUEST,
+  INVALID_TOKEN_LENGTH: HttpStatus.BAD_REQUEST,
+  FAIL_ENCODE_TOKEN: HttpStatus.BAD_REQUEST,
+  NOT_ALLOWED_INVITE: HttpStatus.FORBIDDEN,
+  EXCEEDED_TEAM_INVITE_LIMIT: HttpStatus.FORBIDDEN,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -239,6 +255,14 @@ export const ErrorMessage = {
   EXPIRED_JWS: '인증 토큰이 만료되었습니다.',
   REQUIRED_REFRESH_JWS: '인증 토큰이 필요합니다.',
   SUCCESS_INVITE_SUBSCRIPTION: '초대 메일 발송 성공',
+  SUCCESS_VERIFY_INVITE_TOKEN: '초대 토큰 검증 성공',
+  EXPIRED_INVITATION_TOKEN: '초대 토큰이 만료되었습니다.',
+  ALREADY_JOINED_USER: '이미 조직에 속한 사용자입니다.',
+  FAIL_DECODE_TOKEN: '토큰 복호화에 실패했습니다. 잘못된 토큰이거나 만료되었습니다.',
+  INVALID_TOKEN_LENGTH: '토큰 길이가 비정상입니다.',
+  FAIL_ENCODE_TOKEN: '토큰 암호화에 실패했습니다.',
+  NOT_ALLOWED_INVITE: '초대 권한이 없습니다.',
+  EXCEEDED_TEAM_INVITE_LIMIT: '초대 가능한 인원을 초과했습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

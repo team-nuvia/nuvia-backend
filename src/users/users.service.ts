@@ -77,6 +77,7 @@ export class UsersService {
       subscriptionId: subscription.id,
       permissionId: permission.id,
       isActive: true,
+      isJoined: true,
     });
 
     return newUser;

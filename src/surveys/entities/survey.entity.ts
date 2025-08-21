@@ -73,6 +73,8 @@ export class Survey extends DefaultDateInterface {
   }
 
   get realtimeStatus(): SurveyStatus {
+    console.log('🚀 ~ Survey ~ this.expiresAt:', this.expiresAt);
+    console.log('🚀 ~ Survey ~ this.status:', this.status);
     return this.expiresAt && this.expiresAt < new Date() ? SurveyStatus.Closed : this.status;
   }
 

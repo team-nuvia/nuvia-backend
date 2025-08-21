@@ -79,7 +79,7 @@ export class SurveysRepository extends BaseRepository {
         categoryId: createSurveyPayloadDto.categoryId,
         title: createSurveyPayloadDto.title,
         description: createSurveyPayloadDto.description,
-        expiresAt: createSurveyPayloadDto.expiresAt ?? new Date(),
+        expiresAt: createSurveyPayloadDto.expiresAt,
         isPublic: createSurveyPayloadDto.isPublic,
         status: createSurveyPayloadDto.status,
       })

@@ -12,10 +12,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
+import { VerifyInvitationTokenPayloadDto } from './dto/payload/verify-invitation-token.payload.dto';
 import { AlreadyLoggedOutResponseDto } from './dto/response/already-logged-out.response.dto';
 import { LoginResponseDto } from './dto/response/login.response.dto';
 import { LogoutResponseDto } from './dto/response/logout.response.dto';
 import { RefreshResponseDto } from './dto/response/refesh.response.dto';
+import { VerifyInvitationTokenResponseDto } from './dto/response/verify-invitation-token.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 
@@ -104,5 +106,18 @@ export class AuthController {
   verifyToken(@LoginToken() token: string): VerifyTokenResponseDto {
     const verifyToken = this.authService.verifyToken(token);
     return new VerifyTokenResponseDto({ verified: verifyToken });
+  }
+
+  @ApiOperation({ summary: '초대 토큰 검증' })
+  @CombineResponses(HttpStatus.OK, VerifyInvitationTokenResponseDto)
+  @Transactional()
+  @RequiredLogin
+  @Post('verify/invitation')
+  async verifyInvitationToken(
+    @LoginUser() user: LoginUserData,
+    @Body() verifyInvitationTokenDto: VerifyInvitationTokenPayloadDto,
+  ): Promise<VerifyInvitationTokenResponseDto> {
+    const verifyToken = await this.authService.verifyInvitationToken(verifyInvitationTokenDto.token, user.id);
+    return new VerifyInvitationTokenResponseDto({ verified: verifyToken });
   }
 }

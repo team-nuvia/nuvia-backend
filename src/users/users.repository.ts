@@ -83,7 +83,7 @@ export class UsersRepository extends BaseRepository {
 
   async updateUserOrganization(userId: number, organizationId: number): Promise<void> {
     await this.orm.getRepo(OrganizationRole).update({ userId, isActive: true }, { isActive: false });
-    await this.orm.getRepo(OrganizationRole).update({ userId, subscriptionId: organizationId }, { isActive: true });
+    await this.orm.getRepo(OrganizationRole).update({ userId, subscriptionId: organizationId, isJoined: true }, { isActive: true });
     return;
   }
 }

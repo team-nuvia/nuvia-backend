@@ -51,11 +51,33 @@ export class SubscriptionsRepository extends BaseRepository {
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.user', 'u')
       .leftJoinAndMapOne('s.defaultPermission', Permission, 'sp', 'sp.role = s.defaultRole')
-      .leftJoinAndSelect('s.organizationRoles', 'or', 'or.isJoined = 1 AND or.isActive = 1')
+      .leftJoinAndSelect('s.organizationRoles', 'or')
+      .leftJoinAndSelect('or.user', 'u2')
+      .leftJoinAndSelect('s.plan', 'p')
+      .leftJoinAndSelect('p.planGrants', 'pg')
       .where('s.id = :id', { id: subscriptionId })
       .getOne();
 
-    const joinedUsers = subscription?.organizationRoles.map((role) => role.userId) ?? [];
+    if (!subscription) {
+      throw new NotFoundSubscriptionExceptionDto();
+    }
+
+    const alreadyInvitedUsers = subscription.organizationRoles.filter(
+      (role) => inviteSubscriptionDto.emails.includes(role.user.email) && !role.isJoined && role.deletedAt === null,
+    );
+    /* 이미 초대 됐지만 아직 승락하지 않은 로그 제거 처리 */
+    if (alreadyInvitedUsers.length > 0) {
+      await this.orm.getRepo(OrganizationRole).update(
+        alreadyInvitedUsers.map((role) => role.id),
+        {
+          isActive: false,
+          isJoined: false,
+          deletedAt: new Date(),
+        },
+      );
+    }
+
+    const joinedUsers = subscription.organizationRoles.filter((role) => role.isJoined && role.deletedAt === null).map((role) => role.userId);
     const withoutUsers = new Set([...joinedUsers, userId]);
 
     const users = await this.orm
@@ -66,10 +88,6 @@ export class SubscriptionsRepository extends BaseRepository {
       .getMany();
     const toUsers = users.map((user) => user.email);
 
-    if (!subscription) {
-      throw new NotFoundSubscriptionExceptionDto();
-    }
-
     const organizationRoles = users.map<Partial<OrganizationRole>>((user) => ({
       subscriptionId,
       userId: user.id,
@@ -78,12 +96,13 @@ export class SubscriptionsRepository extends BaseRepository {
       isActive: false,
     }));
 
-    await this.orm.getRepo(OrganizationRole).insert(organizationRoles);
-
     if (toUsers.length > 0) {
+      console.log('🚀 ~ SubscriptionsRepository ~ inviteUsers ~ toUsers:', toUsers);
+      await this.orm.getRepo(OrganizationRole).insert(organizationRoles);
+
       await Promise.all(
         toUsers.map((toUser) => {
-          const token = this.utilService.encodeToken(`${userId}:${subscriptionId}:${toUser}`);
+          const token = this.utilService.createInvitationToken(subscriptionId, toUser, userId);
           const invitationVerificationLink = `${this.commonService.getConfig('common').clientUrl}/invitation?q=${token}`;
 
           return invitationEmailCallback(toUser, fromUser, subscription, invitationVerificationLink);

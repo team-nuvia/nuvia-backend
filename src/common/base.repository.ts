@@ -1,19 +1,18 @@
 import { Permission } from '@/permissions/entities/permission.entity';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
+import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-user-organizations.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
 import { UserRole } from '@share/enums/user-role';
-import { User } from '@users/entities/user.entity';
 import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
 import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.exception.dto';
-import { NotFoundUserExceptionDto } from './dto/exception/not-found-user.exception.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
 
 export abstract class BaseRepository {
@@ -51,6 +50,8 @@ export abstract class BaseRepository {
       .createQueryBuilder('or')
       .leftJoinAndSelect('or.subscription', 's')
       .where('or.userId = :userId', { userId })
+      .andWhere('or.isJoined = 1')
+      .andWhere('or.deletedAt IS NULL')
       .getMany();
 
     const currentOrganization: Subscription = await this.getCurrentOrganization(userId);
@@ -105,21 +106,27 @@ export abstract class BaseRepository {
 
     // 필요 데이터: 사용자 플랜, 사용자 액션, 플랜 제약사항 별 검증 위한 데이터
 
-    const user = await this.orm
-      .getRepo(User)
-      .createQueryBuilder('u')
-      .leftJoinAndSelect('u.subscription', 's')
-      .leftJoinAndSelect('s.plan', 'pl')
-      .leftJoinAndSelect('pl.planGrants', 'plg')
-      .where('u.id = :userId', { userId })
-      .getOne();
+    // const user = await this.orm
+    //   .getRepo(User)
+    //   .createQueryBuilder('u')
+    //   .leftJoinAndSelect('u.subscription', 's')
+    //   .leftJoinAndSelect('s.plan', 'pl')
+    //   .leftJoinAndSelect('pl.planGrants', 'plg')
+    //   .where('u.id = :userId', { userId })
+    //   .getOne();
 
-    if (isNil(user)) {
-      throw new NotFoundUserExceptionDto();
-    }
+    // const subscription = await this.orm
+    //   .getRepo(Subscription)
+    //   .createQueryBuilder('s')
+    //   .leftJoinAndSelect('s.plan', 'pl')
+    //   .leftJoinAndSelect('pl.planGrants', 'plg')
+    //   .where('s.id = :subscriptionId', { subscriptionId: user.subscription.id })
+    //   .getOne();
+
+    const subscription = await this.getCurrentOrganization(userId);
 
     /* 사용자 플랜 */
-    const userPlan = user.subscription.plan;
+    const userPlan = subscription.plan;
     /* 현재 연도 */
     const year = new Date().getFullYear();
     /* 현재 월 */
@@ -133,7 +140,7 @@ export abstract class BaseRepository {
       const userSurveyCountAtMonth = await this.orm
         .getRepo(Survey)
         .createQueryBuilder('s')
-        .where('s.subscriptionId = :subscriptionId', { subscriptionId: user.subscription.id })
+        .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
         .andWhere('s.createdAt BETWEEN :currentFirstDay AND :currentLastDay', { currentFirstDay, currentLastDay })
         .getCount();
 
@@ -168,6 +175,69 @@ export abstract class BaseRepository {
       const allowPerQuestionForSurveyAmount = perQuestionForSurveyAtMonth?.amount ?? 0;
 
       callback?.({ [PlanGrantConstraintsType.PerQuestionForSurvey]: allowPerQuestionForSurveyAmount });
+    }
+  }
+
+  async teamInvitePlanGrantsValidation<T extends (...args: any[]) => any>(
+    subscriptionId: number,
+    planGrantConstraints: PlanGrantConstraintsType[],
+    callback?: T,
+  ) {
+    // 플랜 액션별 권한 검증 로직
+
+    // 1. 플랜에 걸려있는 grant 조회
+    // 2. 플랜 액션별 제약사항 검증
+    // 3. 플랜 액션에 제약사항에 걸릴 시 예외 처리
+    // 4. 제약사항에 걸리지 않으면 모두 통과
+
+    // 필요 데이터: 사용자 플랜, 사용자 액션, 플랜 제약사항 별 검증 위한 데이터
+
+    const subscription = await this.orm
+      .getRepo(Subscription)
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.plan', 'pl')
+      .leftJoinAndSelect('pl.planGrants', 'plg')
+      .where('s.id = :subscriptionId', { subscriptionId })
+      .getOne();
+
+    if (isNil(subscription)) {
+      throw new NotFoundSubscriptionExceptionDto();
+    }
+
+    /* 사용자 플랜 */
+    const subscriptionPlan = subscription.plan;
+
+    // TODO: 설문 Limit 도달 시 복구 할 때 새로운 검증 필요
+    if (planGrantConstraints.includes(PlanGrantConstraintsType.TeamInvite)) {
+      /* 초대 제약사항 검증 */
+      const teamInviteLimitConstraint = subscriptionPlan.planGrants.find(
+        (planGrant) => planGrant.constraints === PlanGrantConstraintsType.TeamInvite && planGrant.isAllowed,
+      );
+
+      if (!teamInviteLimitConstraint?.isAllowed) {
+        throw new ForbiddenAccessExceptionDto('초대 가능한 플랜이 아닙니다.');
+      }
+
+      /* 이미 초대 된 사용자 수 조회 */
+      /* 조직 내 사용정지 유저 또한 조직 인원으로 판단한다. */
+      const joinedUserCount = await this.orm
+        .getRepo(OrganizationRole)
+        .createQueryBuilder('or')
+        .where('or.subscriptionId = :subscriptionId', { subscriptionId })
+        .andWhere('or.isJoined = 1')
+        .getCount();
+
+      /* 초대 제약사항 검증 */
+      if (!isNil(teamInviteLimitConstraint?.amount) && teamInviteLimitConstraint.amount <= joinedUserCount) {
+        throw new ForbiddenAccessExceptionDto('최대 초대 가능한 사용자 수를 초과하였습니다.');
+      }
+
+      callback?.({
+        [PlanGrantConstraintsType.TeamInvite]: {
+          joinedUserCount,
+          teamInviteLimitConstraint,
+        },
+      });
     }
   }
 }

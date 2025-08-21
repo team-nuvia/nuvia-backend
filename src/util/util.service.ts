@@ -1,19 +1,31 @@
+import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
+import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { ExpiredInvitationTokenExceptionDto } from '@auth/dto/exception/expired-invitation-token.exception.dto';
 import { CommonService } from '@common/common.service';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { LoggerService } from '@logger/logger.service';
 import { Injectable } from '@nestjs/common';
+import { User } from '@users/entities/user.entity';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { VerifySecretDto } from './dto/payload/verify-secret.dto';
+import { FailDecodeTokenExceptionDto } from './dto/exception/fail-decode-token.exception.dto';
+import { FailEncodeTokenExceptionDto } from './dto/exception/fail-encode-token.exception.dto';
+import { InvalidTokenLengthExceptionDto } from './dto/exception/invalid-token-length.exception.dto';
+import { VerifyInvitationTokenNestedPayloadDto } from './dto/payload/verify-invitation-token.nested.payload.dto';
+import { VerifySecretPayloadDto } from './dto/payload/verify-secret.payload.dto';
 import { VerifySurveyJWSPayloadDto } from './dto/payload/verify-survey-jws.payload.dto';
+import { UtilRepository } from './util.repository';
 
 @Injectable()
 export class UtilService {
   constructor(
     private readonly loggerService: LoggerService,
     private readonly commonService: CommonService,
+    private readonly utilRepository: UtilRepository,
   ) {}
 
-  verifyPassword(inputPassword: string, verifyContent: VerifySecretDto) {
+  verifyPassword(inputPassword: string, verifyContent: VerifySecretPayloadDto) {
     const storedPassword = verifyContent.password;
     const { hashedPassword } = this.hashPassword(inputPassword, verifyContent.salt, verifyContent.iteration);
     return hashedPassword === storedPassword;
@@ -127,7 +139,7 @@ export class UtilService {
       return Buffer.concat([iv, encrypted]).toString('base64url');
     } catch (error: any) {
       this.loggerService.error(`토큰 암호화 실패: ${error.message}`);
-      throw new Error('토큰 암호화에 실패했습니다.');
+      throw new FailEncodeTokenExceptionDto();
     }
   }
 
@@ -140,7 +152,7 @@ export class UtilService {
 
       // base64 디코딩
       const combined = Buffer.from(token, encoding);
-      if (combined.length < 17) throw new Error('토큰 길이가 비정상입니다.');
+      if (combined.length < 17) throw new InvalidTokenLengthExceptionDto();
 
       // IV 추출 (처음 16바이트)
       const iv = combined.subarray(0, 16);
@@ -155,7 +167,47 @@ export class UtilService {
       return decrypted.toString('utf8');
     } catch (error: any) {
       this.loggerService.error(`토큰 복호화 실패: ${error.message}`);
-      throw new Error('토큰 복호화에 실패했습니다. 잘못된 토큰이거나 만료되었습니다.');
+      throw new FailDecodeTokenExceptionDto();
     }
+  }
+
+  /**
+   *
+   * @param subscriptionId subscription id (구독 조직 id)
+   * @param inviteeEmail invitee email (초대받는 유저 email)
+   * @param inviterUserId inviter user id (초대하는 유저 id)
+   * @returns invitation token (초대 토큰)
+   */
+  createInvitationToken(subscriptionId: number, inviteeEmail: string, inviterUserId: number): string {
+    const invitationData = `${subscriptionId}:${inviteeEmail}:${inviterUserId}`;
+    const encodedData = this.encodeToken(invitationData);
+    const timestamp = `${encodedData}:${Date.now()}`;
+    const token = this.encodeToken(timestamp);
+    return token;
+  }
+
+  async parseInvitationToken(token: string): Promise<VerifyInvitationTokenNestedPayloadDto> {
+    const decodedToken = this.decodeToken(token);
+    const [encodedData, timestamp] = decodedToken.split(':');
+    const invitationData = this.decodeToken(encodedData);
+    const [subscriptionId, inviteeEmail, inviterUserId] = invitationData.split(':');
+
+    const isExpired = Date.now() - Number(timestamp) > 24 * 60 * 60 * 1000;
+    if (isExpired) throw new ExpiredInvitationTokenExceptionDto();
+
+    const isSubscription = await this.utilRepository.getByWith({ id: +subscriptionId }, { organizationRoles: true }, Subscription);
+    if (!isSubscription) throw new NotFoundSubscriptionExceptionDto();
+
+    const isInvitee = await this.utilRepository.getBy({ email: inviteeEmail }, User);
+    if (!isInvitee) throw new NotFoundUserExceptionDto('invitee');
+
+    if (isSubscription.organizationRoles.some((role) => role.userId === isInvitee.id && role.isJoined && role.deletedAt === null)) {
+      throw new AlreadyJoinedUserExceptionDto();
+    }
+
+    const isInviter = await this.utilRepository.existsBy({ id: +inviterUserId }, User);
+    if (!isInviter) throw new NotFoundUserExceptionDto('inviter');
+
+    return { verified: true, subscriptionId: +subscriptionId, inviteeId: isInvitee.id };
   }
 }

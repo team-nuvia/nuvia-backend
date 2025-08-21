@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class VerifySecretDto {
+export class VerifySecretPayloadDto {
   @ApiProperty({ example: 'qweQQ!!1' })
   password!: string;
 

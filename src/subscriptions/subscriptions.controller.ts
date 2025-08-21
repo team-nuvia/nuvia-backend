@@ -10,6 +10,7 @@ import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
 import { SuccessInviteSubscriptionResponseDto } from './dto/response/success-invite-subscription.response.dto';
 import { Subscription } from './entities/subscription.entity';
+import { SubscriptionsInvitationConstraintValidation } from './subscriptions-invitation-constraint.guard';
 import { SubscriptionsService } from './subscriptions.service';
 
 @ApiTags('구독')
@@ -22,6 +23,7 @@ export class SubscriptionsController {
 
   @ApiOperation({ summary: '초대 메일 발송' })
   @CombineResponses(HttpStatus.OK, SuccessInviteSubscriptionResponseDto)
+  @SubscriptionsInvitationConstraintValidation()
   @RequiredLogin
   @Transactional()
   @Post(':subscriptionId/invite')

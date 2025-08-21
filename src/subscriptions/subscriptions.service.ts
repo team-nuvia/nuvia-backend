@@ -9,13 +9,13 @@ import { SubscriptionsRepository } from './subscriptions.repository';
 export class SubscriptionsService {
   constructor(private readonly subscriptionsRepository: SubscriptionsRepository) {}
 
-  inviteUsers(
+  async inviteUsers(
     subscriptionId: number,
     inviteSubscriptionDto: InviteSubscriptionPayloadDto,
     userId: number,
     invitationEmailCallback: (toUser: string, fromUser: User, subscription: Subscription, invitationVerificationLink: string) => Promise<void>,
-  ) {
-    return this.subscriptionsRepository.inviteUsers(subscriptionId, inviteSubscriptionDto, userId, invitationEmailCallback);
+  ): Promise<void> {
+    await this.subscriptionsRepository.inviteUsers(subscriptionId, inviteSubscriptionDto, userId, invitationEmailCallback);
   }
 
   update(id: number, updateSubscriptionDto: UpdateSubscriptionDto) {

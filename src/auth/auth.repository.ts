@@ -1,3 +1,4 @@
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
@@ -111,5 +112,9 @@ export class AuthRepository extends BaseRepository {
       userAccess.accessUserAgent = lastUserAccess.accessUserAgent;
     }
     await this.orm.getRepo(UserAccess).save(userAccess);
+  }
+
+  async joinOrganization(inviteeId: number, subscriptionId: number) {
+    await this.orm.getRepo(OrganizationRole).update({ userId: inviteeId, subscriptionId }, { isJoined: true, deletedAt: null });
   }
 }
