@@ -55,6 +55,15 @@ export class UsersRepository extends BaseRepository {
       name: userMeData.name,
       nickname: userMeData.nickname,
       role: subscription.permission.role,
+      currentOrganization: {
+        id: subscription.id,
+        name: subscription.name,
+        description: subscription.description,
+        target: subscription.target,
+        status: subscription.status,
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt,
+      },
       createdAt: userMeData.createdAt,
       profileImageUrl,
     };

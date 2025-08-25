@@ -5,6 +5,7 @@ import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { Body, Controller, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
@@ -43,6 +44,9 @@ export class SubscriptionsController {
     };
 
     await this.subscriptionsService.inviteUsers(+subscriptionId, inviteSubscriptionDto, user.id, invitationEmailCallback);
+
+    await this.subscriptionsService.addNotifications(+subscriptionId, NotificationType.Invitation, user.id, inviteSubscriptionDto.emails);
+
     return new SuccessInviteSubscriptionResponseDto();
   }
 

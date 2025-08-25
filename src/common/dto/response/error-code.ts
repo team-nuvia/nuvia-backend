@@ -87,6 +87,11 @@ export const ErrorKey = {
   FAIL_ENCODE_TOKEN: 'FAIL_ENCODE_TOKEN',
   NOT_ALLOWED_INVITE: 'NOT_ALLOWED_INVITE',
   EXCEEDED_TEAM_INVITE_LIMIT: 'EXCEEDED_TEAM_INVITE_LIMIT',
+  SUCCESS_GET_NOTIFICATION: 'SUCCESS_GET_NOTIFICATION',
+  SUCCESS_TOGGLE_READ_NOTIFICATION: 'SUCCESS_TOGGLE_READ_NOTIFICATION',
+  NOT_FOUND_NOTIFICATION: 'NOT_FOUND_NOTIFICATION',
+  SUCCESS_GET_SURVEY_GRAPH: 'SUCCESS_GET_SURVEY_GRAPH',
+  NO_INVITE_SELF: 'NO_INVITE_SELF',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -175,6 +180,11 @@ export const ErrorCode = {
   FAIL_ENCODE_TOKEN: HttpStatus.BAD_REQUEST,
   NOT_ALLOWED_INVITE: HttpStatus.FORBIDDEN,
   EXCEEDED_TEAM_INVITE_LIMIT: HttpStatus.FORBIDDEN,
+  SUCCESS_GET_NOTIFICATION: HttpStatus.OK,
+  SUCCESS_TOGGLE_READ_NOTIFICATION: HttpStatus.OK,
+  NOT_FOUND_NOTIFICATION: HttpStatus.NOT_FOUND,
+  SUCCESS_GET_SURVEY_GRAPH: HttpStatus.OK,
+  NO_INVITE_SELF: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -263,6 +273,11 @@ export const ErrorMessage = {
   FAIL_ENCODE_TOKEN: '토큰 암호화에 실패했습니다.',
   NOT_ALLOWED_INVITE: '초대 권한이 없습니다.',
   EXCEEDED_TEAM_INVITE_LIMIT: '초대 가능한 인원을 초과했습니다.',
+  SUCCESS_GET_NOTIFICATION: '알림 조회 성공',
+  SUCCESS_TOGGLE_READ_NOTIFICATION: '알림 읽음 상태 변경 성공',
+  NOT_FOUND_NOTIFICATION: '알림을 찾을 수 없습니다.',
+  SUCCESS_GET_SURVEY_GRAPH: '설문 그래프 조회 성공',
+  NO_INVITE_SELF: '자기 자신을 초대할 수 없습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

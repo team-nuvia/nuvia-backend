@@ -1,6 +1,7 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@share/enums/user-role';
+import { GetUserMeOrganizationNestedResponseDto } from './get-user-me-organization.nested.response.dto';
 
 export class GetUserMeNestedResponseDto {
   @ApiProperty({ example: 1 })
@@ -17,6 +18,13 @@ export class GetUserMeNestedResponseDto {
 
   @ApiProperty({ enum: UserRole, example: UserRole.Admin })
   role: UserRole = UserRole.Admin;
+
+  @ApiProperty({
+    type: () => GetUserMeOrganizationNestedResponseDto,
+    description: '현재 조직 정보',
+    example: new GetUserMeOrganizationNestedResponseDto(),
+  })
+  currentOrganization: GetUserMeOrganizationNestedResponseDto = new GetUserMeOrganizationNestedResponseDto();
 
   @ApiProperty({ example: new Date() })
   createdAt: Date = new Date();

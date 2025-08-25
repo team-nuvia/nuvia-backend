@@ -23,6 +23,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { UtilModule } from './util/util.module';
     PermissionsModule,
     SubscriptionsModule,
     EmailsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, UsersRepository],

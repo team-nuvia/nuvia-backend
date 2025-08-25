@@ -1,9 +1,11 @@
+import { Notification } from '@/notifications/entities/notification.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-user-organizations.nested.response.dto';
+import { OrganizationDataNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/organization-data.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
 import { UserRole } from '@share/enums/user-role';
@@ -13,6 +15,7 @@ import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
 import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.exception.dto';
+import { AddNotificationPayloadDto } from './dto/payload/add-notification.payload.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
 
 export abstract class BaseRepository {
@@ -24,7 +27,7 @@ export abstract class BaseRepository {
 
   abstract softDelete(id: number): Promise<void>;
 
-  async getCurrentOrganization(userId: number): Promise<Subscription & { permission: Permission }> {
+  async getCurrentOrganization(userId: number): Promise<OrganizationDataNestedResponseDto> {
     const organizationRole = await this.orm
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
@@ -41,7 +44,46 @@ export abstract class BaseRepository {
       throw new NotFoundOrganizationRoleExceptionDto();
     }
 
-    return organizationRole.subscription as Subscription & { permission: Permission };
+    const subscription = organizationRole.subscription as Subscription & { permission: Permission };
+    const permission = subscription.permission;
+    const permissionGrants = permission.permissionGrants.map((permissionGrant) => ({
+      id: permissionGrant.id,
+      permissionId: permissionGrant.permissionId,
+      type: permissionGrant.type,
+      description: permissionGrant.description,
+      isAllowed: permissionGrant.isAllowed,
+      createdAt: permissionGrant.createdAt,
+      updatedAt: permissionGrant.updatedAt,
+    }));
+
+    return {
+      id: subscription.id,
+      name: subscription.name,
+      description: subscription.description,
+      target: subscription.target,
+      status: subscription.status,
+      createdAt: subscription.createdAt,
+      updatedAt: subscription.updatedAt,
+      plan: {
+        id: subscription.plan.id,
+        name: subscription.plan.name,
+        description: subscription.plan.description,
+        createdAt: subscription.plan.createdAt,
+        updatedAt: subscription.plan.updatedAt,
+        planGrants: subscription.plan.planGrants,
+      },
+      permission: {
+        id: permission.id,
+        role: permission.role,
+        description: permission.description,
+        sequence: permission.sequence,
+        isDeprecated: permission.isDeprecated,
+        isDefault: permission.isDefault,
+        permissionGrants,
+        createdAt: permission.createdAt,
+        updatedAt: permission.updatedAt,
+      },
+    };
   }
 
   async getUserOrganizations(userId: number): Promise<GetUserOrganizationsNestedResponseDto> {
@@ -49,19 +91,64 @@ export abstract class BaseRepository {
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
       .leftJoinAndSelect('or.subscription', 's')
+      .leftJoinAndSelect('s.plan', 'pl')
+      .leftJoinAndSelect('pl.planGrants', 'plg')
+      .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId')
+      .leftJoinAndSelect('p.permissionGrants', 'pmg')
       .where('or.userId = :userId', { userId })
       .andWhere('or.isJoined = 1')
       .andWhere('or.deletedAt IS NULL')
       .getMany();
 
-    const currentOrganization: Subscription = await this.getCurrentOrganization(userId);
+    const currentOrganization = await this.getCurrentOrganization(userId);
 
-    const organizations = organizationRoles.map((organizationRole) => organizationRole.subscription);
+    const organizations = organizationRoles.map<OrganizationDataNestedResponseDto>((organizationRole) => {
+      const subscription = organizationRole.subscription as Subscription & { permission: Permission };
+      const permission = subscription.permission;
+      const permissionGrants = permission.permissionGrants.map((permissionGrant) => ({
+        id: permissionGrant.id,
+        permissionId: permissionGrant.permissionId,
+        type: permissionGrant.type,
+        description: permissionGrant.description,
+        isAllowed: permissionGrant.isAllowed,
+        createdAt: permissionGrant.createdAt,
+        updatedAt: permissionGrant.updatedAt,
+      }));
+
+      return {
+        id: subscription.id,
+        name: subscription.name,
+        description: subscription.description,
+        target: subscription.target,
+        status: subscription.status,
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt,
+        plan: {
+          id: subscription.plan.id,
+          name: subscription.plan.name,
+          description: subscription.plan.description,
+          createdAt: subscription.plan.createdAt,
+          updatedAt: subscription.plan.updatedAt,
+          planGrants: subscription.plan.planGrants,
+        },
+        permission: {
+          id: permission.id,
+          role: permission.role,
+          description: permission.description,
+          sequence: permission.sequence,
+          isDeprecated: permission.isDeprecated,
+          isDefault: permission.isDefault,
+          permissionGrants,
+          createdAt: permission.createdAt,
+          updatedAt: permission.updatedAt,
+        },
+      };
+    });
     return { currentOrganization, organizations };
   }
 
   /* 조직 내 액션 권한 검증 */
-  surveyPermissionGrantsValidation(subscription: Subscription & { permission: Permission }, action: ValidateActionType) {
+  surveyPermissionGrantsValidation(subscription: OrganizationDataNestedResponseDto, action: ValidateActionType) {
     switch (action) {
       case ValidateActionType.Create:
         if (!isRoleAtLeast(subscription.permission.role, UserRole.Editor)) {
@@ -239,5 +326,9 @@ export abstract class BaseRepository {
         },
       });
     }
+  }
+
+  async addNotification({ fromId, toId, type, referenceId, title, content }: AddNotificationPayloadDto) {
+    return this.orm.getRepo(Notification).save({ fromId, toId, type, referenceId, title, content });
   }
 }

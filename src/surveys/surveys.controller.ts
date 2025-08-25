@@ -7,6 +7,7 @@ import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -20,6 +21,7 @@ import { GetSurveyBinResponseDto } from './dto/response/get-survey-bin.response.
 import { GetSurveyCategoryResponseDto } from './dto/response/get-survey-category.response.dto';
 import { GetSurveyDetailViewResponseDto } from './dto/response/get-survey-detail-view.response.dto';
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
+import { GetSurveyGraphResponseDto } from './dto/response/get-survey-graph.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
@@ -84,6 +86,20 @@ export class SurveysController {
   async getSurvey(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyResponseDto> {
     const survey = await this.surveysService.getSurvey(user.id, searchQuery);
     return new GetSurveyResponseDto(survey);
+  }
+
+  @ApiOperation({ summary: '설문 메타데이터 조회' })
+  @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Get('graph/respondent')
+  async getSurveyRespondentGraphData(
+    @LoginUser() user: LoginUserData,
+    @Query() searchQuery: SurveyGraphSearchQueryParamDto,
+  ): Promise<GetSurveyGraphResponseDto> {
+    const graphData = await this.surveysService.getSurveyRespondentGraphData(user.id, searchQuery);
+    return new GetSurveyGraphResponseDto(graphData);
   }
 
   @ApiOperation({ summary: '설문 메타데이터 조회' })

@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
 import { IOrganization } from '@share/interface/iorganization';
+import { OrganizationDataPermissionNestedResponseDto } from './organization-data-permission.nested.response.dto';
+import { OrganizationDataPlanNestedResponseDto } from './organization-data-plan.nested.response.dto';
 
 export class OrganizationDataNestedResponseDto implements IOrganization {
   @ApiProperty({
@@ -41,4 +43,16 @@ export class OrganizationDataNestedResponseDto implements IOrganization {
     example: new Date(),
   })
   updatedAt: Date = new Date();
+
+  @ApiProperty({
+    type: () => OrganizationDataPlanNestedResponseDto,
+    example: new OrganizationDataPlanNestedResponseDto(),
+  })
+  plan: OrganizationDataPlanNestedResponseDto = new OrganizationDataPlanNestedResponseDto();
+
+  @ApiProperty({
+    type: () => OrganizationDataPermissionNestedResponseDto,
+    example: new OrganizationDataPermissionNestedResponseDto(),
+  })
+  permission: OrganizationDataPermissionNestedResponseDto = new OrganizationDataPermissionNestedResponseDto();
 }

@@ -3,10 +3,12 @@ import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
 import { OrmHelper } from '@util/orm.helper';
 import { UtilService } from '@util/util.service';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
+import { NoInviteSelfExceptionDto } from './dto/exception/no-invite-self.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from './dto/exception/not-found-subscription.exception.dto';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { Subscription } from './entities/subscription.entity';
@@ -34,6 +36,29 @@ export class SubscriptionsRepository extends BaseRepository {
     return this.orm.getRepo(Subscription).exists({ where: condition });
   }
 
+  async addNotifications(subscriptionId: number, type: NotificationType, userId: number, emails: string[]) {
+    const fromOrganization = await this.orm.getRepo(Subscription).findOne({ where: { id: subscriptionId } });
+
+    if (!fromOrganization) {
+      throw new NotFoundSubscriptionExceptionDto();
+    }
+
+    const toUsers = await this.orm.getRepo(User).find({ where: { email: In(emails) }, select: ['id'] });
+
+    await Promise.all(
+      toUsers.map((to) =>
+        this.addNotification({
+          fromId: userId,
+          toId: to.id,
+          type,
+          referenceId: subscriptionId,
+          title: '초대 알림',
+          content: `${fromOrganization.name} 조직에서 초대 메일을 보냈습니다.`,
+        }),
+      ),
+    );
+  }
+
   async inviteUsers(
     subscriptionId: number,
     inviteSubscriptionDto: InviteSubscriptionPayloadDto,
@@ -44,6 +69,10 @@ export class SubscriptionsRepository extends BaseRepository {
 
     if (!fromUser) {
       throw new NotFoundUserExceptionDto();
+    }
+
+    if (inviteSubscriptionDto.emails.includes(fromUser.email)) {
+      throw new NoInviteSelfExceptionDto();
     }
 
     const subscription = await this.orm
