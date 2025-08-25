@@ -1,4 +1,5 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { ExtractSubmissionHash } from '@common/decorator/extract-submission-hash.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
@@ -6,6 +7,7 @@ import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -17,7 +19,9 @@ import { DeleteSurveyResponseDto } from './dto/response/delete-survey.response.d
 import { GetRecentSurveyResponseDto } from './dto/response/get-recent-survey.response.dto';
 import { GetSurveyBinResponseDto } from './dto/response/get-survey-bin.response.dto';
 import { GetSurveyCategoryResponseDto } from './dto/response/get-survey-category.response.dto';
+import { GetSurveyDetailViewResponseDto } from './dto/response/get-survey-detail-view.response.dto';
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
+import { GetSurveyGraphResponseDto } from './dto/response/get-survey-graph.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
@@ -89,6 +93,20 @@ export class SurveysController {
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
+  @Get('graph/respondent')
+  async getSurveyRespondentGraphData(
+    @LoginUser() user: LoginUserData,
+    @Query() searchQuery: SurveyGraphSearchQueryParamDto,
+  ): Promise<GetSurveyGraphResponseDto> {
+    const graphData = await this.surveysService.getSurveyRespondentGraphData(user.id, searchQuery);
+    return new GetSurveyGraphResponseDto(graphData);
+  }
+
+  @ApiOperation({ summary: '설문 메타데이터 조회' })
+  @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
   @Get('metadata')
   async getSurveyMetadata(
     @LoginUser() user: LoginUserData,
@@ -132,7 +150,7 @@ export class SurveysController {
   }
 
   @ApiOperation({ summary: '설문 상세 조회 (유니크 키로 조회)' })
-  @CombineResponses(HttpStatus.OK, GetSurveyDetailResponseDto)
+  @CombineResponses(HttpStatus.OK, GetSurveyDetailViewResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Transactional()
@@ -141,9 +159,10 @@ export class SurveysController {
   async getSurveyDetailAndViewCountUpdate(
     @LoginUser() user: LoginUserData,
     @Param('hashedUniqueKey') hashedUniqueKey: string,
-  ): Promise<GetSurveyDetailResponseDto> {
-    const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, user?.id);
-    return new GetSurveyDetailResponseDto(survey);
+    @ExtractSubmissionHash() submissionHash?: string,
+  ): Promise<GetSurveyDetailViewResponseDto> {
+    const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, submissionHash, user?.id);
+    return new GetSurveyDetailViewResponseDto(survey);
   }
 
   @ApiOperation({ summary: '설문 상세 조회' })

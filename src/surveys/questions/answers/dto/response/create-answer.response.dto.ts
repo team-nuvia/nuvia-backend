@@ -1,7 +1,7 @@
-import { ErrorMessage, SuccessResponse } from '@common/dto/response';
+import { CreatedResponse, ErrorMessage } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateAnswerResponseDto extends SuccessResponse<null> {
+export class CreateAnswerResponseDto extends CreatedResponse<null> {
   @ApiProperty({
     description: '메시지',
     example: ErrorMessage.SUCCESS_CREATE_ANSWER,

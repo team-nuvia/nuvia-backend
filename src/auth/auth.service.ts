@@ -53,4 +53,14 @@ export class AuthService {
 
     return user;
   }
+
+  async verifyInvitationToken(token: string, userId: number): Promise<boolean> {
+    const { verified, inviteeId, subscriptionId } = await this.utilService.parseInvitationToken(token);
+
+    if (inviteeId !== userId) throw new NoMatchUserInformationExceptionDto();
+
+    await this.authRepository.joinOrganization(inviteeId, subscriptionId);
+
+    return verified;
+  }
 }

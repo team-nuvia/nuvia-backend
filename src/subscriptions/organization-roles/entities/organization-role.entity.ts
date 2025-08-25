@@ -2,9 +2,8 @@ import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { User } from '@users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
-@Unique(['subscriptionId', 'userId', 'permissionId'])
 @Entity()
 export class OrganizationRole extends DefaultDateInterface {
   @PrimaryGeneratedColumn()
@@ -21,6 +20,9 @@ export class OrganizationRole extends DefaultDateInterface {
 
   @Column('tinyint', { default: false, comment: '활성 여부' })
   isActive!: boolean;
+
+  @Column('tinyint', { default: false, comment: '초대 수락 여부' })
+  isJoined!: boolean;
 
   @ManyToOne(() => Subscription, (subscription) => subscription.organizationRoles)
   subscription!: Relation<Subscription>;

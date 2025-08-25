@@ -21,9 +21,15 @@ export class RespondentIncreaseRateNestedResponseDto {
   currentMonthRespondentCount!: number;
 }
 
-export class MetadataDashboardSurveryNestedResponseDto extends MetadataCommonInterface {
-  @ApiProperty({ description: '응답자 증가율', type: () => RespondentIncreaseRateNestedResponseDto })
-  respondentIncreaseRate!: RespondentIncreaseRateNestedResponseDto;
+export class MetadataDashboardSurveyNestedResponseDto extends MetadataCommonInterface {
+  // @ApiProperty({ description: '응답자 증가율', type: () => RespondentIncreaseRateNestedResponseDto })
+  // respondentIncreaseRate!: RespondentIncreaseRateNestedResponseDto;
+
+  @ApiProperty({ description: '총 완료 응답자 수', example: 10 })
+  totalCompletedRespondentCount!: number;
+
+  // @ApiProperty({ description: '현재 월 응답자 수', example: 15 })
+  // currentMonthRespondentCount!: number;
 
   @ApiProperty({ description: '플랜 사용량', type: () => PlanUsageNestedResponseDto })
   planUsage!: PlanUsageNestedResponseDto;

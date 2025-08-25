@@ -42,7 +42,12 @@ export class SurveyDetailNestedResponseDto {
   @ApiProperty({ description: '총 응답 수', example: 150 })
   totalResponses: number = 150;
 
-  @ApiProperty({ description: '질문 목록', type: () => QuestionDetailNestedResponseDto, isArray: true })
+  @ApiProperty({
+    description: '질문 목록',
+    type: () => QuestionDetailNestedResponseDto,
+    isArray: true,
+    example: [new QuestionDetailNestedResponseDto(), new QuestionDetailNestedResponseDto()],
+  })
   questions: QuestionDetailNestedResponseDto[] = [];
 
   @ApiProperty({ description: '공개 여부', example: true })
@@ -60,12 +65,12 @@ export class SurveyDetailNestedResponseDto {
   @ApiProperty({ description: '소유자 여부', example: true })
   isOwner: boolean = true;
 
-  @ApiProperty({ description: '만료일시', example: '2024-12-31T23:59:59.000Z', required: false })
+  @ApiProperty({ description: '만료일시', example: new Date(), required: false })
   expiresAt: Date | null = null;
 
-  @ApiProperty({ description: '생성일시', example: '2024-01-01T00:00:00.000Z' })
-  createdAt: Date = new Date('2024-01-01T00:00:00.000Z');
+  @ApiProperty({ description: '생성일시', example: new Date() })
+  createdAt: Date = new Date(new Date());
 
-  @ApiProperty({ description: '수정일시', example: '2024-01-01T00:00:00.000Z' })
-  updatedAt: Date = new Date('2024-01-01T00:00:00.000Z');
+  @ApiProperty({ description: '수정일시', example: new Date() })
+  updatedAt: Date = new Date(new Date());
 }

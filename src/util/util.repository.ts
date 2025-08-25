@@ -1,7 +1,7 @@
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
-import { FindOptionsWhere, ObjectLiteral } from 'typeorm';
+import { FindOptionsRelations, FindOptionsWhere, ObjectLiteral } from 'typeorm';
 
 @Injectable()
 export class UtilRepository extends BaseRepository {
@@ -21,5 +21,19 @@ export class UtilRepository extends BaseRepository {
   async existsBy<T extends ObjectLiteral>(condition: FindOptionsWhere<T>, Model?: new () => T): Promise<boolean> {
     if (Model) return this.orm.getRepo(Model).exists({ where: condition });
     return false;
+  }
+
+  async getBy<T extends ObjectLiteral>(condition: FindOptionsWhere<T>, Model?: new () => T): Promise<T | null> {
+    if (Model) return this.orm.getRepo(Model).findOne({ where: condition });
+    return null;
+  }
+
+  async getByWith<T extends ObjectLiteral>(
+    condition: FindOptionsWhere<T>,
+    relations: FindOptionsRelations<T>,
+    Model?: new () => T,
+  ): Promise<T | null> {
+    if (Model) return this.orm.getRepo(Model).findOne({ where: condition, relations });
+    return null;
   }
 }

@@ -55,6 +55,15 @@ export class UsersRepository extends BaseRepository {
       name: userMeData.name,
       nickname: userMeData.nickname,
       role: subscription.permission.role,
+      currentOrganization: {
+        id: subscription.id,
+        name: subscription.name,
+        description: subscription.description,
+        target: subscription.target,
+        status: subscription.status,
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt,
+      },
       createdAt: userMeData.createdAt,
       profileImageUrl,
     };
@@ -83,7 +92,7 @@ export class UsersRepository extends BaseRepository {
 
   async updateUserOrganization(userId: number, organizationId: number): Promise<void> {
     await this.orm.getRepo(OrganizationRole).update({ userId, isActive: true }, { isActive: false });
-    await this.orm.getRepo(OrganizationRole).update({ userId, subscriptionId: organizationId }, { isActive: true });
+    await this.orm.getRepo(OrganizationRole).update({ userId, subscriptionId: organizationId, isJoined: true }, { isActive: true });
     return;
   }
 }

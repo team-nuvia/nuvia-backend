@@ -1,3 +1,4 @@
+import { Notification } from '@/notifications/entities/notification.entity';
 import { Payment } from '@/payments/entities/payment.entity';
 import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscription.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
@@ -69,6 +70,16 @@ export class User extends DefaultDateInterface {
     cascade: true,
   })
   logUsageSubscriptions!: Relation<LogUsageSubscription>[];
+
+  @OneToMany(() => Notification, (notification) => notification.from, {
+    cascade: true,
+  })
+  notificationsFrom!: Relation<Notification>[];
+
+  @OneToMany(() => Notification, (notification) => notification.to, {
+    cascade: true,
+  })
+  notificationsTo!: Relation<Notification>[];
 
   getProfileUrl(commonService: CommonService): string | null {
     const commonConfig = commonService.getConfig('common');

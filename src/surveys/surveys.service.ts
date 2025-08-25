@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { UserRole } from '@share/enums/user-role';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
+import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
 import { CreateSurveyPayloadDto } from './dto/payload/create-survey.payload.dto';
@@ -13,9 +14,11 @@ import { DashboardRecentSurveyNestedResponseDto } from './dto/response/dashboard
 import { DashboardSurveyNestedResponseDto } from './dto/response/dashboard-survey.nested.response.dto';
 import { GetCategoryNestedResponseDto } from './dto/response/get-category.nested.response.dto';
 import { GetSurveyBinPaginatedResponseDto } from './dto/response/get-survey-bin.response.dto';
+import { GetSurveyGraphNestedResponseDto } from './dto/response/get-survey-graph.nested.response.dto';
 import { ListResponseDto } from './dto/response/get-survey-list.response.dto';
-import { MetadataDashboardSurveryNestedResponseDto } from './dto/response/metadata-dashboard-survery.nested.dto';
+import { MetadataDashboardSurveyNestedResponseDto } from './dto/response/metadata-dashboard-survey.nested.dto';
 import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
+import { SurveyDetailViewNestedResponseDto } from './dto/response/survey-detail-view.nested.response.dto';
 import { SurveyDetailNestedResponseDto } from './dto/response/survey-detail.nested.response.dto';
 import { SurveysRepository } from './surveys.repository';
 
@@ -53,10 +56,14 @@ export class SurveysService {
     return await this.surveyRepository.getSurveyList(userId, searchQuery);
   }
 
+  getSurveyRespondentGraphData(userId: number, searchQuery: SurveyGraphSearchQueryParamDto): Promise<GetSurveyGraphNestedResponseDto[]> {
+    return this.surveyRepository.getSurveyRespondentGraphData(userId, searchQuery);
+  }
+
   async getSurveyMetadata(
     userId: number,
     searchQuery: SurveyMetadataQueryParamDto,
-  ): Promise<MetadataDashboardSurveryNestedResponseDto | MetadataSurveyListNestedResponseDto> {
+  ): Promise<MetadataDashboardSurveyNestedResponseDto | MetadataSurveyListNestedResponseDto> {
     return await this.surveyRepository.getSurveyMetadata(userId, searchQuery);
   }
 
@@ -68,8 +75,12 @@ export class SurveysService {
     return await this.surveyRepository.getSurveyDetail(surveyId, userId);
   }
 
-  async getSurveyDetailAndViewCountUpdate(hashedUniqueKey: string, userId?: number): Promise<SurveyDetailNestedResponseDto> {
-    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey, userId);
+  async getSurveyDetailAndViewCountUpdate(
+    hashedUniqueKey: string,
+    submissionHash?: string,
+    userId?: number,
+  ): Promise<SurveyDetailViewNestedResponseDto> {
+    const survey = await this.surveyRepository.getSurveyDetailByHashedUniqueKey(hashedUniqueKey, submissionHash, userId);
     await this.surveyRepository.viewCountUpdate(hashedUniqueKey);
     return survey;
   }

@@ -1,5 +1,6 @@
 import { LoggerMiddleware } from '@common/middleware/logger.middleware';
 import commonConfig from '@config/common.config';
+import emailConfig from '@config/email.config';
 import secretConfig from '@config/secret.config';
 import { typeormConfig } from '@config/typeorm.config';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -8,8 +9,10 @@ import { UsersRepository } from '@users/users.repository';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { BatchesModule } from './batches/batches.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
+import { EmailsModule } from './emails/emails.module';
 import { ErrorCodeModule } from './error-code/error-code.module';
 import { LoggerModule } from './logger/logger.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -20,12 +23,13 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [commonConfig, typeormConfig, secretConfig],
+      load: [commonConfig, typeormConfig, secretConfig, emailConfig],
     }),
     AuthModule,
     UtilModule,
@@ -34,12 +38,15 @@ import { UtilModule } from './util/util.module';
     CommonModule,
     LoggerModule,
     StaticModule,
+    BatchesModule,
     SurveysModule,
     DatabaseModule,
     ErrorCodeModule,
     PaymentsModule,
     PermissionsModule,
     SubscriptionsModule,
+    EmailsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, UsersRepository],

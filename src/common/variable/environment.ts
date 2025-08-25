@@ -30,6 +30,7 @@ export const IS_PROD = RUN_MODE === RunMode.Production;
 export const IS_DEV = RUN_MODE === RunMode.Development;
 export const IS_TEST = RUN_MODE === RunMode.Test;
 
+export const CLIENT_URL = getEnvAs(String, 'CLIENT_URL', 'http://localhost:5000');
 export const SERVER_URL = getEnvAs(String, 'SERVE_HOST', 'http://localhost:3000');
 export const HOST = getEnvAs(String, 'HOST');
 export const PORT = getEnvAs(Number, 'PORT');
@@ -51,3 +52,9 @@ export const LOG_SAVE_ACTIVATE = getEnvAs(Boolean, 'LOG_SAVE_ACTIVATE', true);
 
 export const SECRET_JWT = getEnvAs(String, 'SECRET_JWT');
 export const SECRET_ANSWER_JWT = getEnvAs(String, 'SECRET_ANSWER_JWT');
+export const SECRET_ENCRYPT = getEnvAs(String, 'SECRET_ENCRYPT');
+export const SECRET_ENCRYPT_SALT = getEnvAs(String, 'SECRET_ENCRYPT_SALT');
+
+export const EMAIL_SERVICE = getEnvAs(String, 'EMAIL_SERVICE');
+export const EMAIL_USER = getEnvAs(String, 'EMAIL_USER');
+export const EMAIL_PASSWORD = getEnvAs(String, 'EMAIL_PASSWORD');
