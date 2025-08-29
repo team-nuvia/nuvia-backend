@@ -1,5 +1,6 @@
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { UserRole } from '@share/enums/user-role';
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { PermissionGrant } from '../permission-grants/entities/permission-grant.entity';
@@ -19,10 +20,10 @@ export class Permission extends DefaultDateInterface {
   @Column('int', { default: 0, unsigned: true, comment: '권한 순서' })
   sequence!: number;
 
-  @Column('tinyint', { default: 0, comment: '권한 비활성 여부' })
+  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '권한 비활성 여부' })
   isDeprecated!: boolean;
 
-  @Column('tinyint', { default: 0, comment: '권한 기본 여부' })
+  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '권한 기본 여부' })
   isDefault!: boolean;
 
   @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.permission, {

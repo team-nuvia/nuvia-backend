@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PlanNameType } from '@share/enums/plan-name-type.enum';
 import { OrganizationDataPlanGrantNestedResponseDto } from './organization-data-plan-grant.nested.response.dto';
 
 export class OrganizationDataPlanNestedResponseDto {
@@ -8,9 +9,10 @@ export class OrganizationDataPlanNestedResponseDto {
   id: number = 1;
 
   @ApiProperty({
-    example: '예시 플랜 이름',
+    enum: PlanNameType,
+    example: PlanNameType.Basic,
   })
-  name: string = '예시 플랜 이름';
+  name: PlanNameType = PlanNameType.Basic;
 
   @ApiProperty({
     example: '예시 플랜 설명',

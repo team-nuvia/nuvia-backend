@@ -1,7 +1,7 @@
 import { ErrorKey, ErrorMessage, NotFoundException } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NotFoundNotificationException extends NotFoundException {
+export class NotFoundNotificationExceptionDto extends NotFoundException {
   @ApiProperty({ description: '메시지', example: ErrorMessage.NOT_FOUND_NOTIFICATION })
   declare message: string;
 

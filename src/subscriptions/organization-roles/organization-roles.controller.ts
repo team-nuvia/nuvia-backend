@@ -1,7 +1,12 @@
+import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { UpdateOrganizationRoleDto } from './dto/payload/update-organization-role.dto';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdateOrganizationRolePayloadDto } from './dto/payload/update-organization-role.payload.dto';
+import { GetOrganizationRolesResponseDto } from './dto/response/get-organization-roles.response.dto';
+import { UpdateOrganizationRoleResponseDto } from './dto/response/update-organization-role.response.dto';
+import { OrganizationRoleUpdateConstraintValidation } from './organization-role-update-constraint.guard';
 import { OrganizationRolesService } from './organization-roles.service';
 
 @RequiredLogin
@@ -10,23 +15,30 @@ import { OrganizationRolesService } from './organization-roles.service';
 export class OrganizationRolesController {
   constructor(private readonly organizationRolesService: OrganizationRolesService) {}
 
+  @ApiOperation({ summary: '조직 역할 목록 조회' })
+  @CombineResponses(HttpStatus.OK, GetOrganizationRolesResponseDto)
+  @RequiredLogin
   @Get()
-  findAll(@Param('subscriptionId') subscriptionId: string) {
-    return this.organizationRolesService.findAll(+subscriptionId);
+  async findAll(@Param('subscriptionId') subscriptionId: string): Promise<GetOrganizationRolesResponseDto> {
+    const roles = await this.organizationRolesService.findAll(+subscriptionId);
+    return new GetOrganizationRolesResponseDto(roles);
   }
 
-  @Get(':id')
-  findOne(@Param('subscriptionId') subscriptionId: string, @Param('id') id: string) {
-    return this.organizationRolesService.findOne(+subscriptionId, +id);
+  @CombineResponses(HttpStatus.OK, UpdateOrganizationRoleResponseDto)
+  @OrganizationRoleUpdateConstraintValidation()
+  @Patch(':organizationRoleId')
+  async update(
+    @LoginUser() user: LoginUserData,
+    @Param('subscriptionId') subscriptionId: number,
+    @Param('organizationRoleId') organizationRoleId: number,
+    @Body() updateOrganizationRolePayloadDto: UpdateOrganizationRolePayloadDto,
+  ): Promise<UpdateOrganizationRoleResponseDto> {
+    await this.organizationRolesService.update(+subscriptionId, +organizationRoleId, user.id, updateOrganizationRolePayloadDto);
+    return new UpdateOrganizationRoleResponseDto();
   }
 
-  @Patch(':id')
-  update(@Param('subscriptionId') subscriptionId: string, @Param('id') id: string, @Body() updateOrganizationRoleDto: UpdateOrganizationRoleDto) {
-    return this.organizationRolesService.update(+subscriptionId, +id, updateOrganizationRoleDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('subscriptionId') subscriptionId: string, @Param('id') id: string) {
-    return this.organizationRolesService.remove(+subscriptionId, +id);
+  @Delete(':organizationRoleId')
+  remove(@Param('subscriptionId') subscriptionId: string, @Param('organizationRoleId') organizationRoleId: string) {
+    return this.organizationRolesService.remove(+subscriptionId, +organizationRoleId);
   }
 }

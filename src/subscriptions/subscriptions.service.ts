@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
+import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
 import { Subscription } from './entities/subscription.entity';
 import { SubscriptionsRepository } from './subscriptions.repository';
@@ -25,5 +26,13 @@ export class SubscriptionsService {
 
   update(id: number, updateSubscriptionDto: UpdateSubscriptionDto) {
     return this.subscriptionsRepository.orm.getManager().update(Subscription, id, updateSubscriptionDto);
+  }
+
+  async updateInvitationWithNotification(
+    subscriptionId: number,
+    userId: number,
+    updateInvitationWithNotificationDto: UpdateInvitationWithNotificationPayloadDto,
+  ) {
+    await this.subscriptionsRepository.updateInvitationWithNotification(subscriptionId, userId, updateInvitationWithNotificationDto);
   }
 }

@@ -1,6 +1,5 @@
 import { NotEnoughPermissionExceptionDto } from '@/permissions/dto/exception/not-enough-permission.exception.dto';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
-import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
@@ -8,6 +7,7 @@ import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { MetadataStatusType } from '@share/enums/metadata-status-type';
+import { PlanGrantType } from '@share/enums/plan-grant-type.enum';
 import { SurveyGraphType } from '@share/enums/survey-graph-type';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { UserRole, UserRoleList } from '@share/enums/user-role';
@@ -631,7 +631,7 @@ export class SurveysRepository extends BaseRepository {
     const updateQuestionOptionQueue: IUpdateQuestionOption[] = [];
 
     /* 수정할 설문 정보 */
-    const survey = await this.orm.getRepo(Survey).findOne({ where: { id: surveyId }, relations: { user: { subscription: true } } });
+    const survey = await this.orm.getRepo(Survey).findOne({ where: { id: surveyId }, relations: { user: { subscriptions: true } } });
 
     if (!survey) {
       throw new NotFoundSurveyExceptionDto();
@@ -640,20 +640,22 @@ export class SurveysRepository extends BaseRepository {
     /* 수정 시도하는 사용자 정보 */
     const user = await this.orm.getRepo(User).findOne({
       where: { id: userId },
-      relations: ['subscription', 'subscription.organizationRoles', 'organizationRoles', 'organizationRoles.permission'],
+      relations: ['subscriptions', 'subscriptions.organizationRoles', 'organizationRoles', 'organizationRoles.permission'],
     });
 
     if (!user) {
       throw new NotFoundUserExceptionDto();
     }
 
+    const subscription = await this.getCurrentOrganization(userId);
+
     /* 수정 시도하는 사용자와 동일 조직인지 검증 */
-    if (survey.user.subscription.id !== user.subscription.id) {
+    if (survey.subscriptionId !== subscription.id) {
       throw new NoMatchSubscriptionExceptionDto();
     }
 
     /* 수정 시도하는 사용자의 조직 내 권한 검증 */
-    const userRole = user.organizationRoles.find((role) => role.subscriptionId === survey.user.subscription.id);
+    const userRole = user.organizationRoles.find((role) => survey.user.subscriptions.some((subscription) => subscription.id === role.subscriptionId));
     if (userRole && UserRoleList.indexOf(userRole.permission.role) < UserRoleList.indexOf(UserRole.Editor)) {
       throw new NotEnoughPermissionExceptionDto();
     }

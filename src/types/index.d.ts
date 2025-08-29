@@ -3,7 +3,7 @@ import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 
 export declare global {
-  export type StringOrNull = string | null;
+  export type StringOrNull = string | string[] | null;
   export type TypeOrNull<T> = T | null;
   export type ValueOrEmpty<T> = T | null | undefined | unknown;
 

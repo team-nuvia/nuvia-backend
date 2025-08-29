@@ -3,7 +3,7 @@ import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscri
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
-import { PlanNameType } from '../enums/plan-name-type.enum';
+import { PlanNameType } from '../../share/enums/plan-name-type.enum';
 import { PlanDiscount } from '../plan-discounts/entities/plan-discount.entity';
 import { PlanGrant } from '../plan-grants/entities/plan-grant.entity';
 

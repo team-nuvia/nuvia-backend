@@ -1,5 +1,6 @@
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 import { SurveyStatus } from '@share/enums/survey-status';
@@ -34,7 +35,7 @@ export class Survey extends DefaultDateInterface {
   @Column('varchar', { length: 300, nullable: true, comment: '설문 설명' })
   description!: string | null;
 
-  @Column('tinyint', { comment: '공개 여부', default: true })
+  @Column('tinyint', { default: true, transformer: BoolTinyIntTransformer, comment: '공개 여부' })
   isPublic!: boolean;
 
   @Column('varchar', { length: 50, comment: '설문 상태', default: SurveyStatus.Draft })

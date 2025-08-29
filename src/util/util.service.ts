@@ -1,3 +1,4 @@
+import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
@@ -6,15 +7,18 @@ import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { LoggerService } from '@logger/logger.service';
 import { Injectable } from '@nestjs/common';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { User } from '@users/entities/user.entity';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { ExceededTeamLimitExceptionDto } from './dto/exception/exceeded-team-limit.exception.dto';
 import { FailDecodeTokenExceptionDto } from './dto/exception/fail-decode-token.exception.dto';
 import { FailEncodeTokenExceptionDto } from './dto/exception/fail-encode-token.exception.dto';
 import { InvalidTokenLengthExceptionDto } from './dto/exception/invalid-token-length.exception.dto';
 import { VerifyInvitationTokenNestedPayloadDto } from './dto/payload/verify-invitation-token.nested.payload.dto';
 import { VerifySecretPayloadDto } from './dto/payload/verify-secret.payload.dto';
 import { VerifySurveyJWSPayloadDto } from './dto/payload/verify-survey-jws.payload.dto';
+import { isNil } from './isNil';
 import { UtilRepository } from './util.repository';
 
 @Injectable()
@@ -192,19 +196,43 @@ export class UtilService {
     const invitationData = this.decodeToken(encodedData);
     const [subscriptionId, inviteeEmail, inviterUserId] = invitationData.split(':');
 
+    /* 초대 토큰 만료 검증 */
     const isExpired = Date.now() - Number(timestamp) > 24 * 60 * 60 * 1000;
     if (isExpired) throw new ExpiredInvitationTokenExceptionDto();
 
-    const isSubscription = await this.utilRepository.getByWith({ id: +subscriptionId }, { organizationRoles: true }, Subscription);
+    /* 조직 검증 */
+    const isSubscription = await this.utilRepository.getByWith(
+      { id: +subscriptionId },
+      { plan: { planGrants: true }, organizationRoles: true },
+      Subscription,
+    );
     if (!isSubscription) throw new NotFoundSubscriptionExceptionDto();
 
+    /* 팀 인원 제약 검증 */
+    const planTeamInviteLimitConstraint = isSubscription.plan.planGrants.find(
+      (planGrant) => planGrant.constraints === PlanGrantConstraintsType.TeamInvite && planGrant.isAllowed,
+    );
+    if (planTeamInviteLimitConstraint && !isNil(planTeamInviteLimitConstraint.amount)) {
+      const joinedUserCount = isSubscription.organizationRoles.filter(
+        (role) => role.status === OrganizationRoleStatusType.Joined && role.deletedAt === null,
+      ).length;
+      if (joinedUserCount >= planTeamInviteLimitConstraint.amount) throw new ExceededTeamLimitExceptionDto();
+    }
+
+    /* 초대 받는 유저 검증 */
     const isInvitee = await this.utilRepository.getBy({ email: inviteeEmail }, User);
     if (!isInvitee) throw new NotFoundUserExceptionDto('invitee');
 
-    if (isSubscription.organizationRoles.some((role) => role.userId === isInvitee.id && role.isJoined && role.deletedAt === null)) {
+    /* 이미 조직에 가입한 유저 검증 */
+    if (
+      isSubscription.organizationRoles.some(
+        (role) => role.userId === isInvitee.id && role.status === OrganizationRoleStatusType.Joined && role.deletedAt === null,
+      )
+    ) {
       throw new AlreadyJoinedUserExceptionDto();
     }
 
+    /* 초대 하는 유저 검증 */
     const isInviter = await this.utilRepository.existsBy({ id: +inviterUserId }, User);
     if (!isInviter) throw new NotFoundUserExceptionDto('inviter');
 

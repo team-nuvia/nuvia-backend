@@ -11,12 +11,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetUserOrganizationsResponseDto } from '../subscriptions/organization-roles/dto/response/get-user-organizations.response.dto';
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
-import { UpdateUserOrganizationPayloadDto } from './dto/payload/update-user-organization.payload.dto';
+import { UpdateUserCurrentOrganizationPayloadDto } from './dto/payload/update-user-organization.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { CreateUserResponseDto } from './dto/response/create-user.response.dto';
 import { DeleteUserResponseDto } from './dto/response/delete-user.response.dto';
 import { GetUserMeResponseDto } from './dto/response/get-user-me.response.dto';
-import { UpdateUserOrganizationResponseDto } from './dto/response/update-user-organization.response.dto';
+import { UpdateUserCurrentOrganizationResponseDto } from './dto/response/update-user-organization.response.dto';
 import { UpdateUserResponseDto } from './dto/response/update-user.response.dto';
 import { UsersService } from './users.service';
 
@@ -44,7 +44,7 @@ export class UsersController {
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
   @Get('me/organizations')
-  async getUserOrganizations(@LoginUser() user: LoginUserData) {
+  async getUserOrganizations(@LoginUser() user: LoginUserData): Promise<GetUserOrganizationsResponseDto> {
     const userOrganizations = await this.usersService.getUserOrganizations(user.id);
     return new GetUserOrganizationsResponseDto(userOrganizations);
   }
@@ -66,9 +66,12 @@ export class UsersController {
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
   @Patch('me/organizations')
-  async updateUserOrganization(@LoginUser() user: LoginUserData, @Body() updateUserOrganizationDto: UpdateUserOrganizationPayloadDto) {
-    await this.usersService.updateUserOrganization(user.id, updateUserOrganizationDto.organizationId);
-    return new UpdateUserOrganizationResponseDto();
+  async updateUserCurrentOrganization(
+    @LoginUser() user: LoginUserData,
+    @Body() updateUserCurrentOrganizationDto: UpdateUserCurrentOrganizationPayloadDto,
+  ): Promise<UpdateUserCurrentOrganizationResponseDto> {
+    await this.usersService.updateUserCurrentOrganization(user.id, updateUserCurrentOrganizationDto.organizationId);
+    return new UpdateUserCurrentOrganizationResponseDto();
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })

@@ -61,10 +61,10 @@ export class User extends DefaultDateInterface {
   })
   userAccesses!: Relation<UserAccess>[];
 
-  @OneToOne(() => Subscription, (subscription) => subscription.user, {
+  @OneToMany(() => Subscription, (subscription) => subscription.user, {
     cascade: true,
   })
-  subscription!: Relation<Subscription>;
+  subscriptions!: Relation<Subscription>[];
 
   @OneToMany(() => LogUsageSubscription, (logUsageSubscription) => logUsageSubscription.user, {
     cascade: true,

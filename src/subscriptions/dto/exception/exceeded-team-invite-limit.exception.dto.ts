@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ExceededTeamInviteLimitExceptionDto extends ForbiddenException {
   @ApiProperty({
-    description: '초대 가능한 인원을 초과했습니다.',
+    description: '메시지',
     example: ErrorMessage.EXCEEDED_TEAM_INVITE_LIMIT,
   })
   declare message: string;

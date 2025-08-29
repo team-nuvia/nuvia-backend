@@ -1,7 +1,7 @@
 import { Plan } from '@/plans/entities/plan.entity';
 import { PlanGrantConstraintsTypeList } from '@/plans/enums/plan-grant-constraints-type.enum';
-import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { PlanGrantType } from '@share/enums/plan-grant-type.enum';
 import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Index(['constraints'], { fulltext: true })

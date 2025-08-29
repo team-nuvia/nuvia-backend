@@ -1,9 +1,12 @@
+import { CurrentOrganizationNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/current-organization.nested.response.dto';
+import { GetCurrentOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-current-organizations.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { DeepPartial, FindOptionsWhere } from 'typeorm';
@@ -32,6 +35,36 @@ export class UsersRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
+  async getUserOrganizationData(userId: number): Promise<GetCurrentOrganizationsNestedResponseDto> {
+    const { currentOrganization, organizations } = await super.getUserOrganizations(userId);
+
+    const composedCurrentOrganization: CurrentOrganizationNestedResponseDto = {
+      id: currentOrganization.id,
+      organizationId: currentOrganization.organizationId,
+      name: currentOrganization.name,
+      description: currentOrganization.description,
+      target: currentOrganization.target,
+      status: currentOrganization.status,
+      role: currentOrganization.permission.role,
+      plan: currentOrganization.plan.name,
+      createdAt: currentOrganization.createdAt,
+    };
+
+    const composedOrganizations = organizations.map<CurrentOrganizationNestedResponseDto>((organization) => ({
+      id: organization.id,
+      organizationId: organization.organizationId,
+      name: organization.name,
+      description: organization.description,
+      target: organization.target,
+      status: organization.status,
+      role: organization.permission.role,
+      plan: organization.plan.name,
+      createdAt: organization.createdAt,
+    }));
+
+    return { currentOrganization: composedCurrentOrganization, organizations: composedOrganizations };
+  }
+
   async getMe(userId: number): Promise<GetUserMeNestedResponseDto | null> {
     const subscription = await this.getCurrentOrganization(userId);
 
@@ -57,6 +90,7 @@ export class UsersRepository extends BaseRepository {
       role: subscription.permission.role,
       currentOrganization: {
         id: subscription.id,
+        organizationId: subscription.organizationId,
         name: subscription.name,
         description: subscription.description,
         target: subscription.target,
@@ -90,9 +124,10 @@ export class UsersRepository extends BaseRepository {
     return source.save(data, { reload: true, transaction: true });
   }
 
-  async updateUserOrganization(userId: number, organizationId: number): Promise<void> {
-    await this.orm.getRepo(OrganizationRole).update({ userId, isActive: true }, { isActive: false });
-    await this.orm.getRepo(OrganizationRole).update({ userId, subscriptionId: organizationId, isJoined: true }, { isActive: true });
-    return;
+  async updateUserCurrentOrganization(userId: number, organizationId: number): Promise<void> {
+    await this.orm.getRepo(OrganizationRole).update({ userId, isCurrentOrganization: true }, { isCurrentOrganization: false });
+    await this.orm
+      .getRepo(OrganizationRole)
+      .update({ userId, subscriptionId: organizationId, status: OrganizationRoleStatusType.Joined }, { isCurrentOrganization: true });
   }
 }

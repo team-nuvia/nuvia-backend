@@ -1,4 +1,6 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
+import { NotificationActionStatus } from '@share/enums/notification-action-status';
 import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
@@ -22,13 +24,16 @@ export class Notification extends DefaultDateInterface {
   @Column('varchar', { nullable: true, default: null, length: 50, comment: '알림 타입' })
   type!: NotificationType | null;
 
+  @Column('varchar', { nullable: true, default: null, length: 50, comment: '액션 상태' })
+  actionStatus!: NotificationActionStatus | null;
+
   @Column('varchar', { length: 100, comment: '제목' })
   title!: string;
 
   @Column('varchar', { nullable: true, default: null, length: 300, comment: '내용' })
   content!: string | null;
 
-  @Column('tinyint', { default: false, comment: '읽음 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '읽음 여부' })
   isRead!: boolean;
 
   @Column('datetime', { nullable: true, default: null, comment: '읽은 시간' })

@@ -1,49 +1,49 @@
 import { PlanGrantConstraintsTypeList } from '@/plans/enums/plan-grant-constraints-type.enum';
-import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { PlanGrantType } from '@share/enums/plan-grant-type.enum';
 
 export class OrganizationDataPlanGrantNestedResponseDto {
   @ApiProperty({
     example: 1,
   })
-  id!: number;
+  id: number = 1;
 
   @ApiProperty({
     example: 1,
   })
-  planId!: number;
+  planId: number = 1;
 
   @ApiProperty({
     enum: PlanGrantType,
     example: PlanGrantType.Limit,
   })
-  type!: PlanGrantType;
+  type: PlanGrantType = PlanGrantType.Limit;
 
   @ApiProperty({
     example: '권한 설명',
     nullable: true,
   })
-  description!: string | null;
+  description: string | null = '권한 설명';
 
   @ApiProperty({
     example: PlanGrantConstraintsTypeList.join('\n'),
     nullable: true,
   })
-  constraints!: string | null;
+  constraints: string | null = '권한 제약 조건';
 
   @ApiProperty({
     example: 10,
     nullable: true,
   })
-  amount!: number | null;
+  amount: number | null = 10;
 
   @ApiProperty({
     example: false,
   })
-  isRenewable!: boolean;
+  isRenewable: boolean = false;
 
   @ApiProperty({
     example: true,
   })
-  isAllowed!: boolean;
+  isAllowed: boolean = true;
 }

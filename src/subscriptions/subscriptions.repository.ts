@@ -3,15 +3,21 @@ import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { NotificationActionStatus } from '@share/enums/notification-action-status';
 import { NotificationType } from '@share/enums/notification-type';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { User } from '@users/entities/user.entity';
 import { OrmHelper } from '@util/orm.helper';
 import { UtilService } from '@util/util.service';
 import { FindOptionsWhere, In } from 'typeorm';
+import { AlreadyJoinedUserExceptionDto } from './dto/exception/already-joined-user.exception.dto';
 import { NoInviteSelfExceptionDto } from './dto/exception/no-invite-self.exception.dto';
+import { NoSignedUserExceptionDto } from './dto/exception/no-signed-user.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from './dto/exception/not-found-subscription.exception.dto';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
+import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
 import { Subscription } from './entities/subscription.entity';
+import { NotFoundOrganizationRoleExceptionDto } from './organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { OrganizationRole } from './organization-roles/entities/organization-role.entity';
 
 @Injectable()
@@ -64,7 +70,7 @@ export class SubscriptionsRepository extends BaseRepository {
     inviteSubscriptionDto: InviteSubscriptionPayloadDto,
     userId: number,
     invitationEmailCallback: (toUser: string, fromUser: User, subscription: Subscription, invitationVerificationLink: string) => Promise<void>,
-  ) {
+  ): Promise<void> {
     const fromUser = await this.orm.getRepo(User).findOne({ where: { id: userId } });
 
     if (!fromUser) {
@@ -91,52 +97,96 @@ export class SubscriptionsRepository extends BaseRepository {
       throw new NotFoundSubscriptionExceptionDto();
     }
 
+    /* 초대 예정자 중 이미 초대된 리스트 */
     const alreadyInvitedUsers = subscription.organizationRoles.filter(
-      (role) => inviteSubscriptionDto.emails.includes(role.user.email) && !role.isJoined && role.deletedAt === null,
+      (role) => inviteSubscriptionDto.emails.includes(role.user.email) && role.status === OrganizationRoleStatusType.Invited,
     );
-    /* 이미 초대 됐지만 아직 승락하지 않은 로그 제거 처리 */
+
+    /* 이미 초대 됐지만 아직 승락하지 않은 사용자 제거 */
     if (alreadyInvitedUsers.length > 0) {
       await this.orm.getRepo(OrganizationRole).update(
         alreadyInvitedUsers.map((role) => role.id),
         {
-          isActive: false,
-          isJoined: false,
+          status: OrganizationRoleStatusType.Deleted,
           deletedAt: new Date(),
         },
       );
     }
 
-    const joinedUsers = subscription.organizationRoles.filter((role) => role.isJoined && role.deletedAt === null).map((role) => role.userId);
-    const withoutUsers = new Set([...joinedUsers, userId]);
+    const joinedUsers = subscription.organizationRoles.filter((role) => role.status === OrganizationRoleStatusType.Joined);
 
-    const users = await this.orm
+    const alreadyJoinedUsers = joinedUsers.filter((role) => inviteSubscriptionDto.emails.includes(role.user.email));
+    if (alreadyJoinedUsers.length > 0) {
+      throw new AlreadyJoinedUserExceptionDto(alreadyJoinedUsers.map((role) => role.user.email));
+    }
+
+    const joinedUserIds = joinedUsers.map((role) => role.userId);
+    const removedDuplicateUserIds = new Set([...joinedUserIds, userId]);
+
+    const willInviteUsers = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
       .where('u.email IN (:...emails)', { emails: inviteSubscriptionDto.emails })
-      .andWhere('u.id NOT IN (:...ids)', { ids: [...withoutUsers] })
+      .andWhere('u.id NOT IN (:...ids)', { ids: [...removedDuplicateUserIds] })
       .getMany();
-    const toUsers = users.map((user) => user.email);
+    const toUserEmails = willInviteUsers.map((user) => user.email);
 
-    const organizationRoles = users.map<Partial<OrganizationRole>>((user) => ({
+    const noSignedUsers = inviteSubscriptionDto.emails.filter((toUserEmail) => !toUserEmails.includes(toUserEmail));
+    if (noSignedUsers.length > 0) {
+      throw new NoSignedUserExceptionDto(noSignedUsers);
+    }
+
+    const inviteUserOrganizationRoleDataList = willInviteUsers.map<Partial<OrganizationRole>>((user) => ({
       subscriptionId,
       userId: user.id,
       permissionId: (subscription as Subscription & { defaultPermission: Permission }).defaultPermission.id,
-      isJoined: false,
-      isActive: false,
+      status: OrganizationRoleStatusType.Invited,
     }));
 
-    if (toUsers.length > 0) {
-      console.log('🚀 ~ SubscriptionsRepository ~ inviteUsers ~ toUsers:', toUsers);
-      await this.orm.getRepo(OrganizationRole).insert(organizationRoles);
+    if (toUserEmails.length > 0) {
+      await this.orm.getRepo(OrganizationRole).insert(inviteUserOrganizationRoleDataList);
 
-      await Promise.all(
-        toUsers.map((toUser) => {
+      Promise.allSettled(
+        toUserEmails.map((toUser) => {
           const token = this.utilService.createInvitationToken(subscriptionId, toUser, userId);
           const invitationVerificationLink = `${this.commonService.getConfig('common').clientUrl}/invitation?q=${token}`;
 
           return invitationEmailCallback(toUser, fromUser, subscription, invitationVerificationLink);
         }),
-      );
+      ).catch((error) => {
+        console.error('✨ email send error:', error);
+      });
     }
+  }
+
+  async updateInvitationWithNotification(
+    subscriptionId: number,
+    userId: number,
+    updateInvitationWithNotificationDto: UpdateInvitationWithNotificationPayloadDto,
+  ) {
+    const organizationRole = await this.orm.getRepo(OrganizationRole).findOne({
+      where: {
+        subscriptionId,
+        userId,
+        status: OrganizationRoleStatusType.Invited,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    if (!organizationRole) {
+      throw new NotFoundOrganizationRoleExceptionDto();
+    }
+
+    await this.updateOrganizationRoleStatus(organizationRole.id, { status: updateInvitationWithNotificationDto.status });
+
+    await this.toggleReadNotification(userId, updateInvitationWithNotificationDto.notificationId, {
+      isRead: true,
+      actionStatus:
+        updateInvitationWithNotificationDto.status === OrganizationRoleStatusType.Joined
+          ? NotificationActionStatus.Joined
+          : NotificationActionStatus.Rejected,
+    });
   }
 }
