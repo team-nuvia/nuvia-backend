@@ -1,11 +1,11 @@
 import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
-import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-user-organizations.nested.response.dto';
+import { GetCurrentOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-current-organizations.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
-import { DEFAULT_ORGANIZATION_NAME } from '@common/variable/globals';
 import { Injectable } from '@nestjs/common';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
 import { UserRole } from '@share/enums/user-role';
@@ -53,7 +53,7 @@ export class UsersService {
     const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
       userId: newUser.id,
       planId: 1,
-      name: DEFAULT_ORGANIZATION_NAME,
+      name: `${newUser.name}님의 개인 문서`,
       description: null,
       defaultRole: UserRole.Owner,
       status: SubscriptionStatusType.Active,
@@ -76,15 +76,15 @@ export class UsersService {
       userId: newUser.id,
       subscriptionId: subscription.id,
       permissionId: permission.id,
-      isActive: true,
-      isJoined: true,
+      status: OrganizationRoleStatusType.Joined,
+      isCurrentOrganization: true,
     });
 
     return newUser;
   }
 
-  async getUserOrganizations(userId: number): Promise<GetUserOrganizationsNestedResponseDto> {
-    const userOrganizations = await this.userRepository.getUserOrganizations(userId);
+  async getUserOrganizations(userId: number): Promise<GetCurrentOrganizationsNestedResponseDto> {
+    const userOrganizations = await this.userRepository.getUserOrganizationData(userId);
     return userOrganizations;
   }
 
@@ -98,8 +98,8 @@ export class UsersService {
     return user;
   }
 
-  async updateUserOrganization(userId: number, organizationId: number): Promise<void> {
-    await this.userRepository.updateUserOrganization(userId, organizationId);
+  async updateUserCurrentOrganization(userId: number, organizationId: number): Promise<void> {
+    await this.userRepository.updateUserCurrentOrganization(userId, organizationId);
     return;
   }
 

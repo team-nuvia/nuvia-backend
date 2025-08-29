@@ -1,7 +1,12 @@
+import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
+import { Notification } from '@/notifications/entities/notification.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
+import { NotificationActionStatus } from '@share/enums/notification-action-status';
+import { NotificationType } from '@share/enums/notification-type';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { User } from '@users/entities/user.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
@@ -111,10 +116,24 @@ export class AuthRepository extends BaseRepository {
       userAccess.accessBrowser = lastUserAccess.accessBrowser;
       userAccess.accessUserAgent = lastUserAccess.accessUserAgent;
     }
-    await this.orm.getRepo(UserAccess).save(userAccess);
+    await this.orm.getRepo(UserAccess).insert(userAccess);
   }
 
   async joinOrganization(inviteeId: number, subscriptionId: number) {
-    await this.orm.getRepo(OrganizationRole).update({ userId: inviteeId, subscriptionId }, { isJoined: true, deletedAt: null });
+    /* 초대할때 중복되면 이미 지우는 로직이 있기 때문에 Join 데이터만 처리 */
+    await this.orm
+      .getRepo(OrganizationRole)
+      .update({ userId: inviteeId, subscriptionId }, { status: OrganizationRoleStatusType.Joined, isCurrentOrganization: false, deletedAt: null });
+
+    const notification = await this.orm.getRepo(Notification).findOne({
+      where: { toId: inviteeId, type: NotificationType.Invitation, referenceId: subscriptionId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!notification) {
+      throw new NotFoundNotificationExceptionDto();
+    }
+
+    await this.orm.getRepo(Notification).update({ id: notification.id }, { actionStatus: NotificationActionStatus.Joined });
   }
 }

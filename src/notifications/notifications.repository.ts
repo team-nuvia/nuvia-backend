@@ -2,10 +2,8 @@ import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere, ObjectLiteral } from 'typeorm';
-import { NotFoundNotificationException } from './dto/exception/not-found-notification.exception.dto';
 import { NotificationSearchParamDto } from './dto/param/notification-search.param.dto';
 import { CreateNotificationPayloadDto } from './dto/payload/create-notification.payload.dto';
-import { ToggleReadNotificationPayloadDto } from './dto/payload/toggle-read-notification.payload.dto';
 import { GetNotificationPaginatedNestedResponseDto } from './dto/response/get-notification-paginated.nested.response.dto';
 import { Notification } from './entities/notification.entity';
 
@@ -51,13 +49,5 @@ export class NotificationsRepository extends BaseRepository {
 
   async createNotification(fromId: number, createNotificationDto: CreateNotificationPayloadDto) {
     return this.orm.getRepo(Notification).save({ fromId, ...createNotificationDto });
-  }
-
-  async toggleReadNotification(userId: number, id: number, toggleReadNotificationDto: ToggleReadNotificationPayloadDto) {
-    const notification = await this.orm.getRepo(Notification).findOne({ where: { id, toId: userId } });
-
-    if (!notification) throw new NotFoundNotificationException();
-
-    await this.orm.getRepo(Notification).update(id, { isRead: toggleReadNotificationDto.isRead });
   }
 }

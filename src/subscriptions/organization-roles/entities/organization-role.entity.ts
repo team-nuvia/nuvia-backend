@@ -1,6 +1,8 @@
 import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
@@ -18,11 +20,11 @@ export class OrganizationRole extends DefaultDateInterface {
   @Column('int', { comment: '권한 아이디' })
   permissionId!: number;
 
-  @Column('tinyint', { default: false, comment: '활성 여부' })
-  isActive!: boolean;
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '현재 조직 사용 여부' })
+  isCurrentOrganization!: boolean;
 
-  @Column('tinyint', { default: false, comment: '초대 수락 여부' })
-  isJoined!: boolean;
+  @Column('varchar', { length: 20, default: OrganizationRoleStatusType.Invited, comment: '상태' })
+  status!: OrganizationRoleStatusType;
 
   @ManyToOne(() => Subscription, (subscription) => subscription.organizationRoles)
   subscription!: Relation<Subscription>;

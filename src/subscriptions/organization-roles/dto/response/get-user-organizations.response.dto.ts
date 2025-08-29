@@ -1,20 +1,20 @@
 import { ErrorMessage, GetResponse } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
-import { GetUserOrganizationsNestedResponseDto } from './get-user-organizations.nested.response.dto';
+import { GetCurrentOrganizationsNestedResponseDto } from './get-current-organizations.nested.response.dto';
 
-export class GetUserOrganizationsResponseDto extends GetResponse<GetUserOrganizationsNestedResponseDto> {
+export class GetUserOrganizationsResponseDto extends GetResponse<GetCurrentOrganizationsNestedResponseDto> {
   @ApiProperty({
     example: ErrorMessage.SUCCESS_GET_USER_ORGANIZATIONS,
   })
   message: string = ErrorMessage.SUCCESS_GET_USER_ORGANIZATIONS;
 
   @ApiProperty({
-    type: () => GetUserOrganizationsNestedResponseDto,
-    example: new GetUserOrganizationsNestedResponseDto(),
+    type: () => GetCurrentOrganizationsNestedResponseDto,
+    example: new GetCurrentOrganizationsNestedResponseDto(),
   })
-  declare payload: GetUserOrganizationsNestedResponseDto;
+  declare payload: GetCurrentOrganizationsNestedResponseDto;
 
-  constructor(payload: GetUserOrganizationsNestedResponseDto = new GetUserOrganizationsNestedResponseDto()) {
+  constructor(payload: GetCurrentOrganizationsNestedResponseDto = new GetCurrentOrganizationsNestedResponseDto()) {
     super(payload);
   }
 }

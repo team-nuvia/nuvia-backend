@@ -19,7 +19,7 @@ export class NotificationsController {
   @ApiOperation({ summary: '내 알림 조회' })
   @CombineResponses(HttpStatus.OK, GetNotificationResponseDto)
   @Get('me')
-  async findAll(@LoginUser() user: LoginUserData, @Query() searchQuery: NotificationSearchParamDto) {
+  async findAll(@LoginUser() user: LoginUserData, @Query() searchQuery: NotificationSearchParamDto): Promise<GetNotificationResponseDto> {
     const notifications = await this.notificationsService.findAll(user.id, searchQuery);
     return new GetNotificationResponseDto(notifications);
   }

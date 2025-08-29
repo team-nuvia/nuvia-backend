@@ -1,3 +1,5 @@
+import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
+import { ToggleReadNotificationPayloadDto } from '@/notifications/dto/payload/toggle-read-notification.payload.dto';
 import { Notification } from '@/notifications/entities/notification.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
@@ -8,6 +10,8 @@ import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organizat
 import { OrganizationDataNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/organization-data.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
+import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
+import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { UserRole } from '@share/enums/user-role';
 import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
@@ -16,6 +20,7 @@ import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
 import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.exception.dto';
 import { AddNotificationPayloadDto } from './dto/payload/add-notification.payload.dto';
+import { UpdateOrganizationRoleStatusPayloadDto } from './dto/payload/update-notification.payload.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
 
 export abstract class BaseRepository {
@@ -27,24 +32,68 @@ export abstract class BaseRepository {
 
   abstract softDelete(id: number): Promise<void>;
 
-  async getCurrentOrganization(userId: number): Promise<OrganizationDataNestedResponseDto> {
-    const organizationRole = await this.orm
+  /**
+   * 현재 조직 초기화
+   * organizationRole이 없을 시에만 update 동작
+   * 있으면 아무 동작하지 않고 다름 프로세스 진행
+   * @param userId 사용자 ID
+   */
+  async initializeCurrentOrganization(userId: number) {
+    const organizationRoles = await this.orm
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
       .leftJoinAndSelect('or.subscription', 's')
+      .where('or.userId = :userId', { userId })
+      .andWhere('s.status = :status', { status: SubscriptionStatusType.Active })
+      .getMany();
+
+    const counterMap = {
+      true: 0,
+      false: 0,
+    };
+
+    for (const role of organizationRoles) {
+      counterMap[`${role.isCurrentOrganization}`]++;
+    }
+
+    if (counterMap['true'] === 1 && counterMap['false'] === organizationRoles.length - 1) {
+      return;
+    }
+
+    const organizationRole = organizationRoles.find((role) => role.status === OrganizationRoleStatusType.Joined);
+
+    if (organizationRole) {
+      await this.orm
+        .getRepo(OrganizationRole)
+        .createQueryBuilder('or')
+        .update()
+        .set({ isCurrentOrganization: true })
+        .where('id = :organizationRoleId', { organizationRoleId: organizationRole.id })
+        .execute();
+    }
+  }
+
+  async getCurrentOrganization(userId: number): Promise<OrganizationDataNestedResponseDto> {
+    await this.initializeCurrentOrganization(userId);
+
+    const organizationRoles = await this.orm
+      .getRepo(OrganizationRole)
+      .createQueryBuilder('or')
+      .leftJoinAndMapOne('or.subscription', Subscription, 's', 's.id = or.subscriptionId')
       .leftJoinAndSelect('s.plan', 'pl')
       .leftJoinAndSelect('pl.planGrants', 'plg')
       .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId')
       .leftJoinAndSelect('p.permissionGrants', 'pmg')
       .where('or.userId = :userId', { userId })
-      .andWhere('or.isActive = 1')
-      .getOne();
+      .getMany();
+
+    const organizationRole = organizationRoles.find((organizationRole) => organizationRole.isCurrentOrganization);
 
     if (!organizationRole) {
       throw new NotFoundOrganizationRoleExceptionDto();
     }
 
-    const subscription = organizationRole.subscription as Subscription & { permission: Permission };
+    const subscription = (organizationRole as OrganizationRole & { subscription: Subscription & { permission: Permission } }).subscription;
     const permission = subscription.permission;
     const permissionGrants = permission.permissionGrants.map((permissionGrant) => ({
       id: permissionGrant.id,
@@ -58,8 +107,10 @@ export abstract class BaseRepository {
 
     return {
       id: subscription.id,
+      organizationId: organizationRole.id,
       name: subscription.name,
       description: subscription.description,
+      role: permission.role,
       target: subscription.target,
       status: subscription.status,
       createdAt: subscription.createdAt,
@@ -87,6 +138,7 @@ export abstract class BaseRepository {
   }
 
   async getUserOrganizations(userId: number): Promise<GetUserOrganizationsNestedResponseDto> {
+    const currentOrganization = await this.getCurrentOrganization(userId);
     const organizationRoles = await this.orm
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
@@ -96,11 +148,8 @@ export abstract class BaseRepository {
       .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId')
       .leftJoinAndSelect('p.permissionGrants', 'pmg')
       .where('or.userId = :userId', { userId })
-      .andWhere('or.isJoined = 1')
-      .andWhere('or.deletedAt IS NULL')
+      .andWhere('or.status = :status', { status: OrganizationRoleStatusType.Joined })
       .getMany();
-
-    const currentOrganization = await this.getCurrentOrganization(userId);
 
     const organizations = organizationRoles.map<OrganizationDataNestedResponseDto>((organizationRole) => {
       const subscription = organizationRole.subscription as Subscription & { permission: Permission };
@@ -117,8 +166,10 @@ export abstract class BaseRepository {
 
       return {
         id: subscription.id,
+        organizationId: organizationRole.id,
         name: subscription.name,
         description: subscription.description,
+        role: permission.role,
         target: subscription.target,
         status: subscription.status,
         createdAt: subscription.createdAt,
@@ -167,6 +218,16 @@ export abstract class BaseRepository {
         break;
       default:
         throw new ForbiddenAccessExceptionDto('설문 제어 권한이 없습니다.');
+    }
+  }
+
+  organizationRolePermissionGrantsValidation(subscription: OrganizationDataNestedResponseDto, action: ValidateActionType) {
+    switch (action) {
+      case ValidateActionType.Update:
+        if (!isRoleAtLeast(subscription.permission.role, UserRole.Editor)) {
+          throw new ForbiddenAccessExceptionDto('조직 역할 수정 권한이 없습니다.');
+        }
+        break;
     }
   }
 
@@ -306,12 +367,14 @@ export abstract class BaseRepository {
       }
 
       /* 이미 초대 된 사용자 수 조회 */
-      /* 조직 내 사용정지 유저 또한 조직 인원으로 판단한다. */
+      /* 조직 내 사용정지, 초대 진행 중인 유저 또한 조직 인원으로 판단한다. */
       const joinedUserCount = await this.orm
         .getRepo(OrganizationRole)
         .createQueryBuilder('or')
         .where('or.subscriptionId = :subscriptionId', { subscriptionId })
-        .andWhere('or.isJoined = 1')
+        .andWhere('or.status IN (:...status)', {
+          status: [OrganizationRoleStatusType.Joined, OrganizationRoleStatusType.Invited, OrganizationRoleStatusType.Deactivated],
+        })
         .getCount();
 
       /* 초대 제약사항 검증 */
@@ -330,5 +393,19 @@ export abstract class BaseRepository {
 
   async addNotification({ fromId, toId, type, referenceId, title, content }: AddNotificationPayloadDto) {
     return this.orm.getRepo(Notification).save({ fromId, toId, type, referenceId, title, content });
+  }
+
+  async toggleReadNotification(toId: number, notificationId: number, toggleReadNotificationDto: ToggleReadNotificationPayloadDto) {
+    const notification = await this.orm.getRepo(Notification).findOne({ where: { id: notificationId, toId } });
+
+    if (!notification) throw new NotFoundNotificationExceptionDto();
+
+    await this.orm
+      .getRepo(Notification)
+      .update(notificationId, { isRead: toggleReadNotificationDto.isRead, actionStatus: toggleReadNotificationDto.actionStatus });
+  }
+
+  async updateOrganizationRoleStatus(organizationRoleId: number, updateOrganizationRoleStatusPayloadDto: UpdateOrganizationRoleStatusPayloadDto) {
+    await this.orm.getRepo(OrganizationRole).update(organizationRoleId, updateOrganizationRoleStatusPayloadDto);
   }
 }

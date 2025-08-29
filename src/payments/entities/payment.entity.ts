@@ -1,5 +1,6 @@
 import { Plan } from '@/plans/entities/plan.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { PaymentStatus } from '@share/enums/payment-status';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
@@ -40,13 +41,13 @@ export class Payment extends DefaultDateInterface {
   @Column('varchar', { length: 45, comment: '결제 상태' })
   status!: PaymentStatus;
 
-  @Column('tinyint', { default: 0, comment: '세액 포함 여부' })
+  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '세액 포함 여부' })
   hasTax!: boolean;
 
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '세액' })
   taxAmount!: number | null;
 
-  @Column('tinyint', { default: 0, comment: '할인 적용 여부' })
+  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '할인 적용 여부' })
   isDiscounted!: boolean;
 
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '할인 금액' })

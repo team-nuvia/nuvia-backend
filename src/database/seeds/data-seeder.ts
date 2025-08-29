@@ -3,10 +3,10 @@ import { PermissionGrantType } from '@/permissions/enums/permission-grant-type.e
 import { PermissionGrant } from '@/permissions/permission-grants/entities/permission-grant.entity';
 import { Plan } from '@/plans/entities/plan.entity';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
-import { PlanGrantType } from '@/plans/enums/plan-grant-type.enum';
-import { PlanNameType } from '@/plans/enums/plan-name-type.enum';
 import { PlanGrant } from '@/plans/plan-grants/entities/plan-grant.entity';
 import { Category } from '@/surveys/entities/category.entity';
+import { PlanGrantType } from '@share/enums/plan-grant-type.enum';
+import { PlanNameType } from '@share/enums/plan-name-type.enum';
 import { UserRole } from '@share/enums/user-role';
 import { DataSource } from 'typeorm';
 import { Seeder, SeederFactoryManager } from 'typeorm-extension';
@@ -393,7 +393,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Limit,
         description: '설문 별 질문 수 제한',
         constraints: PlanGrantConstraintsType.PerQuestionForSurvey,
-        amount: 5,
+        amount: 10,
         isRenewable: true,
         isAllowed: true,
       },
@@ -430,7 +430,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Limit,
         description: '설문 생성 제한',
         constraints: PlanGrantConstraintsType.SurveyCreate,
-        amount: 30,
+        amount: 15,
         isRenewable: true,
         isAllowed: true,
       },
@@ -439,7 +439,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Limit,
         description: '설문 별 질문 수 제한',
         constraints: PlanGrantConstraintsType.PerQuestionForSurvey,
-        amount: 10,
+        amount: 30,
         isRenewable: true,
         isAllowed: true,
       },
@@ -466,7 +466,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Allow,
         description: '팀 최대 인원',
         constraints: PlanGrantConstraintsType.TeamInvite,
-        amount: 5,
+        amount: 10,
         isRenewable: false,
         isAllowed: true,
       },
@@ -485,7 +485,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Limit,
         description: '설문 별 질문 수 제한',
         constraints: PlanGrantConstraintsType.PerQuestionForSurvey,
-        amount: 10,
+        amount: 50,
         isRenewable: true,
         isAllowed: true,
       },
@@ -512,7 +512,7 @@ export default class DataSeeder implements Seeder {
         type: PlanGrantType.Allow,
         description: '팀 최대 인원',
         constraints: PlanGrantConstraintsType.TeamInvite,
-        amount: 5,
+        amount: 30,
         isRenewable: false,
         isAllowed: true,
       },

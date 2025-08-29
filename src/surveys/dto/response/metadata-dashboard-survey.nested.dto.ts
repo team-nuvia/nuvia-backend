@@ -1,6 +1,6 @@
-import { PlanNameType } from '@/plans/enums/plan-name-type.enum';
 import { MetadataCommonInterface } from '@common/interface/metadata-common.interface';
 import { ApiProperty } from '@nestjs/swagger';
+import { PlanNameType } from '@share/enums/plan-name-type.enum';
 
 export class PlanUsageNestedResponseDto {
   @ApiProperty({ description: '플랜 타입', example: PlanNameType.Free, enum: PlanNameType })

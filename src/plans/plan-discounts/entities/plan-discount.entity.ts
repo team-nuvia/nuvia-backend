@@ -1,5 +1,6 @@
 import { Plan } from '@/plans/entities/plan.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
 @Entity()
@@ -31,7 +32,7 @@ export class PlanDiscount extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 45, nullable: true, comment: '할인 코드' })
   code!: string | null;
 
-  @Column('tinyint', { default: 0, comment: '할인 비활성 여부' })
+  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '할인 비활성 여부' })
   isDeprecated!: boolean;
 
   @ManyToOne(() => Plan, (plan) => plan.planDiscounts, {

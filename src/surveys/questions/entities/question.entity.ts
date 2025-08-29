@@ -1,4 +1,5 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from 'typeorm';
@@ -26,7 +27,7 @@ export class Question extends DefaultDateInterface {
   @Column('varchar', { length: 50, comment: '질문 답변 유형' })
   dataType!: DataType;
 
-  @Column('tinyint', { comment: '필수 여부', default: false })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '필수 여부' })
   isRequired!: boolean;
 
   @Column('int', { default: 0, unsigned: true, comment: '질문 순서' })
