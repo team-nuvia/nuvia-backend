@@ -1,7 +1,8 @@
-import { registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraintInterface } from 'class-validator';
+import { registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 
-export class IsDateOnlyStringConstraint implements ValidatorConstraintInterface {
-  validate(value: any, _args: ValidationArguments): boolean | Promise<boolean> {
+@ValidatorConstraint({ name: 'isDateOnlyString', async: false })
+export class IsDateOnlyStringConstraint<T extends string> implements ValidatorConstraintInterface {
+  validate(value: T, _args: ValidationArguments): boolean | Promise<boolean> {
     if (value === null || value === undefined) return true;
     if (typeof value !== 'string') return false;
     return /^(\d{4}-\d{2}-\d{2})$/.test(value);
