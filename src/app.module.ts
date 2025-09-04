@@ -1,4 +1,5 @@
 import { LoggerMiddleware } from '@common/middleware/logger.middleware';
+import { PrometheusMiddleware } from '@common/middleware/prometheus.middleware';
 import commonConfig from '@config/common.config';
 import emailConfig from '@config/email.config';
 import secretConfig from '@config/secret.config';
@@ -15,6 +16,7 @@ import { DatabaseModule } from './database/database.module';
 import { EmailsModule } from './emails/emails.module';
 import { ErrorCodeModule } from './error-code/error-code.module';
 import { LoggerModule } from './logger/logger.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { PlansModule } from './plans/plans.module';
@@ -23,7 +25,6 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
-import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -54,5 +55,6 @@ import { NotificationsModule } from './notifications/notifications.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('/*api');
+    consumer.apply(PrometheusMiddleware).forRoutes('/*api');
   }
 }

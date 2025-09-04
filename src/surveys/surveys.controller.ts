@@ -23,7 +23,7 @@ import { GetSurveyDetailViewResponseDto } from './dto/response/get-survey-detail
 import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.response.dto';
 import { GetSurveyGraphResponseDto } from './dto/response/get-survey-graph.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
-import { GetSurveyMetadataResponseDto } from './dto/response/get-survey-metadata.response.dto';
+import { GetSurveyMetadataResponseDto, GetSurveyMetadataSurveyListResponseDto } from './dto/response/get-survey-metadata.response.dto';
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
 import { RestoreSurveyResponseDto } from './dto/response/restore-survey.response.dto';
 import { UpdateSurveyStatusResponseDto } from './dto/response/update-survey-status.response.dto';
@@ -103,7 +103,7 @@ export class SurveysController {
   }
 
   @ApiOperation({ summary: '설문 메타데이터 조회' })
-  @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto)
+  @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto, GetSurveyMetadataSurveyListResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
@@ -113,7 +113,11 @@ export class SurveysController {
     @Query() searchQuery: SurveyMetadataQueryParamDto,
   ): Promise<GetSurveyMetadataResponseDto> {
     const metadata = await this.surveysService.getSurveyMetadata(user.id, searchQuery);
-    return new GetSurveyMetadataResponseDto(metadata);
+    if (searchQuery.status === MetadataStatusType.Dashboard) {
+      return new GetSurveyMetadataResponseDto(metadata);
+    } else {
+      return new GetSurveyMetadataSurveyListResponseDto(metadata);
+    }
   }
 
   @ApiOperation({ summary: '카테고리 조회' })
