@@ -7,6 +7,7 @@ import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { MetadataStatusType } from '@share/enums/metadata-status-type';
 import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
@@ -25,6 +26,8 @@ import { GetSurveyGraphResponseDto } from './dto/response/get-survey-graph.respo
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto, GetSurveyMetadataSurveyListResponseDto } from './dto/response/get-survey-metadata.response.dto';
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
+import { MetadataDashboardSurveyNestedResponseDto } from './dto/response/metadata-dashboard-survey.nested.dto';
+import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
 import { RestoreSurveyResponseDto } from './dto/response/restore-survey.response.dto';
 import { UpdateSurveyStatusResponseDto } from './dto/response/update-survey-status.response.dto';
 import { UpdateSurveyVisibilityResponseDto } from './dto/response/update-survey-visibility.response.dto';
@@ -111,12 +114,12 @@ export class SurveysController {
   async getSurveyMetadata(
     @LoginUser() user: LoginUserData,
     @Query() searchQuery: SurveyMetadataQueryParamDto,
-  ): Promise<GetSurveyMetadataResponseDto> {
+  ): Promise<GetSurveyMetadataResponseDto | GetSurveyMetadataSurveyListResponseDto> {
     const metadata = await this.surveysService.getSurveyMetadata(user.id, searchQuery);
     if (searchQuery.status === MetadataStatusType.Dashboard) {
-      return new GetSurveyMetadataResponseDto(metadata);
+      return new GetSurveyMetadataResponseDto(metadata as MetadataDashboardSurveyNestedResponseDto);
     } else {
-      return new GetSurveyMetadataSurveyListResponseDto(metadata);
+      return new GetSurveyMetadataSurveyListResponseDto(metadata as MetadataSurveyListNestedResponseDto);
     }
   }
 
