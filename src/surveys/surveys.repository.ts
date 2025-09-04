@@ -175,6 +175,10 @@ export class SurveysRepository extends BaseRepository {
     const query = this.orm
       .getManager()
       .createQueryBuilder(Survey, 's')
+      .leftJoinAndSelect('s.questions', 'sq')
+      .leftJoinAndSelect('sq.questionOptions', 'sqo')
+      .leftJoinAndSelect('s.answers', 'sa')
+      .leftJoinAndSelect('sa.user', 'u')
       .where('s.userId = :userId', { userId })
       .andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
@@ -187,10 +191,6 @@ export class SurveysRepository extends BaseRepository {
     }
 
     query
-      .leftJoinAndSelect('s.questions', 'sq')
-      .leftJoinAndSelect('sq.questionOptions', 'sqo')
-      .leftJoinAndSelect('sq.answers', 'sa')
-      .leftJoinAndSelect('sa.user', 'u')
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('s.createdAt', 'DESC');

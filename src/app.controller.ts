@@ -1,9 +1,11 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { Public } from '@common/decorator/public.decorator';
-import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { ApiHideProperty, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { uniqueHash } from '@util/uniqueHash';
 import { UtilService } from '@util/util.service';
+import { Response } from 'express';
+import client from 'prom-client';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
 
@@ -23,6 +25,12 @@ export class AppController {
     const version = this.appService.getVersion();
 
     return new GetVersionResponse(version);
+  }
+
+  @Get('metrics')
+  async getMetrics(@Res() res: Response) {
+    res.setHeader('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
   }
 
   @ApiHideProperty()

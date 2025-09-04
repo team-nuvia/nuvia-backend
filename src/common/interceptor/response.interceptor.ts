@@ -21,6 +21,24 @@ export class ResponseInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         console.log('🚀 ~ ResponseInterceptor ~ intercept ~ data:', data);
+        if (!data) {
+          const responseEntity = {
+            ok: httpStatus < 300 && httpStatus >= 200,
+            httpStatus,
+            name: 'EmptyResponse',
+            message: '응답 완료',
+            reason: null,
+            payload: null,
+          };
+
+          const serialized = serializeResponse(responseEntity);
+
+          this.loggerService.log(`⬅️ RES. [${method}] ${path} ${serialized.httpStatus}`);
+          this.loggerService.log(JSON.stringify(serialized));
+
+          return serialized;
+        }
+
         const responseEntity = {
           ok: httpStatus < 300 && httpStatus >= 200,
           httpStatus,

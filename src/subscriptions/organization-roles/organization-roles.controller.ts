@@ -24,6 +24,7 @@ export class OrganizationRolesController {
     return new GetOrganizationRolesResponseDto(roles);
   }
 
+  // TODO: 조직 역할 수정 시 권한을 수정자의 권한 이하만 가능하도록 검증 추가
   @CombineResponses(HttpStatus.OK, UpdateOrganizationRoleResponseDto)
   @OrganizationRoleUpdateConstraintValidation()
   @Patch(':organizationRoleId')
