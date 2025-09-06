@@ -26,8 +26,8 @@ export class InputValidationPipeConstraints extends ValidationPipe implements Pi
 
   /* 검증 예외 처리 커스텀 */
   exceptionFactory = (errors: ValidationError[]) => {
-    console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0]);
-    console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0].children?.[0]);
+    // console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0]);
+    // console.log('🚀 ~ InputValidationPipe ~ errors:', errors[0].children?.[0]);
     const { constraints, namespace } = this.getChildrenConstraints(errors);
 
     const values = Object.values(constraints);

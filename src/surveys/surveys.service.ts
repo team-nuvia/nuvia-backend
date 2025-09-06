@@ -36,8 +36,12 @@ export class SurveysService {
     await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
 
-  async restoreSurvey(surveyId: number): Promise<void> {
-    await this.surveyRepository.restoreSurvey(surveyId);
+  async restoreSurvey(surveyId: number, userId: number): Promise<void> {
+    await this.surveyRepository.restoreSurvey(surveyId, userId);
+  }
+
+  async restoreAllSurvey(userId: number): Promise<void> {
+    await this.surveyRepository.restoreAllSurvey(userId);
   }
 
   getSurveyCategories(): Promise<GetCategoryNestedResponseDto[]> {

@@ -18,6 +18,7 @@ import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
 import { Brackets, FindOptionsWhere, In } from 'typeorm';
+import { ExceededRestoreLimitExceptionDto } from './dto/exception/exceeded-restore-limit.exception.dto';
 import { NoMatchSubscriptionExceptionDto } from './dto/exception/no-match-subscription.exception.dto';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
@@ -70,6 +71,8 @@ export class SurveysRepository extends BaseRepository {
   async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
     const hashedUniqueKey = uniqueHash();
 
+    const subscription = await this.getCurrentOrganization(userId);
+
     const survey = await this.orm
       .getManager()
       .createQueryBuilder()
@@ -106,9 +109,26 @@ export class SurveysRepository extends BaseRepository {
     }));
 
     await this.orm.getManager().save(Question, questions);
+
+    await this.calculateUsage(subscription.plan.id, userId);
   }
 
-  async restoreSurvey(surveyId: number): Promise<void> {
+  async restoreSurvey(surveyId: number, userId: number): Promise<void> {
+    const subscription = await this.getCurrentOrganization(userId);
+    const monthlyUsage = await this.getMonthlyUsage(subscription.id);
+
+    const planUsagePerMonth =
+      subscription.plan.planGrants.find(
+        (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
+      )?.amount ?? 0;
+
+    const expectedSurveyCount = monthlyUsage + 1;
+    const overUsage = expectedSurveyCount - planUsagePerMonth;
+
+    if (expectedSurveyCount > planUsagePerMonth) {
+      throw new ExceededRestoreLimitExceptionDto(overUsage.toString());
+    }
+
     await this.orm
       .getManager()
       .createQueryBuilder()
@@ -119,6 +139,48 @@ export class SurveysRepository extends BaseRepository {
       })
       .where('id = :surveyId', { surveyId })
       .execute();
+
+    await this.calculateUsage(subscription.plan.id, userId);
+  }
+
+  async restoreAllSurvey(userId: number): Promise<void> {
+    const subscription = await this.getCurrentOrganization(userId);
+
+    const monthlyUsage = await this.getMonthlyUsage(subscription.id);
+
+    const deletedSurveyCount = await this.orm
+      .getRepo(Survey)
+      .createQueryBuilder('s')
+      .withDeleted()
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('s.deletedAt IS NOT NULL')
+      .getCount();
+
+    const planUsagePerMonth =
+      subscription.plan.planGrants.find(
+        (pg) => pg.isAllowed && pg.type === PlanGrantType.Limit && pg.constraints === PlanGrantConstraintsType.SurveyCreate,
+      )?.amount ?? 0;
+
+    const expectedSurveyCount = deletedSurveyCount + monthlyUsage;
+    const overUsage = expectedSurveyCount - planUsagePerMonth;
+
+    if (expectedSurveyCount > planUsagePerMonth) {
+      throw new ExceededRestoreLimitExceptionDto(overUsage.toString());
+    }
+
+    await this.orm
+      .getManager()
+      .createQueryBuilder()
+      .update(Survey)
+      .set({
+        deletedAt: null,
+        isPublic: false,
+      })
+      .where('subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('deletedAt IS NOT NULL')
+      .execute();
+
+    await this.calculateUsage(subscription.plan.id, userId);
   }
 
   async getDeletedSurvey(userId: number, searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyBinPaginatedResponseDto> {
@@ -127,11 +189,10 @@ export class SurveysRepository extends BaseRepository {
     const subscription = await this.getCurrentOrganization(userId);
 
     const query = this.orm
-      .getManager()
-      .createQueryBuilder(Survey, 's')
+      .getRepo(Survey)
+      .createQueryBuilder('s')
       .withDeleted()
-      .where('s.userId = :userId', { userId })
-      .andWhere('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
       .andWhere('s.deletedAt IS NOT NULL');
 
     if (search) {
@@ -447,15 +508,7 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async viewCountUpdate(hashedUniqueKey: string): Promise<void> {
-    await this.orm
-      .getManager()
-      .createQueryBuilder()
-      .update(Survey)
-      .set({
-        viewCount: () => 'viewCount + 1',
-      })
-      .where('hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
-      .execute();
+    await this.orm.getRepo(Survey).increment({ hashedUniqueKey }, 'viewCount', 1);
   }
 
   async getSurveyDetail(surveyId: number, userId?: number): Promise<SurveyDetailNestedResponseDto> {
@@ -771,6 +824,10 @@ export class SurveysRepository extends BaseRepository {
   }
 
   async deleteSurvey(surveyId: number, userId: number): Promise<void> {
-    await this.orm.getManager().softDelete(Survey, { id: surveyId, userId });
+    const subscription = await this.getCurrentOrganization(userId);
+
+    await this.orm.getManager().softDelete(Survey, { id: surveyId, subscriptionId: subscription.id });
+
+    await this.calculateUsage(subscription.plan.id, userId);
   }
 }

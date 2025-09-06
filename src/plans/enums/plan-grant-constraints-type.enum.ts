@@ -4,6 +4,7 @@ export const PlanGrantConstraintsType = {
   SurveyAnswerCreate: 'survey.answer.create',
   TeamInvite: 'team.invite',
   PerQuestionForSurvey: 'per.question.for.survey',
+  PerResponseForSurvey: 'per.response.for.survey',
 
   /* ALLOW 범주 */
   FileUpload: 'file.upload',

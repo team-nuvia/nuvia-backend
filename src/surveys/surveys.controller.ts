@@ -28,6 +28,7 @@ import { GetSurveyMetadataResponseDto, GetSurveyMetadataSurveyListResponseDto } 
 import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
 import { MetadataDashboardSurveyNestedResponseDto } from './dto/response/metadata-dashboard-survey.nested.dto';
 import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
+import { RestoreAllSurveyResponseDto } from './dto/response/restore-all-survey.response.dto';
 import { RestoreSurveyResponseDto } from './dto/response/restore-survey.response.dto';
 import { UpdateSurveyStatusResponseDto } from './dto/response/update-survey-status.response.dto';
 import { UpdateSurveyVisibilityResponseDto } from './dto/response/update-survey-visibility.response.dto';
@@ -64,9 +65,21 @@ export class SurveysController {
   @Transactional()
   @RequiredLogin
   @Patch(':surveyId/restore')
-  async restoreSurvey(@Param('surveyId') surveyId: string): Promise<RestoreSurveyResponseDto> {
-    await this.surveysService.restoreSurvey(+surveyId);
+  async restoreSurvey(@LoginUser() user: LoginUserData, @Param('surveyId') surveyId: string): Promise<RestoreSurveyResponseDto> {
+    await this.surveysService.restoreSurvey(+surveyId, user.id);
     return new RestoreSurveyResponseDto();
+  }
+
+  @ApiOperation({ summary: '설문 전체 복구' })
+  @CombineResponses(HttpStatus.OK, RestoreAllSurveyResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @Transactional()
+  @RequiredLogin
+  @Patch('restore-all')
+  async restoreAllSurvey(@LoginUser() user: LoginUserData): Promise<RestoreAllSurveyResponseDto> {
+    await this.surveysService.restoreAllSurvey(user.id);
+    return new RestoreAllSurveyResponseDto();
   }
 
   @ApiOperation({ summary: '삭제된 설문 조회' })

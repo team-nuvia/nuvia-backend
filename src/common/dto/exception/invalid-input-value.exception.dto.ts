@@ -3,6 +3,7 @@ import { BadRequestException, ErrorKey, ErrorMessage } from '../response';
 
 export class InvalidInputValueExceptionDto extends BadRequestException {
   @ApiProperty({
+    description: '에러 메시지',
     example: ErrorMessage.INVALID_INPUT_VALUE,
   })
   declare message: string;

@@ -1,5 +1,6 @@
 import { IsDatetimeString } from '@common/decorator/is-datetime-string.decorator';
 import { IsNullable } from '@common/decorator/is-nullable.decorator';
+import { IsPastThanNextDay } from '@common/decorator/is-past-than-next-day.decorator';
 import { ErrorMessage } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
@@ -55,6 +56,7 @@ export class CreateSurveyPayloadDto {
   })
   @IsNullable()
   @IsDatetimeString()
+  @IsPastThanNextDay()
   expiresAt!: Date | null;
 
   @ApiProperty({

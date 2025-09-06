@@ -40,6 +40,7 @@
     "version:deploy:init": "sh scripts/deploy_version_init"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
     "@faker-js/faker": "^9.8.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -56,6 +57,7 @@
     "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cross-env": "^7.0.3",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "ejs": "^3.1.10",
     "image-size": "^2.0.2",

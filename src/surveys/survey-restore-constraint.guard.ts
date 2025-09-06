@@ -1,3 +1,4 @@
+import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { ValidateActionType } from '@common/variable/enums/validate-action-type.enum';
 import { applyDecorators, CanActivate, ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
@@ -21,7 +22,21 @@ export class SurveyRestoreConstraintGuard implements CanActivate {
     /* 권한 검증 */
     this.utilRepository.surveyPermissionGrantsValidation(subscription, ValidateActionType.Delete);
 
-    return true;
+    /* 플랜 제약사항 검증 */
+    return new Promise(async (resolve, reject) => {
+      const callback = (data: { [key in PlanGrantConstraintsType]: number }) => {
+        if (PlanGrantConstraintsType.SurveyCreate in data) {
+          resolve(true);
+        }
+
+        resolve(false);
+      };
+      try {
+        await this.utilRepository.surveyPlanGrantsValidation(user.id, [PlanGrantConstraintsType.SurveyCreate], callback);
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 }
 

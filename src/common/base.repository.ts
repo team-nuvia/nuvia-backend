@@ -3,7 +3,9 @@ import { ToggleReadNotificationPayloadDto } from '@/notifications/dto/payload/to
 import { Notification } from '@/notifications/entities/notification.entity';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-type.enum';
+import { NotFoundLogUsageExceptionDto } from '@/subscriptions/dto/exception/not-found-log-usage.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
+import { LogUsageSubscription } from '@/subscriptions/entities/log-usage-subscription.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-user-organizations.nested.response.dto';
@@ -71,6 +73,80 @@ export abstract class BaseRepository {
         .where('id = :organizationRoleId', { organizationRoleId: organizationRole.id })
         .execute();
     }
+  }
+
+  async initializeUsageLog(planId: number, userId: number) {
+    const subscription = await this.getCurrentOrganization(userId);
+
+    const currentMonthLogUsage = await this.orm
+      .getRepo(LogUsageSubscription)
+      .createQueryBuilder('lus')
+      .where('lus.planId = :planId', { planId })
+      .andWhere('lus.userId = :userId', { userId })
+      .andWhere('YEAR(lus.createdAt) = YEAR(CURRENT_DATE)')
+      .andWhere('MONTH(lus.createdAt) = MONTH(CURRENT_DATE)')
+      .getOne();
+
+    if (!currentMonthLogUsage) {
+      const monthlyUsage = await this.getMonthlyUsage(subscription.id);
+
+      const planMaxSurveyCount =
+        subscription.plan.planGrants.find((planGrant) => planGrant.constraints === PlanGrantConstraintsType.SurveyCreate && planGrant.isAllowed)
+          ?.amount ?? 0;
+
+      const remain = planMaxSurveyCount - monthlyUsage;
+
+      await this.orm
+        .getRepo(LogUsageSubscription)
+        .save({ planId, userId, usage: monthlyUsage, remain, total: planMaxSurveyCount, target: subscription.target, status: subscription.status });
+    }
+  }
+
+  getMonthlyUsage(subscriptionId: number) {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    const { currentFirstDay, currentLastDay } = getRangeOfMonth(year, month);
+
+    return this.orm
+      .getRepo(Survey)
+      .createQueryBuilder('s')
+      .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscriptionId })
+      .andWhere('s.createdAt BETWEEN :currentFirstDay AND :currentLastDay', { currentFirstDay, currentLastDay })
+      .getCount();
+  }
+
+  async calculateUsage(planId: number, userId: number) {
+    await this.initializeUsageLog(planId, userId);
+
+    const currentMonthLogUsage = await this.orm
+      .getRepo(LogUsageSubscription)
+      .createQueryBuilder('lus')
+      .where('lus.planId = :planId', { planId })
+      .andWhere('lus.userId = :userId', { userId })
+      .andWhere('YEAR(lus.createdAt) = YEAR(CURRENT_DATE)')
+      .andWhere('MONTH(lus.createdAt) = MONTH(CURRENT_DATE)')
+      .getOne();
+
+    if (!currentMonthLogUsage) {
+      throw new NotFoundLogUsageExceptionDto();
+    }
+
+    const subscription = await this.getCurrentOrganization(userId);
+
+    const monthlyUsage = await this.getMonthlyUsage(subscription.id);
+
+    const planMaxSurveyCount =
+      subscription.plan.planGrants.find((planGrant) => planGrant.constraints === PlanGrantConstraintsType.SurveyCreate && planGrant.isAllowed)
+        ?.amount ?? 0;
+
+    const remain = planMaxSurveyCount - monthlyUsage;
+
+    await this.orm
+      .getRepo(LogUsageSubscription)
+      .update(
+        { id: currentMonthLogUsage.id },
+        { usage: monthlyUsage, remain, total: planMaxSurveyCount, target: subscription.target, status: subscription.status },
+      );
   }
 
   async getCurrentOrganization(userId: number): Promise<OrganizationDataNestedResponseDto> {
