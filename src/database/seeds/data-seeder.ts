@@ -269,10 +269,10 @@ export default class DataSeeder implements Seeder {
     type PlanGrantData = {
       surveyCreate: PlanGrantValue;
       perQuestionForSurvey: PlanGrantValue;
+      perResponseForSurvey: PlanGrantValue;
       fileUpload: PlanGrantValue;
       download: PlanGrantValue;
       teamInvite: PlanGrantValue;
-      perResponseForSurvey: PlanGrantValue;
     };
 
     function createPlanGrants(planId: number, grants: PlanGrantData) {
@@ -294,6 +294,15 @@ export default class DataSeeder implements Seeder {
           amount: grants.perQuestionForSurvey.amount,
           isRenewable: grants.perQuestionForSurvey.isRenewable,
           isAllowed: grants.perQuestionForSurvey.isAllowed,
+        },
+        {
+          planId,
+          type: PlanGrantType.Limit,
+          description: '설문 별 응답 수 제한',
+          constraints: PlanGrantConstraintsType.PerResponseForSurvey,
+          amount: grants.perResponseForSurvey.amount,
+          isRenewable: grants.perResponseForSurvey.isRenewable,
+          isAllowed: grants.perResponseForSurvey.isAllowed,
         },
         {
           planId,
