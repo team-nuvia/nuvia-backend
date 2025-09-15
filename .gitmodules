@@ -1,4 +1,4 @@
 [submodule "src/share"]
 	path = src/share
-	url = https://github.com/kkn1125/nuvia-models.git
+	url = https://github.com/team-nuvia/nuvia-share.git
 	branch = main
