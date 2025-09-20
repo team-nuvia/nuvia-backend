@@ -13,7 +13,6 @@ import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-sta
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
-import { NotFoundUserAccessExceptionDto } from './dto/exception/not-found-user-access.exception.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 
 @Injectable()
@@ -109,7 +108,9 @@ export class AuthRepository extends BaseRepository {
         .getOne();
 
       if (isNil(lastUserAccess)) {
-        throw new NotFoundUserAccessExceptionDto(id.toString());
+        // throw new NotFoundUserAccessExceptionDto(id.toString());
+        await this.orm.getRepo(UserAccess).insert(userAccess);
+        return;
       }
 
       userAccess.accessDevice = lastUserAccess.accessDevice;

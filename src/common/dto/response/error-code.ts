@@ -101,6 +101,7 @@ export const ErrorKey = {
   SUCCESS_UPDATE_ORGANIZATION_ROLE: 'SUCCESS_UPDATE_ORGANIZATION_ROLE',
   NOT_FOUND_LOG_USAGE: 'NOT_FOUND_LOG_USAGE',
   EXCEEDED_RESTORE_LIMIT: 'EXCEEDED_RESTORE_LIMIT',
+  SUCCESS_VERIFY_SESSION: 'SUCCESS_VERIFY_SESSION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -203,6 +204,7 @@ export const ErrorCode = {
   SUCCESS_UPDATE_ORGANIZATION_ROLE: HttpStatus.OK,
   NOT_FOUND_LOG_USAGE: HttpStatus.NOT_FOUND,
   EXCEEDED_RESTORE_LIMIT: HttpStatus.BAD_REQUEST,
+  SUCCESS_VERIFY_SESSION: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -305,6 +307,7 @@ export const ErrorMessage = {
   SUCCESS_UPDATE_ORGANIZATION_ROLE: '조직 역할 수정 성공',
   NOT_FOUND_LOG_USAGE: '사용 기록을 찾을 수 없습니다.',
   EXCEEDED_RESTORE_LIMIT: '복구 가능한 설문 개수를 초과했습니다.',
+  SUCCESS_VERIFY_SESSION: '세션 검증 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

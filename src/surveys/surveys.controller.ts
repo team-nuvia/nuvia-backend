@@ -25,7 +25,6 @@ import { GetSurveyDetailResponseDto } from './dto/response/get-survey-detail.res
 import { GetSurveyGraphResponseDto } from './dto/response/get-survey-graph.response.dto';
 import { GetSurveyListResponseDto } from './dto/response/get-survey-list.response.dto';
 import { GetSurveyMetadataResponseDto, GetSurveyMetadataSurveyListResponseDto } from './dto/response/get-survey-metadata.response.dto';
-import { GetSurveyResponseDto } from './dto/response/get-survey.response.dto';
 import { MetadataDashboardSurveyNestedResponseDto } from './dto/response/metadata-dashboard-survey.nested.dto';
 import { MetadataSurveyListNestedResponseDto } from './dto/response/metadata-survey-list.nested.response.dto';
 import { RestoreAllSurveyResponseDto } from './dto/response/restore-all-survey.response.dto';
@@ -93,16 +92,16 @@ export class SurveysController {
     return new GetSurveyBinResponseDto(survey);
   }
 
-  @ApiOperation({ summary: '설문 목록 조회' })
-  @CombineResponses(HttpStatus.OK, GetSurveyResponseDto)
-  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
-  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
-  @RequiredLogin
-  @Get('me')
-  async getSurvey(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyResponseDto> {
-    const survey = await this.surveysService.getSurvey(user.id, searchQuery);
-    return new GetSurveyResponseDto(survey);
-  }
+  // @ApiOperation({ summary: '설문 목록 조회' })
+  // @CombineResponses(HttpStatus.OK, GetSurveyResponseDto)
+  // @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  // @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  // @RequiredLogin
+  // @Get('me')
+  // async getSurvey(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyResponseDto> {
+  //   const survey = await this.surveysService.getSurvey(user.id, searchQuery);
+  //   return new GetSurveyResponseDto(survey);
+  // }
 
   @ApiOperation({ summary: '설문 메타데이터 조회' })
   @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto)

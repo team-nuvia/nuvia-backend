@@ -21,6 +21,7 @@ export class OrganizationRoleUpdateConstraintGuard implements CanActivate {
     /* 권한 검증 */
     this.utilRepository.organizationRolePermissionGrantsValidation(subscription, ValidateActionType.Update);
 
+    /* 플랜 제약사항 검증 */
     return true;
   }
 }

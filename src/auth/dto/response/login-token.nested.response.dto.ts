@@ -6,4 +6,7 @@ export class LoginTokenNestedResponseDto {
 
   @ApiProperty({ description: '리프레시 토큰', example: '<refreshToken>' })
   refreshToken: string = '<refreshToken>';
+
+  @ApiProperty({ description: '세션 토큰', example: '<sessionToken>' })
+  hmacSession: string = '<hmacSession>';
 }

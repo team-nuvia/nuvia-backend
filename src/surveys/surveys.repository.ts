@@ -437,6 +437,7 @@ export class SurveysRepository extends BaseRepository {
     const subscription = await this.getCurrentOrganization(userId);
 
     const { search, page, limit, status } = searchQuery;
+    console.log('🚀 ~ SurveysRepository ~ getSurveyList ~ searchQuery:', searchQuery);
 
     const surveyQuery = this.orm
       .getManager()
@@ -451,26 +452,21 @@ export class SurveysRepository extends BaseRepository {
       surveyQuery.andWhere('s.title LIKE :search', { search: `%${search}%` });
     }
 
-    if (status !== 'all') {
-      const statusList = status.split(',') as SurveyStatus[];
-      if (statusList.includes(SurveyStatus.Closed)) {
-        surveyQuery.andWhere(
-          new Brackets((qb) =>
-            qb.where('s.status = :status', { status: SurveyStatus.Closed }).orWhere('(s.expiresAt IS NOT NULL AND s.expiresAt <= :now)', {
-              now: DateFormat.toUTC(),
-            }),
-          ),
-        );
-      } else {
-        surveyQuery
-          .andWhere('s.status IN (:...status)', { status: statusList })
-          .andWhere(
-            new Brackets((qb) =>
-              qb.where('s.expiresAt IS NULL').orWhere('(s.expiresAt IS NOT NULL AND s.expiresAt > :now)', { now: DateFormat.toUTC() }),
-            ),
-          );
-      }
-    }
+    const statusList = status.split(',') as SurveyStatus[];
+    const hasClosedStatus = statusList.includes(SurveyStatus.Closed);
+    surveyQuery.andWhere(
+      new Brackets((qb) => {
+        const now = DateFormat.toUTC();
+        if (statusList.length > 0) {
+          qb.where('s.status IN (:...status)', { status: statusList });
+        }
+        if (hasClosedStatus) {
+          qb.orWhere('(s.expiresAt IS NOT NULL AND s.expiresAt <= :now)', { now });
+        } else {
+          qb.andWhere('(s.expiresAt IS NULL OR s.expiresAt > :now)', { now });
+        }
+      }),
+    );
 
     const [surveyList, total] = await surveyQuery
       .skip((page - 1) * limit)
