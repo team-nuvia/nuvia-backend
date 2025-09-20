@@ -12,6 +12,7 @@ import { NotFoundOrganizationRoleExceptionDto } from './dto/exception/not-found-
 import { UpdateOrganizationRolePayloadDto } from './dto/payload/update-organization-role.payload.dto';
 import { TableOrganizationRoleNestedResponseDto } from './dto/response/table-organization-role.nested.response.dto';
 import { OrganizationRole } from './entities/organization-role.entity';
+import { UserRoleList } from '@share/enums/user-role';
 
 @Injectable()
 export class OrganizationRolesRepository extends BaseRepository {
@@ -62,7 +63,9 @@ export class OrganizationRolesRepository extends BaseRepository {
     updateOrganizationRolePayloadDto: UpdateOrganizationRolePayloadDto,
   ) {
     /* 수정 조직 */
-    const subscription = await this.orm.getRepo(Subscription).findOne({ where: { id: subscriptionId }, relations: ['organizationRoles'] });
+    const subscription = await this.orm
+      .getRepo(Subscription)
+      .findOne({ where: { id: subscriptionId }, relations: ['organizationRoles', 'organizationRoles.permission'] });
 
     /* 조직 존재 여부 검증 */
     if (!subscription) {
@@ -72,6 +75,7 @@ export class OrganizationRolesRepository extends BaseRepository {
     /* 수정 대상 역할 */
     const organizationRole = subscription.organizationRoles.find((role) => role.id === organizationRoleId);
 
+    /* 수정 유저 */
     const updateUserRole = subscription.organizationRoles.find((role) => role.userId === userId);
 
     /* 조직 역할 존재 여부 검증 */
@@ -87,6 +91,12 @@ export class OrganizationRolesRepository extends BaseRepository {
     /* 조직 생성자 수정 시도 검증 */
     if (organizationRole.userId === subscription.userId) {
       throw new NotAllowedUpdateOrganizationRoleExceptionDto('조직 생성자의 역할 정보를 수정할 수 없습니다.');
+    }
+
+    console.log('🚀 ~ OrganizationRolesRepository ~ update ~ updateUserRole:', updateUserRole);
+    const isOverRole = UserRoleList.indexOf(updateUserRole.permission.role) < UserRoleList.indexOf(updateOrganizationRolePayloadDto.role);
+    if (isOverRole) {
+      throw new NotAllowedUpdateOrganizationRoleExceptionDto('본인의 역할보다 높은 역할로 수정할 수 없습니다.');
     }
 
     const permission = await this.orm.getRepo(Permission).findOne({ where: { role: updateOrganizationRolePayloadDto.role } });

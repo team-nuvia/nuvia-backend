@@ -1,4 +1,6 @@
+import { CommonService } from '@common/common.service';
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { LoginSession } from '@common/decorator/login-session.decorator';
 import { LoginToken } from '@common/decorator/login-token.param.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
@@ -7,6 +9,7 @@ import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
+import { REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
 import { Body, Controller, HttpStatus, Ip, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -18,13 +21,17 @@ import { LoginResponseDto } from './dto/response/login.response.dto';
 import { LogoutResponseDto } from './dto/response/logout.response.dto';
 import { RefreshResponseDto } from './dto/response/refesh.response.dto';
 import { VerifyInvitationTokenResponseDto } from './dto/response/verify-invitation-token.response.dto';
+import { VerifySessionResponseDto } from './dto/response/verify-session.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 
 @ApiTags('인증/인가')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly commonConfig: CommonService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Public()
@@ -40,14 +47,22 @@ export class AuthController {
     @Body() userLoginInformationDto: UserLoginInformationPayloadDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponseDto> {
+    const secretConfig = this.commonConfig.getConfig('secret');
     const token = await this.authService.login(loginUserData, ipAddress, userLoginInformationDto);
 
     /* 리프레시만 쿠키 저장 */
-    res.cookie('refresh_token', token.refreshToken, {
+    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 30,
+      maxAge: secretConfig.refreshExpireTime,
+    });
+
+    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.sessionExpireTime,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -63,14 +78,22 @@ export class AuthController {
   @Public()
   @Post('refresh')
   async refresh(@RefreshToken() verifiedRefreshToken: string, @Res({ passthrough: true }) res: Response): Promise<RefreshResponseDto> {
+    const secretConfig = this.commonConfig.getConfig('secret');
     const token = await this.authService.refresh(verifiedRefreshToken);
 
     /* 리프레시만 쿠키 저장 */
-    res.cookie('refresh_token', token.refreshToken, {
+    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 30,
+      maxAge: secretConfig.refreshExpireTime,
+    });
+
+    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.sessionExpireTime,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -90,13 +113,37 @@ export class AuthController {
     @Ip() ipAddress: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
-    res.clearCookie('refresh_token');
+    const secretConfig = this.commonConfig.getConfig('secret');
+
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.refreshExpireTime,
+    });
+
+    res.clearCookie(SESSION_COOKIE_NAME, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.sessionExpireTime,
+    });
+
     if (loginUserData) {
       await this.authService.logout(loginUserData, ipAddress);
     } else {
       return new AlreadyLoggedOutResponseDto();
     }
     return new LogoutResponseDto();
+  }
+
+  @ApiOperation({ summary: '세션 검증' })
+  @CombineResponses(HttpStatus.OK, VerifySessionResponseDto)
+  @RequiredLogin
+  @Post('session')
+  verifySession(@LoginSession() session: string): VerifySessionResponseDto {
+    const verifyToken = this.authService.verifyHmacSession(session);
+    return new VerifySessionResponseDto({ verified: !!verifyToken });
   }
 
   @ApiOperation({ summary: '토큰 검증' })

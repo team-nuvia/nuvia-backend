@@ -50,6 +50,7 @@ export const LOG_EXT = getEnvAs(String, 'LOG_EXT');
 export const LOG_ACTIVATE = getEnvAs(Boolean, 'LOG_ACTIVATE', true);
 export const LOG_SAVE_ACTIVATE = getEnvAs(Boolean, 'LOG_SAVE_ACTIVATE', true);
 
+export const SECRET_SESSION = getEnvAs(String, 'SECRET_SESSION');
 export const SECRET_JWT = getEnvAs(String, 'SECRET_JWT');
 export const SECRET_ANSWER_JWT = getEnvAs(String, 'SECRET_ANSWER_JWT');
 export const SECRET_ENCRYPT = getEnvAs(String, 'SECRET_ENCRYPT');

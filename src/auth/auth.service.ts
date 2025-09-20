@@ -19,9 +19,10 @@ export class AuthService {
     userLoginInformationPayloadDto: UserLoginInformationPayloadDto,
   ): Promise<LoginTokenNestedResponseDto> {
     const jwtInformation = this.utilService.createJWT(payload);
+    const hmacSession = this.utilService.createHmacSession(payload);
     await this.authRepository.addUserAccessLog(payload.id, ipAddress, userLoginInformationPayloadDto, UserAccessStatusType.Login);
 
-    return jwtInformation;
+    return { ...jwtInformation, hmacSession };
   }
 
   async logout(loginUserData: LoginUserData, ipAddress: string) {
@@ -30,10 +31,17 @@ export class AuthService {
 
   async refresh(refreshTokenString: string): Promise<LoginTokenNestedResponseDto> {
     const refreshToken = this.utilService.decodeJWT(refreshTokenString);
-    console.log('🚀 ~ AuthService ~ refresh ~ refreshToken:', refreshToken);
+    // console.log('🚀 ~ AuthService ~ refresh ~ refreshToken:', refreshToken);
     const user = await this.authRepository.findUserById(refreshToken.id);
-    console.log('🚀 ~ AuthService ~ refresh ~ user:', user);
-    return this.utilService.refreshJWT(user);
+    // console.log('🚀 ~ AuthService ~ refresh ~ user:', user);
+
+    const jwtInformation = this.utilService.refreshJWT(user);
+    const hmacSession = this.utilService.createHmacSession(user);
+    return { ...jwtInformation, hmacSession };
+  }
+
+  verifyHmacSession(token: string): string | null {
+    return this.utilService.verifyHmacSession(token);
   }
 
   verifyToken(token: string): boolean {

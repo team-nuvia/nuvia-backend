@@ -20,6 +20,7 @@ import { VerifySecretPayloadDto } from './dto/payload/verify-secret.payload.dto'
 import { VerifySurveyJWSPayloadDto } from './dto/payload/verify-survey-jws.payload.dto';
 import { isNil } from './isNil';
 import { UtilRepository } from './util.repository';
+import { SESSION_EXPIRED_AT } from '@common/variable/globals';
 
 @Injectable()
 export class UtilService {
@@ -61,6 +62,45 @@ export class UtilService {
   // base64 token
   createHash(data: string) {
     return crypto.createHash('sha256').update(data).digest('base64');
+  }
+
+  private sign(data: string) {
+    const secretConfig = this.commonService.getConfig('secret');
+    return crypto.createHmac('sha256', secretConfig.session).update(data).digest('base64url');
+  }
+
+  /* hmac session 생성 */
+  createHmacSession(payload: LoginUserData, ttlSec: number = SESSION_EXPIRED_AT) {
+    const secretConfig = this.commonService.getConfig('secret');
+
+    const now = Math.floor(Date.now() / 1000);
+    const sessionPayload = {
+      sub_hash: crypto.createHmac('sha256', secretConfig.session).update(payload.id.toString()).digest('base64url'),
+      iat: now + ttlSec,
+      exp: now + secretConfig.sessionExpireTime,
+      ver: 1,
+    };
+
+    const b64 = Buffer.from(JSON.stringify(sessionPayload)).toString('base64url');
+    const sig = this.sign(b64);
+    const session = `${b64}.${sig}`;
+    return session;
+  }
+
+  /* hmac session 검증 */
+  verifyHmacSession(session: string): string | null {
+    if (!session) return null;
+
+    const [b64, sig] = session.split('.');
+    if (!b64 || !sig) return null;
+
+    const expected = this.sign(b64);
+    if (crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) === false) return null;
+
+    const payload = JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'));
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+    return payload;
   }
 
   // 설문 인증 JWS
@@ -109,7 +149,21 @@ export class UtilService {
     return { accessToken, refreshToken };
   }
 
-  async refreshJWT(refreshToken: LoginUserData) {
+  async createServerSideSession(payload: LoginUserData) {
+    const secretConfig = this.commonService.getConfig('secret');
+    const user = await this.utilRepository.getBy({ id: payload.id }, User);
+
+    if (!user) {
+      throw new NotFoundUserExceptionDto();
+    }
+
+    const session = jwt.sign(payload, secretConfig.session, {
+      expiresIn: secretConfig.sessionExpireTime,
+    });
+    return session;
+  }
+
+  refreshJWT(refreshToken: LoginUserData) {
     return this.createJWT(refreshToken);
   }
 

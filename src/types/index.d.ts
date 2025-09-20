@@ -7,11 +7,11 @@ export declare global {
   export type TypeOrNull<T> = T | null;
   export type ValueOrEmpty<T> = T | null | undefined | unknown;
 
-  export declare interface LoginUserData {
+  export interface LoginUserData {
     id: number;
   }
 
-  export declare interface UserMinimumInformation {
+  export interface UserMinimumInformation {
     id: number;
     email: string;
     name: string;
