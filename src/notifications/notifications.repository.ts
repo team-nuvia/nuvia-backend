@@ -37,6 +37,7 @@ export class NotificationsRepository extends BaseRepository {
     const [notifications, total] = await query
       .skip((searchQuery.page - 1) * searchQuery.limit)
       .take(searchQuery.limit)
+      .orderBy('n.createdAt', 'DESC')
       .getManyAndCount();
 
     return {

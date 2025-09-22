@@ -19,11 +19,13 @@ import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { OrmHelper } from '@util/orm.helper';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.exception.dto';
 import { AddNotificationPayloadDto } from './dto/payload/add-notification.payload.dto';
 import { UpdateOrganizationRoleStatusPayloadDto } from './dto/payload/update-notification.payload.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
+import { NotificationType } from '@share/enums/notification-type';
+import { User } from '@users/entities/user.entity';
 
 export abstract class BaseRepository {
   constructor(protected readonly orm: OrmHelper) {}
@@ -47,6 +49,7 @@ export abstract class BaseRepository {
       .leftJoinAndSelect('or.subscription', 's')
       .where('or.userId = :userId', { userId })
       .andWhere('s.status = :status', { status: SubscriptionStatusType.Active })
+      .andWhere('or.status IN (:...orStatus)', { orStatus: [OrganizationRoleStatusType.Invited, OrganizationRoleStatusType.Joined] })
       .getMany();
 
     const counterMap = {
@@ -224,7 +227,8 @@ export abstract class BaseRepository {
       .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId')
       .leftJoinAndSelect('p.permissionGrants', 'pmg')
       .where('or.userId = :userId', { userId })
-      .andWhere('or.status = :status', { status: OrganizationRoleStatusType.Joined })
+      .andWhere('or.status = :status', { status: OrganizationRoleStatusType.Joined})
+      .andWhere('or.deletedAt IS NULL')
       .getMany();
 
     const organizations = organizationRoles.map<OrganizationDataNestedResponseDto>((organizationRole) => {
@@ -469,6 +473,43 @@ export abstract class BaseRepository {
 
   async addNotification({ fromId, toId, type, referenceId, title, content }: AddNotificationPayloadDto) {
     return this.orm.getRepo(Notification).save({ fromId, toId, type, referenceId, title, content });
+  }
+
+  async addNotifications({
+    subscriptionId,
+    type,
+    userId,
+    emails,
+    title,
+    content,
+  }: {
+    subscriptionId: number;
+    type: NotificationType;
+    userId: number;
+    emails: string[];
+    title: string;
+    content: string;
+  }) {
+    const fromOrganization = await this.orm.getRepo(Subscription).findOne({ where: { id: subscriptionId } });
+
+    if (!fromOrganization) {
+      throw new NotFoundSubscriptionExceptionDto();
+    }
+
+    const toUsers = await this.orm.getRepo(User).find({ where: { email: In(emails) }, select: ['id'] });
+
+    await Promise.all(
+      toUsers.map((to) =>
+        this.addNotification({
+          fromId: userId,
+          toId: to.id,
+          type,
+          referenceId: subscriptionId,
+          title,
+          content,
+        }),
+      ),
+    );
   }
 
   async toggleReadNotification(toId: number, notificationId: number, toggleReadNotificationDto: ToggleReadNotificationPayloadDto) {
