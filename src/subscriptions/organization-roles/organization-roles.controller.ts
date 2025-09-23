@@ -8,6 +8,7 @@ import { GetOrganizationRolesResponseDto } from './dto/response/get-organization
 import { UpdateOrganizationRoleResponseDto } from './dto/response/update-organization-role.response.dto';
 import { OrganizationRoleUpdateConstraintValidation } from './organization-role-update-constraint.guard';
 import { OrganizationRolesService } from './organization-roles.service';
+import { Transactional } from '@common/decorator/transactional.decorator';
 
 @RequiredLogin
 @ApiTags('조직 역할')
@@ -27,6 +28,7 @@ export class OrganizationRolesController {
   // TODO: 조직 역할 수정 시 권한을 수정자의 권한 이하만 가능하도록 검증 추가
   @CombineResponses(HttpStatus.OK, UpdateOrganizationRoleResponseDto)
   @OrganizationRoleUpdateConstraintValidation()
+  @Transactional()
   @Patch(':organizationRoleId')
   async update(
     @LoginUser() user: LoginUserData,

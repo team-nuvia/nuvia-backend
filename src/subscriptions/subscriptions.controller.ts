@@ -63,7 +63,12 @@ export class SubscriptionsController {
 
     await this.subscriptionsService.inviteUsers(+subscriptionId, inviteSubscriptionDto, user.id, invitationEmailCallback);
 
-    await this.subscriptionsService.addNotifications(+subscriptionId, NotificationType.Invitation, user.id, inviteSubscriptionDto.emails);
+    await this.subscriptionsService.addInviteNotifications({
+      subscriptionId: +subscriptionId,
+      type: NotificationType.Invitation,
+      userId: user.id,
+      emails: inviteSubscriptionDto.emails,
+    });
 
     return new SuccessInviteSubscriptionResponseDto();
   }

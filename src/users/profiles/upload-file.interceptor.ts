@@ -9,7 +9,6 @@ export const UploadFileInterceptor = (fileSize: number = 5 * 1024 * 1024) =>
       fileSize,
     },
     fileFilter: (_req, file, callback) => {
-      console.log('🚀 ~ UploadFileInterceptor ~ file:', file);
       if (isNil(file)) {
         return callback(new NoExistsUploadFileExceptionDto(), false);
       }

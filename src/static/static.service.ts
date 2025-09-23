@@ -41,7 +41,6 @@ export class StaticService {
       fit: 'contain',
       withoutEnlargement: true,
     });
-    console.log('🚀 ~ StaticService ~ dimension:', dimension);
 
     res.setHeader('content-type', contentType);
     res.setHeader('content-disposition', `inline; filename="${originalname}"`);

@@ -10,7 +10,6 @@ export class DimensionParsePipe
       return null;
     }
 
-    console.log('🚀 ~ transform ~ value:', value);
     if (!value.includes('x')) {
       throw new BadRequestException('not allowed type');
     }

@@ -1,6 +1,6 @@
 import { Answer } from '@/surveys/entities/answer.entity';
 import { BaseRepository } from '@common/base.repository';
-import { VERIFY_JWS_EXPIRED_AT } from '@common/variable/globals';
+import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
 import { Injectable } from '@nestjs/common';
 import { AnswerStatus } from '@share/enums/answer-status';
 import { QuestionType } from '@share/enums/question-type';
@@ -57,7 +57,7 @@ export class AnswersRepository extends BaseRepository {
       status: AnswerStatus.Started,
       userAgent: startAnswerPayloadDto.userAgent,
       submissionHash,
-      expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRED_AT),
+      expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME),
     };
 
     const answerInsertResult = await this.orm.getRepo(Answer).insert(answerData);
@@ -85,7 +85,7 @@ export class AnswersRepository extends BaseRepository {
       throw new NotFoundAnswerExceptionDto();
     }
 
-    await this.orm.getRepo(Answer).update({ id: answer.id }, { expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRED_AT) });
+    await this.orm.getRepo(Answer).update({ id: answer.id }, { expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME) });
 
     /* 인증 토큰 갱신 */
     const jwsToken = this.utilService.createSurveyJWS({
@@ -97,7 +97,7 @@ export class AnswersRepository extends BaseRepository {
       secure: true,
       sameSite: 'none',
       path: '/',
-      expires: new Date(Date.now() + VERIFY_JWS_EXPIRED_AT),
+      expires: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME),
     });
 
     return { submissionHash };
@@ -321,7 +321,7 @@ export class AnswersRepository extends BaseRepository {
     if (status === AnswerStatus.Saved) {
       await this.orm
         .getRepo(Answer)
-        .update({ id: answerEntity.id }, { status: AnswerStatus.Saved, expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRED_AT) });
+        .update({ id: answerEntity.id }, { status: AnswerStatus.Saved, expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME) });
     } else if (status === AnswerStatus.Completed) {
       await this.orm.getRepo(Answer).update({ id: answerEntity.id }, { status: AnswerStatus.Completed, completedAt: new Date() });
 

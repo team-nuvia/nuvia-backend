@@ -20,8 +20,36 @@ export class SubscriptionsService {
     await this.subscriptionsRepository.inviteUsers(subscriptionId, inviteSubscriptionDto, userId, invitationEmailCallback);
   }
 
-  addNotifications(subscriptionId: number, type: NotificationType, userId: number, emails: string[]) {
-    return this.subscriptionsRepository.addNotifications(subscriptionId, type, userId, emails);
+  // addNotifications({
+  //   subscriptionId,
+  //   type,
+  //   userId,
+  //   emails,
+  //   title,
+  //   content,
+  // }: {
+  //   subscriptionId: number;
+  //   type: NotificationType;
+  //   userId: number;
+  //   emails: string[];
+  //   title: string;
+  //   content: string;
+  // }) {
+  //   return this.subscriptionsRepository.addNotifications({ subscriptionId, type, userId, emails, title, content });
+  // }
+
+  addInviteNotifications({
+    subscriptionId,
+    type,
+    userId,
+    emails,
+  }: {
+    subscriptionId: number;
+    type: NotificationType;
+    userId: number;
+    emails: string[];
+  }) {
+    return this.subscriptionsRepository.addInviteNotifications({ subscriptionId, type, userId, emails });
   }
 
   update(id: number, updateSubscriptionDto: UpdateSubscriptionDto) {

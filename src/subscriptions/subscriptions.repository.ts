@@ -42,7 +42,17 @@ export class SubscriptionsRepository extends BaseRepository {
     return this.orm.getRepo(Subscription).exists({ where: condition });
   }
 
-  async addNotifications(subscriptionId: number, type: NotificationType, userId: number, emails: string[]) {
+  async addInviteNotifications({
+    subscriptionId,
+    type,
+    userId,
+    emails,
+  }: {
+    subscriptionId: number;
+    type: NotificationType;
+    userId: number;
+    emails: string[];
+  }) {
     const fromOrganization = await this.orm.getRepo(Subscription).findOne({ where: { id: subscriptionId } });
 
     if (!fromOrganization) {

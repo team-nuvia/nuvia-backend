@@ -3,8 +3,9 @@ import { Permission } from '@/permissions/entities/permission.entity';
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
+import { UserRole, UserRoleList } from '@share/enums/user-role';
 import { OrmHelper } from '@util/orm.helper';
-import { FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { NotFoundSubscriptionExceptionDto } from '../dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '../entities/subscription.entity';
 import { NotAllowedUpdateOrganizationRoleExceptionDto } from './dto/exception/not-allowed-update-organization-role.exception.dto';
@@ -12,7 +13,8 @@ import { NotFoundOrganizationRoleExceptionDto } from './dto/exception/not-found-
 import { UpdateOrganizationRolePayloadDto } from './dto/payload/update-organization-role.payload.dto';
 import { TableOrganizationRoleNestedResponseDto } from './dto/response/table-organization-role.nested.response.dto';
 import { OrganizationRole } from './entities/organization-role.entity';
-import { UserRoleList } from '@share/enums/user-role';
+import { NotificationType } from '@share/enums/notification-type';
+import { isRoleAtLeast } from '@util/isRoleAtLeast';
 
 @Injectable()
 export class OrganizationRolesRepository extends BaseRepository {
@@ -65,7 +67,7 @@ export class OrganizationRolesRepository extends BaseRepository {
     /* 수정 조직 */
     const subscription = await this.orm
       .getRepo(Subscription)
-      .findOne({ where: { id: subscriptionId }, relations: ['organizationRoles', 'organizationRoles.permission'] });
+      .findOne({ where: { id: subscriptionId }, relations: ['organizationRoles', 'organizationRoles.permission', 'organizationRoles.user'] });
 
     /* 조직 존재 여부 검증 */
     if (!subscription) {
@@ -73,28 +75,31 @@ export class OrganizationRolesRepository extends BaseRepository {
     }
 
     /* 수정 대상 역할 */
-    const organizationRole = subscription.organizationRoles.find((role) => role.id === organizationRoleId);
+    const targetUserRole = subscription.organizationRoles.find((role) => role.id === organizationRoleId);
 
     /* 수정 유저 */
-    const updateUserRole = subscription.organizationRoles.find((role) => role.userId === userId);
+    const fromUserRole = subscription.organizationRoles.find((role) => role.userId === userId);
 
     /* 조직 역할 존재 여부 검증 */
-    if (!updateUserRole || !organizationRole) {
+    if (!fromUserRole || !targetUserRole) {
       throw new NotFoundOrganizationRoleExceptionDto();
     }
 
     /* 본인 데이터 수정 시도 검증 */
-    if (organizationRole.userId === userId) {
+    if (targetUserRole.userId === userId) {
       throw new NotAllowedUpdateOrganizationRoleExceptionDto('본인의 역할 정보를 수정할 수 없습니다.');
     }
 
     /* 조직 생성자 수정 시도 검증 */
-    if (organizationRole.userId === subscription.userId) {
+    if (targetUserRole.userId === subscription.userId) {
       throw new NotAllowedUpdateOrganizationRoleExceptionDto('조직 생성자의 역할 정보를 수정할 수 없습니다.');
     }
 
-    console.log('🚀 ~ OrganizationRolesRepository ~ update ~ updateUserRole:', updateUserRole);
-    const isOverRole = UserRoleList.indexOf(updateUserRole.permission.role) < UserRoleList.indexOf(updateOrganizationRolePayloadDto.role);
+    if (updateOrganizationRolePayloadDto.role === UserRole.Owner) {
+      throw new NotAllowedUpdateOrganizationRoleExceptionDto('소유자 역할은 부여할 수 없습니다.');
+    }
+
+    const isOverRole = UserRoleList.indexOf(fromUserRole.permission.role) < UserRoleList.indexOf(updateOrganizationRolePayloadDto.role);
     if (isOverRole) {
       throw new NotAllowedUpdateOrganizationRoleExceptionDto('본인의 역할보다 높은 역할로 수정할 수 없습니다.');
     }
@@ -105,12 +110,25 @@ export class OrganizationRolesRepository extends BaseRepository {
       throw new NotFoundPermissionExceptionDto();
     }
 
-    const updateData = {
+    if (
+      ![OrganizationRoleStatusType.Joined, OrganizationRoleStatusType.Deactivated, OrganizationRoleStatusType.Deleted].includes(
+        updateOrganizationRolePayloadDto.status as 'joined' | 'deactivated' | 'deleted',
+      )
+    ) {
+      throw new NotAllowedUpdateOrganizationRoleExceptionDto('잘못된 조직 역할 상태입니다.');
+    }
+
+    const updateData: DeepPartial<OrganizationRole> = {
       permissionId: permission.id,
-      status: updateOrganizationRolePayloadDto.status ? OrganizationRoleStatusType.Joined : OrganizationRoleStatusType.Deactivated,
     };
 
-    return this.orm
+    const isMinAdmin = isRoleAtLeast(fromUserRole.permission.role, UserRole.Admin);
+
+    if (isMinAdmin) {
+      updateData.status = updateOrganizationRolePayloadDto.status;
+    }
+
+    await this.orm
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
       .update()
@@ -118,5 +136,54 @@ export class OrganizationRolesRepository extends BaseRepository {
       .where('subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('id = :organizationRoleId', { organizationRoleId: organizationRoleId })
       .execute();
+
+    /* 최소 관리자 권한이 아니면 종료 */
+    if (!isMinAdmin) return;
+
+    if (
+      targetUserRole.status !== OrganizationRoleStatusType.Deactivated &&
+      updateOrganizationRolePayloadDto.status === OrganizationRoleStatusType.Deactivated
+    ) {
+      await this.addNotifications({
+        subscriptionId,
+        type: NotificationType.Notice,
+        userId,
+        emails: [targetUserRole.user.email],
+        title: '조직 활동 정지 알림',
+        content: `${subscription.name} 조직에서 활동을 정지시켰습니다.`,
+      });
+
+      await this.initializeCurrentOrganization(targetUserRole.user.id);
+    }
+
+    if (
+      targetUserRole.status !== OrganizationRoleStatusType.Deleted &&
+      updateOrganizationRolePayloadDto.status === OrganizationRoleStatusType.Deleted
+    ) {
+      await this.addNotifications({
+        subscriptionId,
+        type: NotificationType.Notice,
+        userId,
+        emails: [targetUserRole.user.email],
+        title: '조직 탈퇴 알림',
+        content: `${subscription.name} 조직에서 강퇴했습니다.`,
+      });
+
+      await this.initializeCurrentOrganization(targetUserRole.user.id);
+    }
+
+    if (
+      targetUserRole.status === OrganizationRoleStatusType.Deactivated &&
+      updateOrganizationRolePayloadDto.status === OrganizationRoleStatusType.Joined
+    ) {
+      await this.addNotifications({
+        subscriptionId,
+        type: NotificationType.Notice,
+        userId,
+        emails: [targetUserRole.user.email],
+        title: '역할 복구 알림',
+        content: `${subscription.name} 조직에서 역할을 복구했습니다.`,
+      });
+    }
   }
 }
