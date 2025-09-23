@@ -4,7 +4,7 @@ import { ExtractSubmissionHash } from '@common/decorator/extract-submission-hash
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { BadRequestException } from '@common/dto/response';
-import { VERIFY_JWS_EXPIRED_AT } from '@common/variable/globals';
+import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
 import { Body, Controller, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -58,7 +58,7 @@ export class AnswersController {
       secure: true,
       sameSite: 'none',
       path: '/',
-      maxAge: VERIFY_JWS_EXPIRED_AT,
+      maxAge: VERIFY_JWS_EXPIRE_TIME,
     });
 
     return new StartAnswerResponseDto();

@@ -20,7 +20,7 @@ import { VerifySecretPayloadDto } from './dto/payload/verify-secret.payload.dto'
 import { VerifySurveyJWSPayloadDto } from './dto/payload/verify-survey-jws.payload.dto';
 import { isNil } from './isNil';
 import { UtilRepository } from './util.repository';
-import { SESSION_EXPIRED_AT } from '@common/variable/globals';
+import { COOKIE_SESSION_EXPIRE_TIME } from '@common/variable/globals';
 
 @Injectable()
 export class UtilService {
@@ -70,14 +70,14 @@ export class UtilService {
   }
 
   /* hmac session 생성 */
-  createHmacSession(payload: LoginUserData, ttlSec: number = SESSION_EXPIRED_AT) {
+  createHmacSession(payload: LoginUserData, ttlSec: number = COOKIE_SESSION_EXPIRE_TIME) {
     const secretConfig = this.commonService.getConfig('secret');
 
     const now = Math.floor(Date.now() / 1000);
     const sessionPayload = {
       sub_hash: crypto.createHmac('sha256', secretConfig.session).update(payload.id.toString()).digest('base64url'),
       iat: now + ttlSec,
-      exp: now + secretConfig.sessionExpireTime,
+      exp: now + secretConfig.cookieSessionExpireTime,
       ver: 1,
     };
 
@@ -141,27 +141,27 @@ export class UtilService {
   createJWT(payload: LoginUserData) {
     const secretConfig = this.commonService.getConfig('secret');
     const accessToken = jwt.sign(payload, secretConfig.jwt, {
-      expiresIn: secretConfig.tokenExpireTime,
+      expiresIn: secretConfig.jwtTokenExpireTime,
     });
     const refreshToken = jwt.sign(payload, secretConfig.jwt, {
-      expiresIn: secretConfig.refreshExpireTime,
+      expiresIn: secretConfig.jwtRefreshExpireTime,
     });
     return { accessToken, refreshToken };
   }
 
-  async createServerSideSession(payload: LoginUserData) {
-    const secretConfig = this.commonService.getConfig('secret');
-    const user = await this.utilRepository.getBy({ id: payload.id }, User);
+  // async createServerSideSession(payload: LoginUserData) {
+  //   const secretConfig = this.commonService.getConfig('secret');
+  //   const user = await this.utilRepository.getBy({ id: payload.id }, User);
 
-    if (!user) {
-      throw new NotFoundUserExceptionDto();
-    }
+  //   if (!user) {
+  //     throw new NotFoundUserExceptionDto();
+  //   }
 
-    const session = jwt.sign(payload, secretConfig.session, {
-      expiresIn: secretConfig.sessionExpireTime,
-    });
-    return session;
-  }
+  //   const session = jwt.sign(payload, secretConfig.session, {
+  //     expiresIn: secretConfig.cookieSessionExpireTime,
+  //   });
+  //   return session;
+  // }
 
   refreshJWT(refreshToken: LoginUserData) {
     return this.createJWT(refreshToken);

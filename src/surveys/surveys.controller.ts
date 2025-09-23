@@ -8,6 +8,7 @@ import { BadRequestException, UnauthorizedException } from '@common/dto/response
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MetadataStatusType } from '@share/enums/metadata-status-type';
+import { ClosedSurveyExceptionDto } from './dto/exception/closed-survey.exception.dto';
 import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
@@ -37,7 +38,6 @@ import { SurveyDeleteConstraintValidation } from './survey-delete-constraint.gua
 import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.guard';
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
-
 @ApiTags('설문')
 @Controller('surveys')
 export class SurveysController {
@@ -91,17 +91,6 @@ export class SurveysController {
     const survey = await this.surveysService.getDeletedSurvey(user.id, searchQuery);
     return new GetSurveyBinResponseDto(survey);
   }
-
-  // @ApiOperation({ summary: '설문 목록 조회' })
-  // @CombineResponses(HttpStatus.OK, GetSurveyResponseDto)
-  // @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
-  // @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
-  // @RequiredLogin
-  // @Get('me')
-  // async getSurvey(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyResponseDto> {
-  //   const survey = await this.surveysService.getSurvey(user.id, searchQuery);
-  //   return new GetSurveyResponseDto(survey);
-  // }
 
   @ApiOperation({ summary: '설문 메타데이터 조회' })
   @CombineResponses(HttpStatus.OK, GetSurveyMetadataResponseDto)
@@ -170,7 +159,7 @@ export class SurveysController {
 
   @ApiOperation({ summary: '설문 상세 조회 (유니크 키로 조회)' })
   @CombineResponses(HttpStatus.OK, GetSurveyDetailViewResponseDto)
-  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException, ClosedSurveyExceptionDto)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @Transactional()
   @Public()

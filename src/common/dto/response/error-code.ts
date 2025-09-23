@@ -102,6 +102,7 @@ export const ErrorKey = {
   NOT_FOUND_LOG_USAGE: 'NOT_FOUND_LOG_USAGE',
   EXCEEDED_RESTORE_LIMIT: 'EXCEEDED_RESTORE_LIMIT',
   SUCCESS_VERIFY_SESSION: 'SUCCESS_VERIFY_SESSION',
+  CLOSED_SURVEY: 'CLOSED_SURVEY',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -205,6 +206,7 @@ export const ErrorCode = {
   NOT_FOUND_LOG_USAGE: HttpStatus.NOT_FOUND,
   EXCEEDED_RESTORE_LIMIT: HttpStatus.BAD_REQUEST,
   SUCCESS_VERIFY_SESSION: HttpStatus.OK,
+  CLOSED_SURVEY: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -251,7 +253,7 @@ export const ErrorMessage = {
   SUCCESS_CREATE_SURVEY: '설문 생성 성공',
   SUCCESS_RESTORE_SURVEY: '설문 복구 성공',
   SUCCESS_RESTORE_ALL_SURVEY: '모든 설문 복구 성공',
-  NOT_FOUND_SURVEY: '설문이 존재하지 않습니다.',
+  NOT_FOUND_SURVEY: '요청하신 설문이 존재하지 않거나 접근할 수 없는 상태입니다.',
   SUCCESS_GET_SURVEY: '설문 조회 성공',
   SUCCESS_UPDATE_SURVEY: '설문 수정 성공',
   UPDATE_ORGANIZATION_SUCCESS: '조직 정보 수정 성공',
@@ -308,6 +310,7 @@ export const ErrorMessage = {
   NOT_FOUND_LOG_USAGE: '사용 기록을 찾을 수 없습니다.',
   EXCEEDED_RESTORE_LIMIT: '복구 가능한 설문 개수를 초과했습니다.',
   SUCCESS_VERIFY_SESSION: '세션 검증 성공',
+  CLOSED_SURVEY: '이미 마감된 설문입니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

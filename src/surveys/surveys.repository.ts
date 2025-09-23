@@ -18,6 +18,7 @@ import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
 import { Brackets, FindOptionsWhere, In } from 'typeorm';
+import { ClosedSurveyExceptionDto } from './dto/exception/closed-survey.exception.dto';
 import { ExceededRestoreLimitExceptionDto } from './dto/exception/exceeded-restore-limit.exception.dto';
 import { NoMatchSubscriptionExceptionDto } from './dto/exception/no-match-subscription.exception.dto';
 import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
@@ -309,7 +310,6 @@ export class SurveysRepository extends BaseRepository {
       }
 
       const rawDataList = await query.groupBy('DATE(a.createdAt)').getRawMany();
-      console.log(rawDataList);
       // 데이터 맵 생성
       const dataMap = new Map<string, number>();
       rawDataList.forEach((item) => {
@@ -437,7 +437,6 @@ export class SurveysRepository extends BaseRepository {
     const subscription = await this.getCurrentOrganization(userId);
 
     const { search, page, limit, status } = searchQuery;
-    console.log('🚀 ~ SurveysRepository ~ getSurveyList ~ searchQuery:', searchQuery);
 
     const surveyQuery = this.orm
       .getManager()
@@ -576,10 +575,7 @@ export class SurveysRepository extends BaseRepository {
     submissionHash?: string,
     userId?: number,
   ): Promise<SurveyDetailViewNestedResponseDto> {
-    console.log('🚀 ~ SurveysRepository ~ getSurveyDetailByHashedUniqueKey ~ submissionHash:', submissionHash);
-    console.log('userId:', userId);
     const organizationRoles = userId ? await this.orm.getRepo(OrganizationRole).find({ where: { userId }, relations: ['subscription'] }) : [];
-    console.log(organizationRoles);
 
     const query = this.orm
       .getManager()
@@ -603,7 +599,7 @@ export class SurveysRepository extends BaseRepository {
         .withDeleted();
     } else {
       // 보려는 사용자가 해당 조직 일원이 아니면, 공개 여부, 설문 상태 조건을 만족해야한다.
-      query.andWhere('s.isPublic = :isPublic', { isPublic: true }).andWhere('s.status = :status', { status: SurveyStatus.Active });
+      query.andWhere('s.isPublic = :isPublic', { isPublic: true }).andWhere('s.status != :status', { status: SurveyStatus.Draft });
     }
 
     const survey = await query
@@ -615,6 +611,18 @@ export class SurveysRepository extends BaseRepository {
 
     if (isNil(survey)) {
       throw new NotFoundSurveyExceptionDto();
+    }
+
+    /* 비회원, 조직 일원이 아닌 경우 */
+    if (!(userId && organizationRoles.length > 0)) {
+      if (survey.realtimeStatus !== SurveyStatus.Active) {
+        throw new ClosedSurveyExceptionDto();
+      }
+
+      /* 설문 비공개 여부는 프라이빗한 정보로 판단 */
+      // if (survey.isPublic === false) {
+      //   throw new PrivateSurveyExceptionDto();
+      // }
     }
 
     const answer = (survey as Survey & { answer: SurveyDetailAnswerDetailNestedResponseDto | null }).answer;
@@ -773,7 +781,6 @@ export class SurveysRepository extends BaseRepository {
 
         /* 삭제할 질문 옵션 쿼리 생성 */
         const questionOptionIdList = question.questionOptions.map((questionOption) => questionOption.id).filter((id) => !isNil(id));
-        console.log('🚀 ~ SurveysRepository ~ updateSurvey ~ questionOptionIdList:', questionOptionIdList);
         if (questionOptionIdList.length > 0) {
           deleteTargetQueryQueue.push(
             this.orm
@@ -792,7 +799,6 @@ export class SurveysRepository extends BaseRepository {
 
     /* 삭제할 질문 옵션 쿼리 실행 */
     const deleteTargetOptionList = await Promise.all(deleteTargetQueryQueue);
-    console.log('🚀 ~ SurveysRepository ~ updateSurvey ~ deleteTargetOptionList:', deleteTargetOptionList);
     deleteQuestionOptionQueue.push(...deleteTargetOptionList.flatMap((option) => option.map((option) => option.id)));
 
     /* upsert, delete, update 쿼리 실행 */

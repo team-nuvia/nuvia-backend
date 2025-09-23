@@ -24,6 +24,7 @@ import { VerifyInvitationTokenResponseDto } from './dto/response/verify-invitati
 import { VerifySessionResponseDto } from './dto/response/verify-session.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
+import { RequiredSession } from './guard/session.guard';
 
 @ApiTags('인증/인가')
 @Controller('auth')
@@ -55,14 +56,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.refreshExpireTime,
+      maxAge: secretConfig.cookieRefreshExpireTime,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.sessionExpireTime,
+      maxAge: secretConfig.cookieSessionExpireTime,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -86,14 +87,16 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.refreshExpireTime,
+      maxAge: secretConfig.cookieRefreshExpireTime,
+      // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.sessionExpireTime,
+      maxAge: secretConfig.cookieSessionExpireTime,
+      // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -119,14 +122,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.refreshExpireTime,
+      maxAge: secretConfig.cookieRefreshExpireTime,
     });
 
     res.clearCookie(SESSION_COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: secretConfig.sessionExpireTime,
+      maxAge: secretConfig.cookieSessionExpireTime,
     });
 
     if (loginUserData) {
@@ -139,7 +142,8 @@ export class AuthController {
 
   @ApiOperation({ summary: '세션 검증' })
   @CombineResponses(HttpStatus.OK, VerifySessionResponseDto)
-  @RequiredLogin
+  @RequiredSession()
+  @Public()
   @Post('session')
   verifySession(@LoginSession() session: string): VerifySessionResponseDto {
     const verifyToken = this.authService.verifyHmacSession(session);
