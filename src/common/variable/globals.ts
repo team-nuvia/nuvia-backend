@@ -1,5 +1,6 @@
 export const ROLES_KEY = 'roles';
 export const PUBLIC_KEY = 'public';
+export const SESSION_KEY = 'session';
 export const TX_META_KEY = 'useTx';
 export const DEFAULT_ORGANIZATION_NAME = 'Default Organization';
 

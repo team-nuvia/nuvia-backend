@@ -1,14 +1,14 @@
-import { ErrorKey, NotFoundException } from '@common/dto/response';
+import { ErrorKey, ErrorMessage, NotFoundException } from '@common/dto/response';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class NotFoundSurveyExceptionDto extends NotFoundException {
   @ApiProperty({
-    description: '설문 메시지',
-    example: '설문 조회 성공',
+    description: '메시지',
+    example: ErrorMessage.NOT_FOUND_SURVEY,
   })
-  message: string = '설문이 존재하지 않습니다.';
+  declare message: string;
 
-  constructor() {
-    super({ code: ErrorKey.NOT_FOUND_SURVEY });
+  constructor(reason: StringOrNull = null) {
+    super({ code: ErrorKey.NOT_FOUND_SURVEY, reason });
   }
 }

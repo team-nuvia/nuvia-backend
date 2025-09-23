@@ -24,6 +24,7 @@ import { VerifyInvitationTokenResponseDto } from './dto/response/verify-invitati
 import { VerifySessionResponseDto } from './dto/response/verify-session.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
+import { RequiredSession } from './guard/session.guard';
 
 @ApiTags('인증/인가')
 @Controller('auth')
@@ -141,7 +142,8 @@ export class AuthController {
 
   @ApiOperation({ summary: '세션 검증' })
   @CombineResponses(HttpStatus.OK, VerifySessionResponseDto)
-  @RequiredLogin
+  @RequiredSession()
+  @Public()
   @Post('session')
   verifySession(@LoginSession() session: string): VerifySessionResponseDto {
     const verifyToken = this.authService.verifyHmacSession(session);

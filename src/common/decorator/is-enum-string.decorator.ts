@@ -3,7 +3,6 @@ import { registerDecorator, ValidationArguments, ValidationOptions, ValidatorCon
 @ValidatorConstraint({ name: 'isEnumString', async: false })
 class IsEnumStringConstraint<T extends Record<string, any>> implements ValidatorConstraintInterface {
   validate(value: T[keyof T], args: ValidationArguments) {
-    console.log('🚀 ~ IsEnumStringConstraint ~ validate ~ value:', value);
     const [enumType] = args.constraints;
     const valueList = value.split(',');
     return valueList.every((v: string) => Object.values(enumType).includes(v));

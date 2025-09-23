@@ -33,7 +33,6 @@ export class ProfilesController {
   @Post()
   @UseInterceptors(UploadFileInterceptor())
   create(@LoginUser() user: LoginUserData, @UploadedFile() file: Express.Multer.File) {
-    console.log('🚀 ~ ProfilesController ~ create ~ file:', file);
     return this.profilesService.create(user.id, file);
   }
 

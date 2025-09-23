@@ -28,7 +28,6 @@ export class EmailsService {
   }
 
   async sendInvitationMail(to: string, data: Record<string, any>) {
-    console.log('send email service:', to, data);
     const content = await this.getTemplate('invitation', data);
     await this.sendMail(to, 'Invitation to join the subscription', content);
   }
