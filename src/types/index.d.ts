@@ -1,6 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
+import { SocialProvider } from '@share/enums/social-provider.enum';
+import jwt from 'jsonwebtoken';
 
 export declare global {
   export type StringOrNull = string | string[] | null;
@@ -9,10 +11,37 @@ export declare global {
 
   export interface LoginUserData {
     id: number;
+    provider: SocialProvider;
+  }
+
+  export interface SocialLoginGoogleIdToken {
+    access_token: string;
+    expires_in: number;
+    scope: string;
+    token_type: string;
+    id_token: string;
+    refresh_token?: string;
+  }
+
+  export interface SocialLoginGoogleIdTokenPayload extends jwt.JwtPayload {
+    iss: string;
+    azp: string;
+    aud: string;
+    sub: string;
+    email: string;
+    email_verified: boolean;
+    at_hash: string;
+    name: string;
+    picture: string;
+    given_name: string;
+    family_name: string;
+    iat: number;
+    exp: number;
   }
 
   export interface UserMinimumInformation {
     id: number;
+    provider: SocialProvider;
     email: string;
     name: string;
     nickname: string;

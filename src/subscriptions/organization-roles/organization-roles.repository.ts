@@ -38,8 +38,9 @@ export class OrganizationRolesRepository extends BaseRepository {
     const roles = await this.orm
       .getRepo(OrganizationRole)
       .createQueryBuilder('or')
-      .leftJoinAndSelect('or.user', 'user')
-      .leftJoinAndSelect('or.permission', 'permission')
+      .leftJoinAndSelect('or.user', 'u')
+      .leftJoinAndSelect('u.userProviders', 'up')
+      .leftJoinAndSelect('or.permission', 'p')
       .where('or.subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('or.status IN (:...status)', {
         status: [OrganizationRoleStatusType.Joined, OrganizationRoleStatusType.Deactivated, OrganizationRoleStatusType.Invited],
@@ -48,8 +49,8 @@ export class OrganizationRolesRepository extends BaseRepository {
 
     const composedRoles = roles.map((role) => ({
       id: role.id,
-      name: role.user.name,
-      email: role.user.email,
+      name: role.user.userProvider.name,
+      email: role.user.userProvider.email,
       role: role.permission.role,
       status: role.status,
       createdAt: role.createdAt,
@@ -67,7 +68,13 @@ export class OrganizationRolesRepository extends BaseRepository {
     /* 수정 조직 */
     const subscription = await this.orm
       .getRepo(Subscription)
-      .findOne({ where: { id: subscriptionId }, relations: ['organizationRoles', 'organizationRoles.permission', 'organizationRoles.user'] });
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.organizationRoles', 'or')
+      .leftJoinAndSelect('or.permission', 'p')
+      .leftJoinAndSelect('or.user', 'oru')
+      .leftJoinAndSelect('oru.userProvider', 'up')
+      .where('s.id = :subscriptionId', { subscriptionId })
+      .getOne();
 
     /* 조직 존재 여부 검증 */
     if (!subscription) {
@@ -148,7 +155,7 @@ export class OrganizationRolesRepository extends BaseRepository {
         subscriptionId,
         type: NotificationType.Notice,
         userId,
-        emails: [targetUserRole.user.email],
+        emails: [targetUserRole.user.userProvider.email],
         title: '조직 활동 정지 알림',
         content: `${subscription.name} 조직에서 활동을 정지시켰습니다.`,
       });
@@ -164,7 +171,7 @@ export class OrganizationRolesRepository extends BaseRepository {
         subscriptionId,
         type: NotificationType.Notice,
         userId,
-        emails: [targetUserRole.user.email],
+        emails: [targetUserRole.user.userProvider.email],
         title: '조직 탈퇴 알림',
         content: `${subscription.name} 조직에서 강퇴했습니다.`,
       });
@@ -180,7 +187,7 @@ export class OrganizationRolesRepository extends BaseRepository {
         subscriptionId,
         type: NotificationType.Notice,
         userId,
-        emails: [targetUserRole.user.email],
+        emails: [targetUserRole.user.userProvider.email],
         title: '역할 복구 알림',
         content: `${subscription.name} 조직에서 역할을 복구했습니다.`,
       });

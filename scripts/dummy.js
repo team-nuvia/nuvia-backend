@@ -38,7 +38,8 @@ function withAuth(token) {
     return apiRequest(url, {
       ...options,
       headers: {
-        Authorization: `Bearer ${token}`,
+        // Authorization: `Bearer ${token}`,
+        Cookie: `access_token=${token}`,
         ...options.headers,
       },
     });

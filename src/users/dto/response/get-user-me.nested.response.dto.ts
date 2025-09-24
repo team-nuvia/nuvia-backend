@@ -1,23 +1,27 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SocialProvider } from '@share/enums/social-provider.enum';
 import { UserRole } from '@share/enums/user-role';
 import { GetUserMeOrganizationNestedResponseDto } from './get-user-me-organization.nested.response.dto';
 
 export class GetUserMeNestedResponseDto {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ description: '사용자 ID', example: 1 })
   id: number = 1;
 
-  @ApiProperty({ example: 'example@example.com' })
+  @ApiProperty({ description: '이메일', example: 'example@example.com' })
   email: string = 'example@example.com';
 
-  @ApiProperty({ example: 'name' })
+  @ApiProperty({ description: '이름', example: 'name' })
   name: string = 'name';
 
-  @ApiProperty({ example: 'nickname' })
+  @ApiProperty({ description: '닉네임', example: 'nickname' })
   nickname: string = 'nickname';
 
-  @ApiProperty({ enum: UserRole, example: UserRole.Admin })
+  @ApiProperty({ enum: UserRole, description: '역할', example: UserRole.Admin })
   role: UserRole = UserRole.Admin;
+
+  @ApiProperty({ enum: SocialProvider, description: '공급자', example: SocialProvider.Google })
+  provider: SocialProvider = SocialProvider.Google;
 
   @ApiProperty({
     type: () => GetUserMeOrganizationNestedResponseDto,
@@ -26,9 +30,12 @@ export class GetUserMeNestedResponseDto {
   })
   currentOrganization: GetUserMeOrganizationNestedResponseDto = new GetUserMeOrganizationNestedResponseDto();
 
-  @ApiProperty({ example: new Date() })
+  @ApiProperty({ description: '생성 일시', example: new Date() })
   createdAt: Date = new Date();
 
-  @ApiPropertyNullable({ example: 'https://example.com/profile.png' })
+  @ApiPropertyNullable({ description: '최근 로그인 일시', example: new Date() })
+  lastAccessAt: Date | null = new Date();
+
+  @ApiPropertyNullable({ description: '프로필 이미지 URL', example: 'https://example.com/profile.png' })
   profileImageUrl: string | null = 'https://example.com/profile.png';
 }

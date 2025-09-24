@@ -3,6 +3,7 @@ import { PrometheusMiddleware } from '@common/middleware/prometheus.middleware';
 import commonConfig from '@config/common.config';
 import emailConfig from '@config/email.config';
 import secretConfig from '@config/secret.config';
+import socialProviderConfig from '@config/social-provider.config';
 import { typeormConfig } from '@config/typeorm.config';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -30,7 +31,7 @@ import { UtilModule } from './util/util.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [commonConfig, typeormConfig, secretConfig, emailConfig],
+      load: [commonConfig, typeormConfig, secretConfig, emailConfig, socialProviderConfig],
     }),
     AuthModule,
     UtilModule,

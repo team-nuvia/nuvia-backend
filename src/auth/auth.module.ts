@@ -1,5 +1,5 @@
-import { CommonModule } from '@common/common.module';
 import { CommonService } from '@common/common.service';
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -11,9 +11,14 @@ import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './guard/jwt.strategy';
 import { LocalStrategy } from './guard/local.strategy';
+import { CommonModule } from '@common/common.module';
 
 @Module({
   imports: [
+    HttpModule.register({
+      timeout: 5000,
+      maxRedirects: 5,
+    }),
     JwtModule.registerAsync({
       imports: [CommonModule, PassportModule],
       inject: [CommonService],

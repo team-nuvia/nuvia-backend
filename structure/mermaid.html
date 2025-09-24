@@ -242,6 +242,25 @@
 
 erDiagram
 
+"notification(Notification)" {
+  *datetime createdAt      "생성 일시"  
+  *datetime updatedAt      "수정 일시"  
+  datetime deletedAt      "삭제 일시"  
+  *number id    PK      "알림 고유 번호"  
+  *number fromId    FK      "알림 발신자"  
+  *number toId    FK      "알림 수신자"  
+  int referenceId      "참조 아이디"  
+  varchar(50) type      "알림 타입"  
+  varchar(50) actionStatus      "액션 상태"  
+  *varchar(100) title      "제목"  
+  varchar(300) content      "내용"  
+  *tinyint isRead      "읽음 여부"  
+  datetime readAt      "읽은 시간"  
+}
+
+
+"notification(Notification)"  }o  --  ||  "user(User)":  "to_id"
+
 "log_usage_subscription(LogUsageSubscription)" {
   *datetime createdAt      "생성 일시"  
   *datetime updatedAt      "수정 일시"  
@@ -293,9 +312,11 @@ erDiagram
   *datetime updatedAt      "수정 일시"  
   datetime deletedAt      "삭제 일시"  
   *number id    PK    
-  *number subscriptionId    FK,UK      "구독/조직 아이디"  
-  *number userId    FK,UK      "사용자 아이디"  
-  *number permissionId    FK,UK      "권한 아이디"  
+  *number subscriptionId    FK      "구독/조직 아이디"  
+  *number userId    FK      "사용자 아이디"  
+  *number permissionId    FK      "권한 아이디"  
+  *tinyint isCurrentOrganization      "현재 조직 사용 여부"  
+  *varchar(20) status      "상태"  
   *tinyint isActive      "활성 여부"  
 }
 
@@ -310,7 +331,12 @@ erDiagram
   datetime deletedAt      "삭제 일시"  
   *number id    PK    
   *number surveyId    FK      "설문 PK"  
-  number userId    FK      "유저 PK"  
+  number userId    FK      "유저(응답자) PK"  
+  varchar(255) submissionHash      "비회원 해시"  
+  varchar(255) userAgent      "유저 에이전트"  
+  *varchar(50) status      "설문 상태"  
+  *datetime expiredAt      "실제 만료 일시"  
+  datetime completedAt      "완료 일시"  
 }
 
 
@@ -410,8 +436,9 @@ erDiagram
 }
 
 
-"subscription(Subscription)"  |o  --  ||  "user(User)":  "user_id"
+"subscription(Subscription)"  }o  --  ||  "user(User)":  "user_id"
 "subscription(Subscription)"  }o  --  ||  "plan(Plan)":  "plan_id"
+"subscription(Subscription)"  |o  --  ||  "user(User)":  "user_id"
 
 "plan_discount(PlanDiscount)" {
   *datetime createdAt      "생성 일시"  
@@ -440,7 +467,7 @@ erDiagram
   *number planId    FK      "플랜 PK"  
   *varchar(45) type      "권한 이름"  
   varchar(200) description      "권한 설명"  
-  varchar(100) constraints      "권한 제약 여부<br /><br />survey.create<br />survey.answer.create<br />team.invite<br />per.question.for.survey<br />file.upload<br />file.upload.image<br />file.upload.file<br />file.upload.pdf<br />file.upload.xlsx<br />download<br />download.image<br />download.file<br />download.pdf<br />download.xlsx"  
+  varchar(100) constraints      "권한 제약 여부<br /><br />survey.create<br />survey.answer.create<br />team.invite<br />per.question.for.survey<br />per.response.for.survey<br />file.upload<br />file.upload.image<br />file.upload.file<br />file.upload.pdf<br />file.upload.xlsx<br />download<br />download.image<br />download.file<br />download.pdf<br />download.xlsx"  
   int amount      "허용 개수"  
   *tinyint isRenewable      "갱신 가능 여부"  
   *tinyint isAllowed      "권한 허용 여부"  
@@ -582,6 +609,25 @@ erDiagram
 
 erDiagram
 
+"notification(Notification)" {
+  *datetime createdAt      "생성 일시"  
+  *datetime updatedAt      "수정 일시"  
+  datetime deletedAt      "삭제 일시"  
+  *number id    PK      "알림 고유 번호"  
+  *number fromId    FK      "알림 발신자"  
+  *number toId    FK      "알림 수신자"  
+  int referenceId      "참조 아이디"  
+  varchar(50) type      "알림 타입"  
+  varchar(50) actionStatus      "액션 상태"  
+  *varchar(100) title      "제목"  
+  varchar(300) content      "내용"  
+  *tinyint isRead      "읽음 여부"  
+  datetime readAt      "읽은 시간"  
+}
+
+
+"notification(Notification)"  }o  --  ||  "user(User)":  "to_id"
+
 "log_usage_subscription(LogUsageSubscription)" {
   *datetime createdAt      "생성 일시"  
   *datetime updatedAt      "수정 일시"  
@@ -633,9 +679,11 @@ erDiagram
   *datetime updatedAt      "수정 일시"  
   datetime deletedAt      "삭제 일시"  
   *number id    PK    
-  *number subscriptionId    FK,UK      "구독/조직 아이디"  
-  *number userId    FK,UK      "사용자 아이디"  
-  *number permissionId    FK,UK      "권한 아이디"  
+  *number subscriptionId    FK      "구독/조직 아이디"  
+  *number userId    FK      "사용자 아이디"  
+  *number permissionId    FK      "권한 아이디"  
+  *tinyint isCurrentOrganization      "현재 조직 사용 여부"  
+  *varchar(20) status      "상태"  
   *tinyint isActive      "활성 여부"  
 }
 
@@ -650,7 +698,12 @@ erDiagram
   datetime deletedAt      "삭제 일시"  
   *number id    PK    
   *number surveyId    FK      "설문 PK"  
-  number userId    FK      "유저 PK"  
+  number userId    FK      "유저(응답자) PK"  
+  varchar(255) submissionHash      "비회원 해시"  
+  varchar(255) userAgent      "유저 에이전트"  
+  *varchar(50) status      "설문 상태"  
+  *datetime expiredAt      "실제 만료 일시"  
+  datetime completedAt      "완료 일시"  
 }
 
 
@@ -750,8 +803,9 @@ erDiagram
 }
 
 
-"subscription(Subscription)"  |o  --  ||  "user(User)":  "user_id"
+"subscription(Subscription)"  }o  --  ||  "user(User)":  "user_id"
 "subscription(Subscription)"  }o  --  ||  "plan(Plan)":  "plan_id"
+"subscription(Subscription)"  |o  --  ||  "user(User)":  "user_id"
 
 "plan_discount(PlanDiscount)" {
   *datetime createdAt      "생성 일시"  
@@ -780,7 +834,7 @@ erDiagram
   *number planId    FK      "플랜 PK"  
   *varchar(45) type      "권한 이름"  
   varchar(200) description      "권한 설명"  
-  varchar(100) constraints      "권한 제약 여부<br /><br />survey.create<br />survey.answer.create<br />team.invite<br />per.question.for.survey<br />file.upload<br />file.upload.image<br />file.upload.file<br />file.upload.pdf<br />file.upload.xlsx<br />download<br />download.image<br />download.file<br />download.pdf<br />download.xlsx"  
+  varchar(100) constraints      "권한 제약 여부<br /><br />survey.create<br />survey.answer.create<br />team.invite<br />per.question.for.survey<br />per.response.for.survey<br />file.upload<br />file.upload.image<br />file.upload.file<br />file.upload.pdf<br />file.upload.xlsx<br />download<br />download.image<br />download.file<br />download.pdf<br />download.xlsx"  
   int amount      "허용 개수"  
   *tinyint isRenewable      "갱신 가능 여부"  
   *tinyint isAllowed      "권한 허용 여부"  

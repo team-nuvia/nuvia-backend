@@ -38,6 +38,7 @@ import { SurveyDeleteConstraintValidation } from './survey-delete-constraint.gua
 import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.guard';
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 @ApiTags('설문')
 @Controller('surveys')
 export class SurveysController {
@@ -149,10 +150,12 @@ export class SurveysController {
   @ApiOperation({ summary: '최근 생성된 설문 조회' })
   @CombineResponses(HttpStatus.OK, GetRecentSurveyResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundOrganizationRoleExceptionDto)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
   @Get('recent')
   async getRecentSurvey(@LoginUser() user: LoginUserData): Promise<GetRecentSurveyResponseDto> {
+    console.log('🚀 ~ SurveysController ~ getRecentSurvey ~ user:', user);
     const survey = await this.surveysService.getRecentSurvey(user.id);
     return new GetRecentSurveyResponseDto(survey);
   }
