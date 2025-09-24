@@ -16,6 +16,7 @@ import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
 import { UsersRepository } from './users.repository';
+import { SocialProvider } from '@share/enums/social-provider.enum';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +28,7 @@ export class UsersService {
   async create({ password, ...createUserDto }: CreateUserPayloadDto) {
     const alreadyExistUserEmail = await this.userRepository.existsBy({
       email: createUserDto.email,
+      provider: createUserDto.provider,
     });
 
     if (alreadyExistUserEmail) {
@@ -35,6 +37,7 @@ export class UsersService {
 
     const alreadyExistUserNickname = await this.userRepository.existsBy({
       nickname: createUserDto.nickname,
+      provider: createUserDto.provider,
     });
 
     if (alreadyExistUserNickname) {
@@ -44,8 +47,18 @@ export class UsersService {
     const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
 
     /* 유저 생성 */
-    const { userSecret: _, ...newUser } = await this.userRepository.save({
-      ...createUserDto,
+    const {
+      userSecret: _,
+      userProvider,
+      ...newUser
+    } = await this.userRepository.createUserAndProvider({
+      userProvider: {
+        email: createUserDto.email,
+        name: createUserDto.name,
+        nickname: createUserDto.nickname,
+        provider: createUserDto.provider,
+        providerId: null,
+      },
       userSecret: { ...userSecret, password: hashedPassword },
     });
 
@@ -53,7 +66,7 @@ export class UsersService {
     const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
       userId: newUser.id,
       planId: 1,
-      name: `${newUser.name}님의 개인 문서`,
+      name: `${userProvider.name}님의 개인 문서`,
       description: null,
       defaultRole: UserRole.Owner,
       status: SubscriptionStatusType.Active,
@@ -88,8 +101,8 @@ export class UsersService {
     return userOrganizations;
   }
 
-  async getMe(id: number): Promise<GetUserMeNestedResponseDto> {
-    const user = await this.userRepository.getMe(id);
+  async getMe(id: number, provider: SocialProvider): Promise<GetUserMeNestedResponseDto> {
+    const user = await this.userRepository.getMe(id, provider);
 
     if (isNil(user)) {
       throw new NotFoundUserExceptionDto();
@@ -98,13 +111,18 @@ export class UsersService {
     return user;
   }
 
+  async updateUserSettings(userId: number, mailing: boolean): Promise<void> {
+    await this.userRepository.updateUserSettings(userId, mailing);
+    return;
+  }
+
   async updateUserCurrentOrganization(userId: number, organizationId: number): Promise<void> {
     await this.userRepository.updateUserCurrentOrganization(userId, organizationId);
     return;
   }
 
   async update(id: number, updateUserDto: UpdateUserPayloadDto) {
-    const updated = await this.userRepository.save({ id, ...updateUserDto });
+    const updated = await this.userRepository.saveUserProvider(id, { ...updateUserDto });
     return updated;
   }
 

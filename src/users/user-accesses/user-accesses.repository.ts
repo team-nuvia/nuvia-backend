@@ -24,9 +24,12 @@ export class UserAccessRepository extends BaseRepository {
   }
 
   async findAll(): Promise<GetUserAccessNestedDto[]> {
-    const userAccessList = await this.orm.getRepo(UserAccess).find({
-      relations: ['user'],
-    });
+    const userAccessList = await this.orm
+      .getRepo(UserAccess)
+      .createQueryBuilder('ua')
+      .leftJoinAndSelect('ua.user', 'u')
+      .leftJoinAndSelect('u.userProvider', 'up')
+      .getMany();
 
     return userAccessList.map<GetUserAccessNestedDto>((userAccess) => ({
       id: userAccess.id,
@@ -37,14 +40,35 @@ export class UserAccessRepository extends BaseRepository {
       lastAccessAt: userAccess.lastAccessAt,
       user: {
         id: userAccess.user.id,
-        name: userAccess.user.name,
-        email: userAccess.user.email,
-        nickname: userAccess.user.nickname,
+        name: userAccess.user.userProvider.name,
+        email: userAccess.user.userProvider.email,
+        nickname: userAccess.user.userProvider.nickname,
       },
     }));
   }
 
-  findByUserId(userId: number): Promise<GetUserAccessNestedDto[]> {
-    return this.orm.getRepo(UserAccess).find({ where: { userId } });
+  async findByUserId(userId: number): Promise<GetUserAccessNestedDto[]> {
+    const userAccessList = await this.orm
+      .getRepo(UserAccess)
+      .createQueryBuilder('ua')
+      .leftJoinAndSelect('ua.user', 'u')
+      .leftJoinAndSelect('u.userProvider', 'up')
+      .where('ua.userId = :userId', { userId })
+      .getMany();
+
+    return userAccessList.map<GetUserAccessNestedDto>((userAccess) => ({
+      id: userAccess.id,
+      accessIp: userAccess.accessIp,
+      accessDevice: userAccess.accessDevice,
+      accessBrowser: userAccess.accessBrowser,
+      accessUserAgent: userAccess.accessUserAgent,
+      lastAccessAt: userAccess.lastAccessAt,
+      user: {
+        id: userAccess.user.id,
+        name: userAccess.user.userProvider.name,
+        email: userAccess.user.userProvider.email,
+        nickname: userAccess.user.userProvider.nickname,
+      },
+    }));
   }
 }

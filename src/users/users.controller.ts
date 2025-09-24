@@ -19,6 +19,8 @@ import { GetUserMeResponseDto } from './dto/response/get-user-me.response.dto';
 import { UpdateUserCurrentOrganizationResponseDto } from './dto/response/update-user-organization.response.dto';
 import { UpdateUserResponseDto } from './dto/response/update-user.response.dto';
 import { UsersService } from './users.service';
+import { UpdateUserSettingsResponseDto } from './dto/response/update-user-settings.response.dto';
+import { UpdateUserSettingsPayloadDto } from './dto/payload/update-user-settings.payload.dto';
 
 @RequiredLogin
 @ApiTags('사용자')
@@ -56,7 +58,7 @@ export class UsersController {
   @Get('me')
   @PassRoles()
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
-    const getMe = await this.usersService.getMe(user.id);
+    const getMe = await this.usersService.getMe(user.id, user.provider);
     return new GetUserMeResponseDto(getMe);
   }
 
@@ -72,6 +74,20 @@ export class UsersController {
   ): Promise<UpdateUserCurrentOrganizationResponseDto> {
     await this.usersService.updateUserCurrentOrganization(user.id, updateUserCurrentOrganizationDto.organizationId);
     return new UpdateUserCurrentOrganizationResponseDto();
+  }
+
+  @ApiOperation({ summary: '사용자 설정 수정' })
+  @CombineResponses(HttpStatus.OK, UpdateUserSettingsResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Patch('me/settings')
+  async updateUserSettings(
+    @LoginUser() user: LoginUserData,
+    @Body() updateUserSettingsDto: UpdateUserSettingsPayloadDto,
+  ): Promise<UpdateUserSettingsResponseDto> {
+    await this.usersService.updateUserSettings(user.id, updateUserSettingsDto.mailing);
+    return new UpdateUserSettingsResponseDto();
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })

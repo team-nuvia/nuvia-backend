@@ -1,5 +1,7 @@
 import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
 import { Notification } from '@/notifications/entities/notification.entity';
+import { Permission } from '@/permissions/entities/permission.entity';
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
@@ -7,6 +9,11 @@ import { Injectable } from '@nestjs/common';
 import { NotificationActionStatus } from '@share/enums/notification-action-status';
 import { NotificationType } from '@share/enums/notification-type';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
+import { SocialProvider } from '@share/enums/social-provider.enum';
+import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
+import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
+import { UserRole } from '@share/enums/user-role';
+import { UserProvider } from '@users/entities/user-provider.entity';
 import { User } from '@users/entities/user.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
 import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
@@ -14,6 +21,7 @@ import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
+import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
@@ -33,12 +41,80 @@ export class AuthRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
-  async findUserById(id: number): Promise<UserMinimumInformation> {
+  async socialLogin(token: SocialLoginGoogleIdTokenPayload, socialProvider: SocialProvider) {
+    /* 사용자 계정 조회 */
+    let user = await this.orm
+      .getRepo(User)
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.userProviders', 'up')
+      .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
+      .getOne();
+
+    /* 사용자 계정 없으면 생성 */
+    if (isNil(user)) {
+      const newUser = await this.orm.getRepo(User).insert({});
+      await this.orm.getRepo(UserProvider).insert({
+        userId: newUser.identifiers[0].id,
+        providerId: token.sub,
+        name: token.name,
+        nickname: token.given_name,
+        email: token.email,
+        provider: socialProvider,
+      });
+
+      user = await this.orm
+        .getRepo(User)
+        .createQueryBuilder('u')
+        .leftJoinAndSelect('u.userProviders', 'up')
+        .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
+        .getOne();
+    }
+
+    if (isNil(user)) {
+      throw new NotFoundUserExceptionDto(token.email);
+    }
+
+    /* 구독 생성 & 조직 생성 */
+    const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
+      userId: user.id,
+      planId: 1,
+      name: `${user.userProvider.name}님의 개인 문서`,
+      description: null,
+      defaultRole: UserRole.Owner,
+      status: SubscriptionStatusType.Active,
+      target: SubscriptionTargetType.Individual,
+    };
+    const subscription = await this.orm.getRepo(Subscription).save(subscriptionData);
+
+    const permission = await this.orm.getRepo(Permission).findOne({
+      where: {
+        role: subscription.defaultRole,
+      },
+    });
+
+    if (isNil(permission)) {
+      throw new NotFoundPermissionExceptionDto();
+    }
+
+    /* 조직 역할 생성 */
+    await this.orm.getRepo(OrganizationRole).insert({
+      userId: user.id,
+      subscriptionId: subscription.id,
+      permissionId: permission.id,
+      status: OrganizationRoleStatusType.Joined,
+      isCurrentOrganization: true,
+    });
+
+    return user;
+  }
+
+  async findUserById(id: number, provider: SocialProvider): Promise<UserMinimumInformation> {
     const user = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
-      .where('u.id = :id', { id })
-      .select(['u.id', 'u.email', 'u.name', 'u.nickname'])
+      .leftJoinAndSelect('u.userProviders', 'up')
+      .where('u.id = :id AND up.provider = :provider', { id, provider })
+      .select(['u.id', 'up.email', 'up.name', 'up.nickname'])
       .getOne();
 
     if (isNil(user)) {
@@ -49,20 +125,22 @@ export class AuthRepository extends BaseRepository {
 
     return {
       id: user.id,
-      email: user.email,
-      name: user.name,
-      nickname: user.nickname,
+      provider,
+      email: user.userProvider.email,
+      name: user.userProvider.name,
+      nickname: user.userProvider.nickname,
       role: subscription.permission.role,
     };
   }
 
-  async findUserWithSecret(email: string) {
+  async findUserWithSecret(email: string, provider: SocialProvider) {
     const user = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
-      .where('u.email = :email', { email })
+      .leftJoinAndSelect('u.userProviders', 'up')
       .leftJoinAndSelect('u.userSecret', 'us')
-      .select(['u.id', 'u.email', 'u.name', 'u.nickname', 'us.id', 'us.salt', 'us.password', 'us.iteration'])
+      .where('up.email = :email AND up.provider = :provider', { email, provider })
+      .select(['u.id', 'up.email', 'up.name', 'up.nickname', 'us.id', 'us.salt', 'us.password', 'us.iteration'])
       .getOne();
 
     if (isNil(user) || isNil(user.userSecret)) {
@@ -73,9 +151,9 @@ export class AuthRepository extends BaseRepository {
 
     const combinedUser = {
       id: user.id,
-      email: user.email,
-      name: user.name,
-      nickname: user.nickname,
+      email: user.userProvider.email,
+      name: user.userProvider.name,
+      nickname: user.userProvider.nickname,
       role: subscription.permission.role,
       userSecret: user.userSecret,
     };

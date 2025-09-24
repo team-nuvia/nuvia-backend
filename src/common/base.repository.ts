@@ -12,9 +12,11 @@ import { GetUserOrganizationsNestedResponseDto } from '@/subscriptions/organizat
 import { OrganizationDataNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/organization-data.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
+import { NotificationType } from '@share/enums/notification-type';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { UserRole } from '@share/enums/user-role';
+import { UserProvider } from '@users/entities/user-provider.entity';
 import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
@@ -24,8 +26,6 @@ import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.ex
 import { AddNotificationPayloadDto } from './dto/payload/add-notification.payload.dto';
 import { UpdateOrganizationRoleStatusPayloadDto } from './dto/payload/update-notification.payload.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
-import { NotificationType } from '@share/enums/notification-type';
-import { User } from '@users/entities/user.entity';
 
 export abstract class BaseRepository {
   constructor(protected readonly orm: OrmHelper) {}
@@ -227,7 +227,7 @@ export abstract class BaseRepository {
       .leftJoinAndMapOne('s.permission', Permission, 'p', 'p.id = or.permissionId')
       .leftJoinAndSelect('p.permissionGrants', 'pmg')
       .where('or.userId = :userId', { userId })
-      .andWhere('or.status = :status', { status: OrganizationRoleStatusType.Joined})
+      .andWhere('or.status = :status', { status: OrganizationRoleStatusType.Joined })
       .andWhere('or.deletedAt IS NULL')
       .getMany();
 
@@ -496,7 +496,7 @@ export abstract class BaseRepository {
       throw new NotFoundSubscriptionExceptionDto();
     }
 
-    const toUsers = await this.orm.getRepo(User).find({ where: { email: In(emails) }, select: ['id'] });
+    const toUsers = await this.orm.getRepo(UserProvider).find({ where: { email: In(emails) }, select: ['id'] });
 
     await Promise.all(
       toUsers.map((to) =>

@@ -59,7 +59,7 @@ export class SubscriptionsRepository extends BaseRepository {
       throw new NotFoundSubscriptionExceptionDto();
     }
 
-    const toUsers = await this.orm.getRepo(User).find({ where: { email: In(emails) }, select: ['id'] });
+    const toUsers = await this.orm.getRepo(User).find({ where: { userProvider: { email: In(emails) } }, select: ['id'] });
 
     await Promise.all(
       toUsers.map((to) =>
@@ -81,13 +81,13 @@ export class SubscriptionsRepository extends BaseRepository {
     userId: number,
     invitationEmailCallback: (toUser: string, fromUser: User, subscription: Subscription, invitationVerificationLink: string) => Promise<void>,
   ): Promise<void> {
-    const fromUser = await this.orm.getRepo(User).findOne({ where: { id: userId } });
+    const fromUser = await this.orm.getRepo(User).findOne({ where: { id: userId }, relations: ['userProvider'] });
 
     if (!fromUser) {
       throw new NotFoundUserExceptionDto();
     }
 
-    if (inviteSubscriptionDto.emails.includes(fromUser.email)) {
+    if (inviteSubscriptionDto.emails.includes(fromUser.userProvider.email)) {
       throw new NoInviteSelfExceptionDto();
     }
 
@@ -95,9 +95,11 @@ export class SubscriptionsRepository extends BaseRepository {
       .getRepo(Subscription)
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.user', 'u')
+      .leftJoinAndSelect('u.userProvider', 'up')
       .leftJoinAndMapOne('s.defaultPermission', Permission, 'sp', 'sp.role = s.defaultRole')
       .leftJoinAndSelect('s.organizationRoles', 'or')
-      .leftJoinAndSelect('or.user', 'u2')
+      .leftJoinAndSelect('or.user', 'oru')
+      .leftJoinAndSelect('oru.userProvider', 'up2')
       .leftJoinAndSelect('s.plan', 'p')
       .leftJoinAndSelect('p.planGrants', 'pg')
       .where('s.id = :id', { id: subscriptionId })
@@ -109,7 +111,7 @@ export class SubscriptionsRepository extends BaseRepository {
 
     /* 초대 예정자 중 이미 초대된 리스트 */
     const alreadyInvitedUsers = subscription.organizationRoles.filter(
-      (role) => inviteSubscriptionDto.emails.includes(role.user.email) && role.status === OrganizationRoleStatusType.Invited,
+      (role) => inviteSubscriptionDto.emails.includes(role.user.userProvider.email) && role.status === OrganizationRoleStatusType.Invited,
     );
 
     /* 이미 초대 됐지만 아직 승락하지 않은 사용자 제거 */
@@ -125,9 +127,9 @@ export class SubscriptionsRepository extends BaseRepository {
 
     const joinedUsers = subscription.organizationRoles.filter((role) => role.status === OrganizationRoleStatusType.Joined);
 
-    const alreadyJoinedUsers = joinedUsers.filter((role) => inviteSubscriptionDto.emails.includes(role.user.email));
+    const alreadyJoinedUsers = joinedUsers.filter((role) => inviteSubscriptionDto.emails.includes(role.user.userProvider.email));
     if (alreadyJoinedUsers.length > 0) {
-      throw new AlreadyJoinedUserExceptionDto(alreadyJoinedUsers.map((role) => role.user.email));
+      throw new AlreadyJoinedUserExceptionDto(alreadyJoinedUsers.map((role) => role.user.userProvider.email));
     }
 
     const joinedUserIds = joinedUsers.map((role) => role.userId);
@@ -136,10 +138,11 @@ export class SubscriptionsRepository extends BaseRepository {
     const willInviteUsers = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
-      .where('u.email IN (:...emails)', { emails: inviteSubscriptionDto.emails })
+      .leftJoinAndSelect('u.userProvider', 'up')
+      .where('up.email IN (:...emails)', { emails: inviteSubscriptionDto.emails })
       .andWhere('u.id NOT IN (:...ids)', { ids: [...removedDuplicateUserIds] })
       .getMany();
-    const toUserEmails = willInviteUsers.map((user) => user.email);
+    const toUserEmails = willInviteUsers.map((user) => user.userProvider.email);
 
     const noSignedUsers = inviteSubscriptionDto.emails.filter((toUserEmail) => !toUserEmails.includes(toUserEmail));
     if (noSignedUsers.length > 0) {

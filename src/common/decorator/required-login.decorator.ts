@@ -2,10 +2,10 @@ import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-acc
 import { NoRoleInformationExceptionDto } from '@common/dto/exception/no-role-information.exception.dto';
 import { UnauthorizedException } from '@common/dto/response';
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiCookieAuth } from '@nestjs/swagger';
 import { CombineResponses } from './combine-responses.decorator';
 
 export const RequiredLogin = applyDecorators(
-  ApiBearerAuth(),
+  ApiCookieAuth('access_token'),
   CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException, ForbiddenAccessExceptionDto, NoRoleInformationExceptionDto),
 );

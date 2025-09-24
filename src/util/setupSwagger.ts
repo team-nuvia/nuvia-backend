@@ -6,13 +6,13 @@ export const setupSwagger = (app: INestApplication, version: string) => {
     .setTitle('Nuvia API')
     .setDescription('Nuvia API Docs')
     .setVersion(version)
-    .addBearerAuth({
+    .addCookieAuth('access_token', {
       type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'Authorization',
-      description: 'JWT Authorization header using the Bearer scheme',
-      in: 'header',
+      scheme: 'cookie',
+      // bearerFormat: 'JWT',
+      name: 'access_token',
+      description: 'JWT Authorization header using the Cookie scheme',
+      in: 'cookie',
     })
     .build();
   const documentFactory = () =>
