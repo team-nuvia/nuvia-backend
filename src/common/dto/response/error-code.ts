@@ -104,6 +104,7 @@ export const ErrorKey = {
   SUCCESS_VERIFY_SESSION: 'SUCCESS_VERIFY_SESSION',
   CLOSED_SURVEY: 'CLOSED_SURVEY',
   SUCCESS_UPDATE_USER_SETTINGS: 'SUCCESS_UPDATE_USER_SETTINGS',
+  SUCCESS_GET_USER_SETTINGS: 'SUCCESS_GET_USER_SETTINGS',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -209,6 +210,7 @@ export const ErrorCode = {
   SUCCESS_VERIFY_SESSION: HttpStatus.OK,
   CLOSED_SURVEY: HttpStatus.BAD_REQUEST,
   SUCCESS_UPDATE_USER_SETTINGS: HttpStatus.OK,
+  SUCCESS_GET_USER_SETTINGS: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -314,6 +316,7 @@ export const ErrorMessage = {
   SUCCESS_VERIFY_SESSION: '세션 검증 성공',
   CLOSED_SURVEY: '이미 마감된 설문입니다.',
   SUCCESS_UPDATE_USER_SETTINGS: '사용자 설정 수정 성공',
+  SUCCESS_GET_USER_SETTINGS: '사용자 설정 조회 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

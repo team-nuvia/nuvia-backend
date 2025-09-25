@@ -1,5 +1,6 @@
 import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
 import { Notification } from '@/notifications/entities/notification.entity';
+import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
@@ -21,7 +22,6 @@ import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere } from 'typeorm';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
-import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
@@ -53,14 +53,19 @@ export class AuthRepository extends BaseRepository {
     /* 사용자 계정 없으면 생성 */
     if (isNil(user)) {
       const newUser = await this.orm.getRepo(User).insert({});
-      await this.orm.getRepo(UserProvider).insert({
-        userId: newUser.identifiers[0].id,
-        providerId: token.sub,
-        name: token.name,
-        nickname: token.given_name,
-        email: token.email,
-        provider: socialProvider,
-      });
+      await this.orm
+        .getRepo(UserProvider)
+        .createQueryBuilder()
+        .insert()
+        .values({
+          userId: newUser.identifiers[0].id,
+          providerId: token.sub,
+          name: token.name,
+          nickname: token.given_name,
+          email: token.email,
+          provider: socialProvider,
+        })
+        .execute();
 
       user = await this.orm
         .getRepo(User)
@@ -68,42 +73,44 @@ export class AuthRepository extends BaseRepository {
         .leftJoinAndSelect('u.userProviders', 'up')
         .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
         .getOne();
+
+      if (user) {
+        /* 구독 생성 & 조직 생성 */
+        const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
+          userId: user.id,
+          planId: 1,
+          name: `${user.userProvider.name}님의 개인 문서`,
+          description: null,
+          defaultRole: UserRole.Owner,
+          status: SubscriptionStatusType.Active,
+          target: SubscriptionTargetType.Individual,
+        };
+        const subscription = await this.orm.getRepo(Subscription).save(subscriptionData);
+
+        const permission = await this.orm.getRepo(Permission).findOne({
+          where: {
+            role: subscription.defaultRole,
+          },
+        });
+
+        if (isNil(permission)) {
+          throw new NotFoundPermissionExceptionDto();
+        }
+
+        /* 조직 역할 생성 */
+        await this.orm.getRepo(OrganizationRole).insert({
+          userId: user.id,
+          subscriptionId: subscription.id,
+          permissionId: permission.id,
+          status: OrganizationRoleStatusType.Joined,
+          isCurrentOrganization: true,
+        });
+      }
     }
 
     if (isNil(user)) {
       throw new NotFoundUserExceptionDto(token.email);
     }
-
-    /* 구독 생성 & 조직 생성 */
-    const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
-      userId: user.id,
-      planId: 1,
-      name: `${user.userProvider.name}님의 개인 문서`,
-      description: null,
-      defaultRole: UserRole.Owner,
-      status: SubscriptionStatusType.Active,
-      target: SubscriptionTargetType.Individual,
-    };
-    const subscription = await this.orm.getRepo(Subscription).save(subscriptionData);
-
-    const permission = await this.orm.getRepo(Permission).findOne({
-      where: {
-        role: subscription.defaultRole,
-      },
-    });
-
-    if (isNil(permission)) {
-      throw new NotFoundPermissionExceptionDto();
-    }
-
-    /* 조직 역할 생성 */
-    await this.orm.getRepo(OrganizationRole).insert({
-      userId: user.id,
-      subscriptionId: subscription.id,
-      permissionId: permission.id,
-      status: OrganizationRoleStatusType.Joined,
-      isCurrentOrganization: true,
-    });
 
     return user;
   }

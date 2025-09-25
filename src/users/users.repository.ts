@@ -4,6 +4,7 @@ import { OrganizationRole } from '@/subscriptions/organization-roles/entities/or
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
+import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { SocialProvider } from '@share/enums/social-provider.enum';
@@ -12,11 +13,11 @@ import { OrmHelper } from '@util/orm.helper';
 import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
+import { GetUserSettingsNestedResponseDto } from './dto/response/get-user-settings.nested.response.dto';
 import { UserProvider } from './entities/user-provider.entity';
 import { User } from './entities/user.entity';
 import { UserAccess } from './user-accesses/entities/user-access.entity';
 import { UserSecret } from './user-secrets/entities/user-secret.entity';
-import { BadRequestException } from '@common/dto/response';
 
 @Injectable()
 export class UsersRepository extends BaseRepository {
@@ -116,6 +117,18 @@ export class UsersRepository extends BaseRepository {
     };
 
     return responseGetMeData;
+  }
+
+  async getUserSettings(userId: number, provider: SocialProvider): Promise<GetUserSettingsNestedResponseDto> {
+    const userProvider = await this.orm.getRepo(UserProvider).findOne({ where: { userId, provider }, select: ['mailing'] });
+
+    if (!userProvider) {
+      throw new NotFoundUserExceptionDto();
+    }
+
+    return {
+      mailing: userProvider.mailing,
+    };
   }
 
   findOneByEmail(email: string, provider: SocialProvider): Promise<UserProvider | null> {

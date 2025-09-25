@@ -1,4 +1,4 @@
-import { IsNullable } from '@common/decorator/is-nullable.decorator';
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
@@ -7,11 +7,10 @@ import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsS
 import { UpdateSurveyQuestionOptionNestedDto } from './update-survey-question-option.nested.payload.dto';
 
 export class UpdateSurveyQuestionNestedDto {
-  @ApiProperty({
+  @ApiPropertyNullable({
     description: '질문 PK',
     example: 1,
   })
-  @IsNullable()
   @IsNumber()
   id!: number | null;
 
@@ -23,11 +22,10 @@ export class UpdateSurveyQuestionNestedDto {
   @IsString()
   title!: string;
 
-  @ApiProperty({
+  @ApiPropertyNullable({
     description: '질문 설명',
     example: '질문 설명',
   })
-  @IsNullable()
   @IsString()
   description!: string | null;
 

@@ -45,7 +45,8 @@ export class CreateUserPayloadDto {
 
   @ApiProperty({
     description: '공급자',
-    example: SocialProvider.Local,
+    enum: SocialProvider,
+    example: SocialProvider.Facebook,
   })
   @IsEnum(SocialProvider)
   provider!: SocialProvider;

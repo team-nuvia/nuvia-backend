@@ -17,6 +17,7 @@ import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
 import { UsersRepository } from './users.repository';
 import { SocialProvider } from '@share/enums/social-provider.enum';
+import { GetUserSettingsNestedResponseDto } from './dto/response/get-user-settings.nested.response.dto';
 
 @Injectable()
 export class UsersService {
@@ -109,6 +110,11 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async getUserSettings(userId: number, provider: SocialProvider): Promise<GetUserSettingsNestedResponseDto> {
+    const userSettings = await this.userRepository.getUserSettings(userId, provider);
+    return userSettings;
   }
 
   async updateUserSettings(userId: number, mailing: boolean): Promise<void> {

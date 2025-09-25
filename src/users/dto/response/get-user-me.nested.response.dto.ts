@@ -20,7 +20,7 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ enum: UserRole, description: '역할', example: UserRole.Admin })
   role: UserRole = UserRole.Admin;
 
-  @ApiProperty({ enum: SocialProvider, description: '공급자', example: SocialProvider.Google })
+  @ApiProperty({ description: '공급자', enum: SocialProvider, example: SocialProvider.Google })
   provider: SocialProvider = SocialProvider.Google;
 
   @ApiProperty({

@@ -11,10 +11,10 @@ import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-mat
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { CLIENT_URL } from '@common/variable/environment';
 import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
-import { Body, Controller, Get, HttpStatus, Ip, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Ip, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SocialProvider } from '@share/enums/social-provider.enum';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { VerifyInvitationTokenPayloadDto } from './dto/payload/verify-invitation-token.payload.dto';
@@ -140,7 +140,13 @@ export class AuthController {
     const secretConfig = this.commonConfig.getConfig('secret');
     const token = await this.authService.refresh(verifiedRefreshToken);
 
-    /* 리프레시만 쿠키 저장 */
+    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
+
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -175,6 +181,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
+
+    res.clearCookie(ACCESS_COOKIE_NAME, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
 
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
@@ -212,24 +225,8 @@ export class AuthController {
   @CombineResponses(HttpStatus.OK, VerifyTokenResponseDto)
   @RequiredLogin
   @Post('verify')
-  verifyToken(@LoginToken() token: string, @Req() req: Request, @Res({ passthrough: true }) res: Response): VerifyTokenResponseDto {
-    const secretConfig = this.commonConfig.getConfig('secret');
+  verifyToken(@LoginToken() token: string): VerifyTokenResponseDto {
     const verifyToken = this.authService.verifyToken(token);
-    const refreshToken = req.cookies[REFRESH_COOKIE_NAME];
-    const sessionToken = req.cookies[SESSION_COOKIE_NAME];
-
-    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: secretConfig.cookieRefreshExpireTime,
-    });
-    res.cookie(SESSION_COOKIE_NAME, sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: secretConfig.cookieSessionExpireTime,
-    });
 
     return new VerifyTokenResponseDto({ verified: verifyToken, token });
   }
