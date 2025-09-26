@@ -41,13 +41,13 @@ export class Payment extends DefaultDateInterface {
   @Column('varchar', { length: 45, comment: '결제 상태' })
   status!: PaymentStatus;
 
-  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '세액 포함 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '세액 포함 여부' })
   hasTax!: boolean;
 
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '세액' })
   taxAmount!: number | null;
 
-  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '할인 적용 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '할인 적용 여부' })
   isDiscounted!: boolean;
 
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '할인 금액' })

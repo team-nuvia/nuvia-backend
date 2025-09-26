@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePlanDiscountDto {
-  @ApiProperty({ description: '플랜 PK' })
-  planId!: number;
-
   @ApiProperty({ description: '할인 이름' })
   name!: string;
 

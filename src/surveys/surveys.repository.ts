@@ -518,7 +518,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo', 'sqo.deletedAt IS NULL')
       .leftJoinAndSelect('s.answers', 'sa')
-      .leftJoinAndSelect('u.userProvider', 'up2')
+      .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.id = :surveyId', { surveyId });
 
     if (subscription) {
@@ -589,7 +589,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.answers', 'sas')
       .leftJoinAndMapOne('s.answer', Answer, 'sa', 'sa.surveyId = s.id AND sa.submissionHash = :submissionHash', { submissionHash })
       .leftJoinAndSelect('sa.questionAnswers', 'sqa')
-      .leftJoinAndSelect('u.userProvider', 'up2')
+      .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
 
     if (userId && organizationRoles.length > 0) {

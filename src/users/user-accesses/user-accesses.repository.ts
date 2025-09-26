@@ -32,7 +32,7 @@ export class UserAccessRepository extends BaseRepository {
       .getRepo(UserAccess)
       .createQueryBuilder('ua')
       .leftJoinAndSelect('ua.user', 'u')
-      .leftJoinAndSelect('u.userProvider', 'up')
+      .leftJoinAndSelect('u.userProviders', 'up')
       .where('u.id = :userId', { userId });
 
     if (search) {
@@ -52,6 +52,7 @@ export class UserAccessRepository extends BaseRepository {
       accessBrowser: userAccess.accessBrowser,
       accessUserAgent: userAccess.accessUserAgent,
       lastAccessAt: userAccess.lastAccessAt,
+      status: userAccess.status,
       user: {
         id: userAccess.user.id,
         name: userAccess.user.userProvider.name,
@@ -73,7 +74,7 @@ export class UserAccessRepository extends BaseRepository {
       .getRepo(UserAccess)
       .createQueryBuilder('ua')
       .leftJoinAndSelect('ua.user', 'u')
-      .leftJoinAndSelect('u.userProvider', 'up')
+      .leftJoinAndSelect('u.userProviders', 'up')
       .where('ua.userId = :userId', { userId })
       .getMany();
 
@@ -84,6 +85,7 @@ export class UserAccessRepository extends BaseRepository {
       accessBrowser: userAccess.accessBrowser,
       accessUserAgent: userAccess.accessUserAgent,
       lastAccessAt: userAccess.lastAccessAt,
+      status: userAccess.status,
       user: {
         id: userAccess.user.id,
         name: userAccess.user.userProvider.name,

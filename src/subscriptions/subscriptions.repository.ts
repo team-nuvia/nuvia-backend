@@ -1,3 +1,4 @@
+import { FailedToAddNotificationExceptionDto } from '@/notifications/dto/exception/filed-to-add-notification.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { BaseRepository } from '@common/base.repository';
 import { CommonService } from '@common/common.service';
@@ -59,20 +60,25 @@ export class SubscriptionsRepository extends BaseRepository {
       throw new NotFoundSubscriptionExceptionDto();
     }
 
-    const toUsers = await this.orm.getRepo(User).find({ where: { userProvider: { email: In(emails) } }, select: ['id'] });
+    try {
+      const toUsers = await this.orm.getRepo(User).find({ where: { userProviders: { email: In(emails) } }, select: ['id'] });
 
-    await Promise.all(
-      toUsers.map((to) =>
-        this.addNotification({
-          fromId: userId,
-          toId: to.id,
-          type,
-          referenceId: subscriptionId,
-          title: '초대 알림',
-          content: `${fromOrganization.name} 조직에서 초대 메일을 보냈습니다.`,
-        }),
-      ),
-    );
+      await Promise.all(
+        toUsers.map((to) =>
+          this.addNotification({
+            fromId: userId,
+            toId: to.id,
+            type,
+            referenceId: subscriptionId,
+            title: '초대 알림',
+            content: `${fromOrganization.name} 조직에서 초대 메일을 보냈습니다.`,
+          }),
+        ),
+      );
+    } catch (error) {
+      console.log('🚀 ~ SubscriptionsRepository ~ addInviteNotifications ~ error:', error);
+      throw new FailedToAddNotificationExceptionDto();
+    }
   }
 
   async inviteUsers(
@@ -81,7 +87,7 @@ export class SubscriptionsRepository extends BaseRepository {
     userId: number,
     invitationEmailCallback: (toUser: string, fromUser: User, subscription: Subscription, invitationVerificationLink: string) => Promise<void>,
   ): Promise<void> {
-    const fromUser = await this.orm.getRepo(User).findOne({ where: { id: userId }, relations: ['userProvider'] });
+    const fromUser = await this.orm.getRepo(User).findOne({ where: { id: userId }, relations: ['userProviders'] });
 
     if (!fromUser) {
       throw new NotFoundUserExceptionDto();
@@ -95,11 +101,11 @@ export class SubscriptionsRepository extends BaseRepository {
       .getRepo(Subscription)
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.user', 'u')
-      .leftJoinAndSelect('u.userProvider', 'up')
+      .leftJoinAndSelect('u.userProviders', 'up')
       .leftJoinAndMapOne('s.defaultPermission', Permission, 'sp', 'sp.role = s.defaultRole')
       .leftJoinAndSelect('s.organizationRoles', 'or')
       .leftJoinAndSelect('or.user', 'oru')
-      .leftJoinAndSelect('oru.userProvider', 'up2')
+      .leftJoinAndSelect('oru.userProviders', 'up2')
       .leftJoinAndSelect('s.plan', 'p')
       .leftJoinAndSelect('p.planGrants', 'pg')
       .where('s.id = :id', { id: subscriptionId })
@@ -138,7 +144,7 @@ export class SubscriptionsRepository extends BaseRepository {
     const willInviteUsers = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
-      .leftJoinAndSelect('u.userProvider', 'up')
+      .leftJoinAndSelect('u.userProviders', 'up')
       .where('up.email IN (:...emails)', { emails: inviteSubscriptionDto.emails })
       .andWhere('u.id NOT IN (:...ids)', { ids: [...removedDuplicateUserIds] })
       .getMany();

@@ -6,6 +6,6 @@ import { ApiCookieAuth } from '@nestjs/swagger';
 import { CombineResponses } from './combine-responses.decorator';
 
 export const RequiredLogin = applyDecorators(
-  ApiCookieAuth('access_token'),
+  ApiCookieAuth(),
   CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException, ForbiddenAccessExceptionDto, NoRoleInformationExceptionDto),
 );

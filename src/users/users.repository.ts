@@ -127,7 +127,7 @@ export class UsersRepository extends BaseRepository {
     }
 
     return {
-      mailing: userProvider.mailing,
+      mailing: Boolean(userProvider.mailing),
     };
   }
 

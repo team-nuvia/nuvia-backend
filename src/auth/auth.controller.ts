@@ -1,3 +1,6 @@
+import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
+import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { CommonService } from '@common/common.service';
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginSession } from '@common/decorator/login-session.decorator';
@@ -84,10 +87,10 @@ export class AuthController {
   async loginWithSocialProvider(
     @Ip() ipAddress: string,
     @Query() userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
-    @Param('socialProvider') socialProvider: SocialProvider,
+    @Param('socialProvider') socialProvider: string,
     @Res() res: Response,
   ) {
-    const url = await this.authService.loginWithSocialProvider(socialProvider, ipAddress, userLoginInformationDto);
+    const url = await this.authService.loginWithSocialProvider(socialProvider as SocialProvider, ipAddress, userLoginInformationDto);
     res.redirect(url.toString());
   }
 
@@ -97,13 +100,13 @@ export class AuthController {
   @Get('login/:socialProvider/callback')
   async loginWithSocialProviderCallback(
     @Query() query: Record<string, string>,
-    @Param('socialProvider') socialProvider: SocialProvider,
+    @Param('socialProvider') socialProvider: string,
     @Res() res: Response,
   ) {
     const secretConfig = this.commonConfig.getConfig('secret');
     const idToken = await this.authService.loginWithSocialProviderCallback(query);
 
-    const token = await this.authService.socialLogin(idToken, socialProvider, query);
+    const token = await this.authService.socialLogin(idToken, socialProvider as SocialProvider, query);
 
     res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
       httpOnly: true,
@@ -233,6 +236,8 @@ export class AuthController {
 
   @ApiOperation({ summary: '초대 토큰 검증' })
   @CombineResponses(HttpStatus.OK, VerifyInvitationTokenResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, AlreadyJoinedUserExceptionDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundOrganizationRoleExceptionDto, NotFoundNotificationExceptionDto)
   @Transactional()
   @RequiredLogin
   @Post('verify/invitation')

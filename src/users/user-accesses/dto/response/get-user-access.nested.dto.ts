@@ -1,5 +1,6 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 
 export class UserSimpleInfoNestedDto {
   @ApiProperty({ description: '유저 아이디', example: 1 })
@@ -30,6 +31,9 @@ export class GetUserAccessNestedDto {
 
   @ApiPropertyNullable({ description: '접속 유저 에이전트', example: 'Chrome' })
   accessUserAgent: string | null = 'Chrome';
+
+  @ApiProperty({ description: '접속 상태', enum: UserAccessStatusType, example: UserAccessStatusType.Login })
+  status: UserAccessStatusType = UserAccessStatusType.Login;
 
   @ApiPropertyNullable({ description: '접속 시간', example: new Date() })
   lastAccessAt: Date | null = new Date();

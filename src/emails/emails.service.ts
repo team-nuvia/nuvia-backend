@@ -4,7 +4,23 @@ import ejs from 'ejs';
 import nodemailer, { Transporter } from 'nodemailer';
 import path from 'path';
 
-type TemplateName = 'invitation';
+type TemplateName = 'invitation' | 'notice';
+
+interface NoticeData {
+  title: string;
+  content: string;
+  actionUrl?: string;
+  toUserName: string;
+  organizationName: string;
+}
+
+interface InvitationData {
+  inviteeEmail: string;
+  inviterEmail: string;
+  inviterName: string;
+  organizationName: string;
+  invitationUrl: string;
+}
 
 @Injectable()
 export class EmailsService {
@@ -27,9 +43,14 @@ export class EmailsService {
     return this.commonService.getConfig('email');
   }
 
-  async sendInvitationMail(to: string, data: Record<string, any>) {
+  async sendInvitationMail(to: string, data: InvitationData) {
     const content = await this.getTemplate('invitation', data);
-    await this.sendMail(to, 'Invitation to join the subscription', content);
+    await this.sendMail(to, '[누비아 활동 알림] 구독 서비스 초대', content);
+  }
+
+  async sendNoticeMail(to: string, { actionUrl = undefined, ...data }: NoticeData) {
+    const content = await this.getTemplate('notice', { ...data, actionUrl });
+    await this.sendMail(to, `[누비아 활동 알림] ${data.title}`, content);
   }
 
   async sendMail(to: string, subject: string, content: string) {
@@ -41,7 +62,10 @@ export class EmailsService {
     });
   }
 
-  private getTemplate(name: TemplateName, data: Record<string, any> = {}) {
-    return ejs.renderFile(path.join(path.resolve(), 'src', 'emails', 'templates', `${name}.template.ejs`), data);
+  private async getTemplate(name: TemplateName, data: Record<string, any> = {}) {
+    const content = await ejs.renderFile(path.join(path.resolve(), 'src', 'emails', 'templates', `${name}.template.ejs`), data);
+    const layout = await ejs.renderFile(path.join(path.resolve(), 'src', 'emails', 'templates', 'layout.ejs'), { content });
+
+    return layout;
   }
 }

@@ -15,10 +15,15 @@ import { TableOrganizationRoleNestedResponseDto } from './dto/response/table-org
 import { OrganizationRole } from './entities/organization-role.entity';
 import { NotificationType } from '@share/enums/notification-type';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
+import { EmailsService } from '@/emails/emails.service';
+import { LocalizationManager } from '@util/LocalizationManager';
 
 @Injectable()
 export class OrganizationRolesRepository extends BaseRepository {
-  constructor(readonly orm: OrmHelper) {
+  constructor(
+    readonly orm: OrmHelper,
+    private readonly emailsService: EmailsService,
+  ) {
     super(orm);
   }
 
@@ -72,7 +77,7 @@ export class OrganizationRolesRepository extends BaseRepository {
       .leftJoinAndSelect('s.organizationRoles', 'or')
       .leftJoinAndSelect('or.permission', 'p')
       .leftJoinAndSelect('or.user', 'oru')
-      .leftJoinAndSelect('oru.userProvider', 'up')
+      .leftJoinAndSelect('oru.userProviders', 'up')
       .where('s.id = :subscriptionId', { subscriptionId })
       .getOne();
 
@@ -147,6 +152,26 @@ export class OrganizationRolesRepository extends BaseRepository {
     /* 최소 관리자 권한이 아니면 종료 */
     if (!isMinAdmin) return;
 
+    if (targetUserRole.permission.role !== updateOrganizationRolePayloadDto.role) {
+      await this.addNotifications({
+        subscriptionId,
+        type: NotificationType.Notice,
+        userId,
+        emails: [targetUserRole.user.userProvider.email],
+        title: '역할 변경 알림',
+        content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 역할을 "${LocalizationManager.translate(targetUserRole.permission.role)}"에서 "${LocalizationManager.translate(updateOrganizationRolePayloadDto.role)}"로 변경했습니다.`,
+      });
+
+      if (targetUserRole.user.userProvider.mailing) {
+        await this.emailsService.sendNoticeMail(targetUserRole.user.userProvider.email, {
+          title: '역할 변경 알림',
+          content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 역할을 "${LocalizationManager.translate(targetUserRole.permission.role)}"에서 "${LocalizationManager.translate(updateOrganizationRolePayloadDto.role)}"로 변경했습니다.`,
+          toUserName: targetUserRole.user.userProvider.name,
+          organizationName: subscription.name,
+        });
+      }
+    }
+
     if (
       targetUserRole.status !== OrganizationRoleStatusType.Deactivated &&
       updateOrganizationRolePayloadDto.status === OrganizationRoleStatusType.Deactivated
@@ -157,8 +182,17 @@ export class OrganizationRolesRepository extends BaseRepository {
         userId,
         emails: [targetUserRole.user.userProvider.email],
         title: '조직 활동 정지 알림',
-        content: `${subscription.name} 조직에서 활동을 정지시켰습니다.`,
+        content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 활동을 정지시켰습니다.`,
       });
+
+      if (targetUserRole.user.userProvider.mailing) {
+        await this.emailsService.sendNoticeMail(targetUserRole.user.userProvider.email, {
+          title: '조직 활동 정지 알림',
+          content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 활동을 정지시켰습니다.`,
+          toUserName: targetUserRole.user.userProvider.name,
+          organizationName: subscription.name,
+        });
+      }
 
       await this.initializeCurrentOrganization(targetUserRole.user.id);
     }
@@ -172,9 +206,18 @@ export class OrganizationRolesRepository extends BaseRepository {
         type: NotificationType.Notice,
         userId,
         emails: [targetUserRole.user.userProvider.email],
-        title: '조직 탈퇴 알림',
-        content: `${subscription.name} 조직에서 강퇴했습니다.`,
+        title: '조직 제외 알림',
+        content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님을 제외했습니다.`,
       });
+
+      if (targetUserRole.user.userProvider.mailing) {
+        await this.emailsService.sendNoticeMail(targetUserRole.user.userProvider.email, {
+          title: '조직 제외 알림',
+          content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님을 제외했습니다.`,
+          toUserName: targetUserRole.user.userProvider.name,
+          organizationName: subscription.name,
+        });
+      }
 
       await this.initializeCurrentOrganization(targetUserRole.user.id);
     }
@@ -188,9 +231,18 @@ export class OrganizationRolesRepository extends BaseRepository {
         type: NotificationType.Notice,
         userId,
         emails: [targetUserRole.user.userProvider.email],
-        title: '역할 복구 알림',
-        content: `${subscription.name} 조직에서 역할을 복구했습니다.`,
+        title: '조직 권한 복구 알림',
+        content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 역할을 복구했습니다.`,
       });
+
+      if (targetUserRole.user.userProvider.mailing) {
+        await this.emailsService.sendNoticeMail(targetUserRole.user.userProvider.email, {
+          title: '조직 권한 복구 알림',
+          content: `${subscription.name} 조직에서 ${targetUserRole.user.userProvider.name}님의 역할을 복구했습니다.`,
+          toUserName: targetUserRole.user.userProvider.name,
+          organizationName: subscription.name,
+        });
+      }
     }
   }
 }

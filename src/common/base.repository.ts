@@ -16,7 +16,7 @@ import { NotificationType } from '@share/enums/notification-type';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { UserRole } from '@share/enums/user-role';
-import { UserProvider } from '@users/entities/user-provider.entity';
+import { User } from '@users/entities/user.entity';
 import { getRangeOfMonth } from '@util/getRangeOfMonth';
 import { isNil } from '@util/isNil';
 import { isRoleAtLeast } from '@util/isRoleAtLeast';
@@ -56,18 +56,30 @@ export abstract class BaseRepository {
       true: 0,
       false: 0,
     };
+    const wrongRoles: OrganizationRole[] = [];
 
     for (const role of organizationRoles) {
+      if (role.isCurrentOrganization && role.status !== OrganizationRoleStatusType.Joined) {
+        wrongRoles.push(role);
+      }
       counterMap[`${role.isCurrentOrganization}`]++;
     }
 
-    if (counterMap['true'] === 1 && counterMap['false'] === organizationRoles.length - 1) {
+    if (counterMap['true'] === 1 && counterMap['false'] === organizationRoles.length - 1 && wrongRoles.length === 0) {
       return;
+    }
+
+    if (wrongRoles.length > 0) {
+      /* join이 아닌 상태 역할 플래그 초기화 */
+      await this.orm.getRepo(OrganizationRole).update(
+        wrongRoles.map((role) => ({ id: role.id })),
+        { isCurrentOrganization: false },
+      );
     }
 
     const organizationRole = organizationRoles.find((role) => role.status === OrganizationRoleStatusType.Joined);
 
-    if (organizationRole) {
+    if (organizationRole && !organizationRole.isCurrentOrganization) {
       await this.orm
         .getRepo(OrganizationRole)
         .createQueryBuilder('or')
@@ -496,7 +508,7 @@ export abstract class BaseRepository {
       throw new NotFoundSubscriptionExceptionDto();
     }
 
-    const toUsers = await this.orm.getRepo(UserProvider).find({ where: { email: In(emails) }, select: ['id'] });
+    const toUsers = await this.orm.getRepo(User).find({ where: { userProviders: { email: In(emails) } }, select: ['id'] });
 
     await Promise.all(
       toUsers.map((to) =>

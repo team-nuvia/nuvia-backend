@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthRepository } from './auth.repository';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
+import { isNil } from '@util/isNil';
 
 @Injectable()
 export class AuthService {
@@ -33,11 +34,25 @@ export class AuthService {
     return { ...jwtInformation, hmacSession };
   }
 
+  async urlImageToBuffer(url?: string | null) {
+    if (!url || isNil(url)) return null;
+    try {
+      const { data } = await firstValueFrom(this.httpService.get(url, { responseType: 'arraybuffer' }));
+      console.log('🚀 ~ AuthService ~ urlImageToBuffer ~ data:', data);
+      return Buffer.from(data, 'utf-8');
+    } catch (error: any) {
+      console.log('🚀 ~ AuthService ~ urlImageToBuffer ~ error:', error.message);
+      /* 에러 무시 (프로필 이미지 없으면 없는 채로 진행되야 함) */
+      return null;
+    }
+  }
+
   async socialLogin(token: SocialLoginGoogleIdTokenPayload, socialProvider: SocialProvider, query: Record<string, string>) {
     const decodedState = Buffer.from(query.state, 'base64url').toString('utf8');
     const { ipAddress, ...userLoginInformationPayloadDto } = JSON.parse(decodedState);
 
-    const user = await this.authRepository.socialLogin(token, socialProvider);
+    const imageBuffer = await this.urlImageToBuffer(token.picture);
+    const user = await this.authRepository.socialLogin(token, socialProvider, imageBuffer);
 
     const payload = { id: user.id, provider: socialProvider };
     const jwtInformation = this.utilService.createJWT(payload);

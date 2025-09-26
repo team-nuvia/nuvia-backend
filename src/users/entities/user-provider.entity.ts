@@ -1,4 +1,5 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { SocialProvider } from '@share/enums/social-provider.enum';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { User } from './user.entity';
@@ -29,7 +30,7 @@ export class UserProvider extends DefaultDateInterface {
   @Column('varchar', { nullable: true, length: 255, comment: '이미지' })
   image!: string;
 
-  @Column('tinyint', { default: false, comment: '메일링 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '메일링 여부' })
   mailing!: boolean;
 
   @ManyToOne(() => User, (user) => user.userProviders, { onDelete: 'CASCADE' })

@@ -1,0 +1,31 @@
+<!-- 헤더 -->
+<div class="header">
+  <h1>🔔 알림이 도착했습니다</h1>
+</div>
+
+<!-- 메인 콘텐츠 -->
+<div class="content">
+  <div class="greeting">안녕하세요, <%= toUserName %>님!</div>
+
+  <div class="message">
+    <strong><%= title || '새로운 알림' %></strong><br />
+    <%= content || '새로운 알림 내용입니다.' %>
+  </div>
+
+  <% if (actionUrl) { %>
+  <!-- CTA 버튼 -->
+  <div class="cta-container">
+    <a href="<%= actionUrl %>" class="cta-button"> 자세히 보기 </a>
+  </div>
+  <% } %>
+
+  <!-- 보안 정보 -->
+  <div class="security-info">
+    <h3>📧 알림 안내</h3>
+    <p>이 이메일은 자동으로 발송된 알림입니다. 궁금한 점이 있으시면 언제든지 문의해 주세요.</p>
+  </div>
+
+  <div class="message" style="margin-top: 30px; font-size: 14px; color: #888">
+    감사합니다.
+  </div>
+</div>

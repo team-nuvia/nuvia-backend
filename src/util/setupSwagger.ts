@@ -7,12 +7,10 @@ export const setupSwagger = (app: INestApplication, version: string) => {
     .setDescription('Nuvia API Docs')
     .setVersion(version)
     .addCookieAuth('access_token', {
-      type: 'http',
-      scheme: 'cookie',
-      // bearerFormat: 'JWT',
-      name: 'access_token',
-      description: 'JWT Authorization header using the Cookie scheme',
+      type: 'apiKey',
       in: 'cookie',
+      // bearerFormat: 'JWT',
+      description: 'JWT Authorization header using the Cookie scheme',
     })
     .build();
   const documentFactory = () =>

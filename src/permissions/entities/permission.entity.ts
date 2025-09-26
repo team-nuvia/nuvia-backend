@@ -20,10 +20,10 @@ export class Permission extends DefaultDateInterface {
   @Column('int', { default: 0, unsigned: true, comment: '권한 순서' })
   sequence!: number;
 
-  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '권한 비활성 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '권한 비활성 여부' })
   isDeprecated!: boolean;
 
-  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '권한 기본 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '권한 기본 여부' })
   isDefault!: boolean;
 
   @OneToMany(() => OrganizationRole, (organizationRole) => organizationRole.permission, {

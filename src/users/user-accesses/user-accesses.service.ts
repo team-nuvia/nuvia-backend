@@ -9,7 +9,7 @@ export class UserAccessesService {
   constructor(private readonly userAccessRepository: UserAccessRepository) {}
 
   async findAll(userId: number, searchQuery: AccessSearchQueryParamDto): Promise<GetAllUserAccesseListPaginatedResponseDto> {
-    return this.findAll(userId, searchQuery);
+    return this.userAccessRepository.findAll(userId, searchQuery);
   }
 
   findByUserId(userId: number): Promise<GetUserAccessNestedDto[]> {

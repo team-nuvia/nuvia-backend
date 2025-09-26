@@ -26,6 +26,10 @@ import { UserProvider } from './entities/user-provider.entity';
         path: 'users',
         module: UserSecretsModule,
       },
+      {
+        path: 'users',
+        module: UserAccessesModule,
+      },
     ]),
   ],
   controllers: [UsersController],
