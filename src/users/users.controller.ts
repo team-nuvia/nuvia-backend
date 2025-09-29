@@ -12,11 +12,14 @@ import { GetUserOrganizationsResponseDto } from '../subscriptions/organization-r
 import { AlreadyExistsUserExceptionDto } from './dto/exception/already-exists-user.exception.dto';
 import { CreateUserPayloadDto } from './dto/payload/create-user.payload.dto';
 import { UpdateUserCurrentOrganizationPayloadDto } from './dto/payload/update-user-organization.payload.dto';
+import { UpdateUserSettingsPayloadDto } from './dto/payload/update-user-settings.payload.dto';
 import { UpdateUserPayloadDto } from './dto/payload/update-user.payload.dto';
 import { CreateUserResponseDto } from './dto/response/create-user.response.dto';
 import { DeleteUserResponseDto } from './dto/response/delete-user.response.dto';
 import { GetUserMeResponseDto } from './dto/response/get-user-me.response.dto';
+import { GetUserSettingsResponseDto } from './dto/response/get-user-settings.response.dto';
 import { UpdateUserCurrentOrganizationResponseDto } from './dto/response/update-user-organization.response.dto';
+import { UpdateUserSettingsResponseDto } from './dto/response/update-user-settings.response.dto';
 import { UpdateUserResponseDto } from './dto/response/update-user.response.dto';
 import { UsersService } from './users.service';
 
@@ -49,6 +52,17 @@ export class UsersController {
     return new GetUserOrganizationsResponseDto(userOrganizations);
   }
 
+  @ApiOperation({ summary: '사용자 조직 조회' })
+  @CombineResponses(HttpStatus.OK, GetUserSettingsResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Get('me/settings')
+  async getUserSettings(@LoginUser() user: LoginUserData): Promise<GetUserSettingsResponseDto> {
+    const userSettings = await this.usersService.getUserSettings(user.id, user.provider);
+    return new GetUserSettingsResponseDto(userSettings);
+  }
+
   @ApiOperation({ summary: '사용자 정보 조회' })
   @CombineResponses(HttpStatus.OK, GetUserMeResponseDto)
   @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
@@ -56,7 +70,7 @@ export class UsersController {
   @Get('me')
   @PassRoles()
   async findMe(@LoginUser() user: LoginUserData): Promise<GetUserMeResponseDto> {
-    const getMe = await this.usersService.getMe(user.id);
+    const getMe = await this.usersService.getMe(user.id, user.provider);
     return new GetUserMeResponseDto(getMe);
   }
 
@@ -72,6 +86,20 @@ export class UsersController {
   ): Promise<UpdateUserCurrentOrganizationResponseDto> {
     await this.usersService.updateUserCurrentOrganization(user.id, updateUserCurrentOrganizationDto.organizationId);
     return new UpdateUserCurrentOrganizationResponseDto();
+  }
+
+  @ApiOperation({ summary: '사용자 설정 수정' })
+  @CombineResponses(HttpStatus.OK, UpdateUserSettingsResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundUserExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Patch('me/settings')
+  async updateUserSettings(
+    @LoginUser() user: LoginUserData,
+    @Body() updateUserSettingsDto: UpdateUserSettingsPayloadDto,
+  ): Promise<UpdateUserSettingsResponseDto> {
+    await this.usersService.updateUserSettings(user.id, updateUserSettingsDto.mailing);
+    return new UpdateUserSettingsResponseDto();
   }
 
   @ApiOperation({ summary: '사용자 정보 수정' })

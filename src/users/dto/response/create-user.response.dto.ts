@@ -1,10 +1,11 @@
-import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ErrorMessage } from '@common/dto/response';
 import { SuccessResponse } from '@common/dto/response/response.interface';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserResponseDto extends SuccessResponse<null> {
-  @ApiPropertyNullable({
+  @ApiProperty({
+    description: '메시지',
     example: ErrorMessage.SUCCESS_CREATE_USER,
   })
-  declare message: string;
+  message: string = ErrorMessage.SUCCESS_CREATE_USER;
 }

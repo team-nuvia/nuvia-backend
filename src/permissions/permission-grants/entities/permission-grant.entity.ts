@@ -18,7 +18,7 @@ export class PermissionGrant extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 200, nullable: true, comment: '권한 설명' })
   description!: string | null;
 
-  @Column('tinyint', { default: 1, transformer: BoolTinyIntTransformer, comment: '권한 허용 여부' })
+  @Column('tinyint', { default: true, transformer: BoolTinyIntTransformer, comment: '권한 허용 여부' })
   isAllowed!: boolean;
 
   @ManyToOne(() => Permission, (permission) => permission.permissionGrants, {

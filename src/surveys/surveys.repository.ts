@@ -309,7 +309,7 @@ export class SurveysRepository extends BaseRepository {
         query.andWhere('DATE(a.createdAt) <= :endDate', { endDate: searchQuery.endDate });
       }
 
-      const rawDataList = await query.groupBy('DATE(a.createdAt)').getRawMany();
+      const rawDataList = await query.groupBy('DATE_FORMAT(a.createdAt, "%Y-%m-%d")').getRawMany();
       // 데이터 맵 생성
       const dataMap = new Map<string, number>();
       rawDataList.forEach((item) => {
@@ -518,6 +518,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('sq.questionOptions', 'sqo', 'sqo.deletedAt IS NULL')
       .leftJoinAndSelect('s.answers', 'sa')
+      .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.id = :surveyId', { surveyId });
 
     if (subscription) {
@@ -541,7 +542,7 @@ export class SurveysRepository extends BaseRepository {
       viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
-      author: survey.user ? { id: survey.user.id, name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
+      author: survey.user ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
       questions: survey.questions.map((question) => ({
@@ -588,6 +589,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.answers', 'sas')
       .leftJoinAndMapOne('s.answer', Answer, 'sa', 'sa.surveyId = s.id AND sa.submissionHash = :submissionHash', { submissionHash })
       .leftJoinAndSelect('sa.questionAnswers', 'sqa')
+      .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
 
     if (userId && organizationRoles.length > 0) {
@@ -639,7 +641,7 @@ export class SurveysRepository extends BaseRepository {
       viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
-      author: survey.user ? { id: survey.user.id, name: survey.user.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
+      author: survey.user ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
       questions: survey.questions.map((question) => ({

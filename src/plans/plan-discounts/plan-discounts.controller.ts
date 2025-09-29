@@ -1,38 +1,31 @@
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreatePlanDiscountDto } from './dto/create-plan-discount.dto';
 import { UpdatePlanDiscountDto } from './dto/update-plan-discount.dto';
 import { PlanDiscountsService } from './plan-discounts.service';
 
 @RequiredLogin
 @ApiTags('플랜 할인')
-@Controller('plan-discounts')
+@Controller(':planId/plan-discounts')
 export class PlanDiscountsController {
   constructor(private readonly planDiscountsService: PlanDiscountsService) {}
 
+  @ApiOperation({ summary: '플랜 할인 생성' })
   @Post()
-  create(@Body() createPlanDiscountDto: CreatePlanDiscountDto) {
-    return this.planDiscountsService.create(createPlanDiscountDto);
+  create(@Body() createPlanDiscountDto: CreatePlanDiscountDto, @Param('planId') planId: string) {
+    return this.planDiscountsService.create(+planId, createPlanDiscountDto);
   }
 
-  @Get()
-  findAll() {
-    return this.planDiscountsService.findAll();
+  @ApiOperation({ summary: '플랜 할인 수정' })
+  @Patch(':planDiscountId')
+  update(@Param('planDiscountId') planDiscountId: string, @Body() updatePlanDiscountDto: UpdatePlanDiscountDto, @Param('planId') planId: string) {
+    return this.planDiscountsService.update(+planId, +planDiscountId, updatePlanDiscountDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.planDiscountsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlanDiscountDto: UpdatePlanDiscountDto) {
-    return this.planDiscountsService.update(+id, updatePlanDiscountDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.planDiscountsService.remove(+id);
+  @ApiOperation({ summary: '플랜 할인 삭제' })
+  @Delete(':planDiscountId')
+  remove(@Param('planDiscountId') planDiscountId: string, @Param('planId') planId: string) {
+    return this.planDiscountsService.remove(+planId, +planDiscountId);
   }
 }

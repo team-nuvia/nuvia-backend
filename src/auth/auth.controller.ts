@@ -1,3 +1,6 @@
+import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/not-found-notification.exception.dto';
+import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { CommonService } from '@common/common.service';
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginSession } from '@common/decorator/login-session.decorator';
@@ -9,9 +12,11 @@ import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
-import { REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
-import { Body, Controller, HttpStatus, Ip, Post, Res, UseGuards } from '@nestjs/common';
+import { CLIENT_URL } from '@common/variable/environment';
+import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
+import { Body, Controller, Get, HttpStatus, Ip, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SocialProvider } from '@share/enums/social-provider.enum';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
@@ -51,7 +56,13 @@ export class AuthController {
     const secretConfig = this.commonConfig.getConfig('secret');
     const token = await this.authService.login(loginUserData, ipAddress, userLoginInformationDto);
 
-    /* 리프레시만 쿠키 저장 */
+    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
+
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -67,8 +78,57 @@ export class AuthController {
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
-    const { refreshToken, ...onlyAccessToken } = token;
-    return new LoginResponseDto(onlyAccessToken);
+    return new LoginResponseDto();
+  }
+
+  @ApiOperation({ summary: '소셜 로그인' })
+  @Public()
+  @Get('login/:socialProvider')
+  async loginWithSocialProvider(
+    @Ip() ipAddress: string,
+    @Query() userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
+    @Res() res: Response,
+  ) {
+    const url = await this.authService.loginWithSocialProvider(ipAddress, userLoginInformationDto);
+    res.redirect(url.toString());
+  }
+
+  @ApiOperation({ summary: '소셜 로그인 콜백' })
+  @Public()
+  @Transactional()
+  @Get('login/:socialProvider/callback')
+  async loginWithSocialProviderCallback(
+    @Query() query: Record<string, string>,
+    @Param('socialProvider') socialProvider: string,
+    @Res() res: Response,
+  ) {
+    const secretConfig = this.commonConfig.getConfig('secret');
+    const idToken = await this.authService.loginWithSocialProviderCallback(query);
+
+    const token = await this.authService.socialLogin(idToken, socialProvider as SocialProvider, query);
+
+    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
+
+    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieRefreshExpireTime,
+    });
+
+    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieSessionExpireTime,
+    });
+
+    res.redirect(`${CLIENT_URL}/auth/login`);
   }
 
   @ApiOperation({ summary: '리프레시' })
@@ -82,7 +142,13 @@ export class AuthController {
     const secretConfig = this.commonConfig.getConfig('secret');
     const token = await this.authService.refresh(verifiedRefreshToken);
 
-    /* 리프레시만 쿠키 저장 */
+    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
+
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -117,6 +183,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
+
+    res.clearCookie(ACCESS_COOKIE_NAME, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: secretConfig.cookieAccessExpireTime,
+    });
 
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
@@ -156,11 +229,14 @@ export class AuthController {
   @Post('verify')
   verifyToken(@LoginToken() token: string): VerifyTokenResponseDto {
     const verifyToken = this.authService.verifyToken(token);
-    return new VerifyTokenResponseDto({ verified: verifyToken });
+
+    return new VerifyTokenResponseDto({ verified: verifyToken, token });
   }
 
   @ApiOperation({ summary: '초대 토큰 검증' })
   @CombineResponses(HttpStatus.OK, VerifyInvitationTokenResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, AlreadyJoinedUserExceptionDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundOrganizationRoleExceptionDto, NotFoundNotificationExceptionDto)
   @Transactional()
   @RequiredLogin
   @Post('verify/invitation')
@@ -169,6 +245,6 @@ export class AuthController {
     @Body() verifyInvitationTokenDto: VerifyInvitationTokenPayloadDto,
   ): Promise<VerifyInvitationTokenResponseDto> {
     const verifyToken = await this.authService.verifyInvitationToken(verifyInvitationTokenDto.token, user.id);
-    return new VerifyInvitationTokenResponseDto({ verified: verifyToken });
+    return new VerifyInvitationTokenResponseDto({ verified: verifyToken, token: verifyInvitationTokenDto.token });
   }
 }

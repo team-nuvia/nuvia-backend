@@ -6,6 +6,7 @@ export class OnlyAccessToken extends OmitType(LoginTokenNestedResponseDto, ['ref
 
 export class RefreshResponseDto extends SuccessResponse<OnlyAccessToken> {
   @ApiProperty({
+    description: '메시지',
     example: ErrorMessage.SUCCESS_REFRESH,
   })
   message: string = ErrorMessage.SUCCESS_REFRESH;

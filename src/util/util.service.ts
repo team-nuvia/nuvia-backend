@@ -5,6 +5,7 @@ import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { ExpiredInvitationTokenExceptionDto } from '@auth/dto/exception/expired-invitation-token.exception.dto';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
+import { COOKIE_SESSION_EXPIRE_TIME } from '@common/variable/globals';
 import { LoggerService } from '@logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
@@ -20,7 +21,6 @@ import { VerifySecretPayloadDto } from './dto/payload/verify-secret.payload.dto'
 import { VerifySurveyJWSPayloadDto } from './dto/payload/verify-survey-jws.payload.dto';
 import { isNil } from './isNil';
 import { UtilRepository } from './util.repository';
-import { COOKIE_SESSION_EXPIRE_TIME } from '@common/variable/globals';
 
 @Injectable()
 export class UtilService {
@@ -274,7 +274,7 @@ export class UtilService {
     }
 
     /* 초대 받는 유저 검증 */
-    const isInvitee = await this.utilRepository.getBy({ email: inviteeEmail }, User);
+    const isInvitee = await this.utilRepository.getBy({ userProviders: { email: inviteeEmail } }, User);
     if (!isInvitee) throw new NotFoundUserExceptionDto('invitee');
 
     /* 이미 조직에 가입한 유저 검증 */

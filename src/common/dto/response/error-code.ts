@@ -103,6 +103,9 @@ export const ErrorKey = {
   EXCEEDED_RESTORE_LIMIT: 'EXCEEDED_RESTORE_LIMIT',
   SUCCESS_VERIFY_SESSION: 'SUCCESS_VERIFY_SESSION',
   CLOSED_SURVEY: 'CLOSED_SURVEY',
+  SUCCESS_UPDATE_USER_SETTINGS: 'SUCCESS_UPDATE_USER_SETTINGS',
+  SUCCESS_GET_USER_SETTINGS: 'SUCCESS_GET_USER_SETTINGS',
+  FAILED_TO_ADD_NOTIFICATION: 'FAILED_TO_ADD_NOTIFICATION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -207,6 +210,9 @@ export const ErrorCode = {
   EXCEEDED_RESTORE_LIMIT: HttpStatus.BAD_REQUEST,
   SUCCESS_VERIFY_SESSION: HttpStatus.OK,
   CLOSED_SURVEY: HttpStatus.BAD_REQUEST,
+  SUCCESS_UPDATE_USER_SETTINGS: HttpStatus.OK,
+  SUCCESS_GET_USER_SETTINGS: HttpStatus.OK,
+  FAILED_TO_ADD_NOTIFICATION: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -311,6 +317,9 @@ export const ErrorMessage = {
   EXCEEDED_RESTORE_LIMIT: '복구 가능한 설문 개수를 초과했습니다.',
   SUCCESS_VERIFY_SESSION: '세션 검증 성공',
   CLOSED_SURVEY: '이미 마감된 설문입니다.',
+  SUCCESS_UPDATE_USER_SETTINGS: '사용자 설정 수정 성공',
+  SUCCESS_GET_USER_SETTINGS: '사용자 설정 조회 성공',
+  FAILED_TO_ADD_NOTIFICATION: '알림 추가에 실패했습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

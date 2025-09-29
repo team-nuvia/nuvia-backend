@@ -1,6 +1,7 @@
 import { Plan } from '@/plans/entities/plan.entity';
 import { PlanGrantConstraintsTypeList } from '@/plans/enums/plan-grant-constraints-type.enum';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 import { PlanGrantType } from '@share/enums/plan-grant-type.enum';
 import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 
@@ -25,10 +26,10 @@ export class PlanGrant extends DefaultDateInterface {
   @Column('int', { default: null, nullable: true, unsigned: true, comment: '허용 개수' })
   amount!: number | null;
 
-  @Column('tinyint', { default: 0, comment: '갱신 가능 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '갱신 가능 여부' })
   isRenewable!: boolean;
 
-  @Column('tinyint', { default: 1, comment: '권한 허용 여부' })
+  @Column('tinyint', { default: true, transformer: BoolTinyIntTransformer, comment: '권한 허용 여부' })
   isAllowed!: boolean;
 
   @ManyToOne(() => Plan, (plan) => plan.planGrants, {

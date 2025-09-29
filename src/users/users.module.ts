@@ -9,10 +9,11 @@ import { UserSecretsModule } from './user-secrets/user-secrets.module';
 import { UsersController } from './users.controller';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
+import { UserProvider } from './entities/user-provider.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Subscription]),
+    TypeOrmModule.forFeature([User, UserProvider, Subscription]),
     ProfilesModule,
     UserSecretsModule,
     UserAccessesModule,
@@ -24,6 +25,10 @@ import { UsersService } from './users.service';
       {
         path: 'users',
         module: UserSecretsModule,
+      },
+      {
+        path: 'users',
+        module: UserAccessesModule,
       },
     ]),
   ],

@@ -32,7 +32,7 @@ export class PlanDiscount extends DefaultDateInterface {
   @Column('varchar', { default: null, length: 45, nullable: true, comment: '할인 코드' })
   code!: string | null;
 
-  @Column('tinyint', { default: 0, transformer: BoolTinyIntTransformer, comment: '할인 비활성 여부' })
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '할인 비활성 여부' })
   isDeprecated!: boolean;
 
   @ManyToOne(() => Plan, (plan) => plan.planDiscounts, {

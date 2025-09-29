@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ExpiredTokenExceptionDto extends UnauthorizedException {
   @ApiProperty({
+    description: '메시지',
     example: ErrorMessage.EXPIRED_TOKEN,
   })
   declare message: string;

@@ -20,24 +20,6 @@ export class SubscriptionsService {
     await this.subscriptionsRepository.inviteUsers(subscriptionId, inviteSubscriptionDto, userId, invitationEmailCallback);
   }
 
-  // addNotifications({
-  //   subscriptionId,
-  //   type,
-  //   userId,
-  //   emails,
-  //   title,
-  //   content,
-  // }: {
-  //   subscriptionId: number;
-  //   type: NotificationType;
-  //   userId: number;
-  //   emails: string[];
-  //   title: string;
-  //   content: string;
-  // }) {
-  //   return this.subscriptionsRepository.addNotifications({ subscriptionId, type, userId, emails, title, content });
-  // }
-
   addInviteNotifications({
     subscriptionId,
     type,

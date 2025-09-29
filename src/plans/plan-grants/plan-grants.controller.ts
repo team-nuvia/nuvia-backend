@@ -1,21 +1,17 @@
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PlanGrantsService } from './plan-grants.service';
 
 @RequiredLogin
 @ApiTags('플랜 제약사항')
-@Controller('plan-grants')
+@Controller(':planId/plan-grants')
 export class PlanGrantsController {
   constructor(private readonly planGrantsService: PlanGrantsService) {}
 
+  @ApiOperation({ summary: '플랜 제약사항 조회' })
   @Get()
-  findAll() {
-    return this.planGrantsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.planGrantsService.findOne(+id);
+  findAll(@Param('planId') planId: string) {
+    return this.planGrantsService.findAll(planId);
   }
 }

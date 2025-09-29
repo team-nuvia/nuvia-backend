@@ -10,21 +10,13 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { UserProvider } from './user-provider.entity';
 
 @Entity()
 export class User extends DefaultDateInterface {
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
-
-  @Column('varchar', { length: 50, comment: '이름' })
-  name!: string;
-
-  @Column('varchar', { length: 50, comment: '이메일 (코드레벨에서 unique 검증)' })
-  email!: string;
-
-  @Column('varchar', { length: 50, comment: '닉네임 (코드레벨에서 unique 검증)' })
-  nickname!: string;
 
   @OneToOne(() => Profile, (profile) => profile.user, {
     cascade: true,
@@ -81,8 +73,17 @@ export class User extends DefaultDateInterface {
   })
   notificationsTo!: Relation<Notification>[];
 
+  @OneToMany(() => UserProvider, (userProvider) => userProvider.user, {
+    cascade: true,
+  })
+  userProviders!: Relation<UserProvider>[];
+
   getProfileUrl(commonService: CommonService): string | null {
     const commonConfig = commonService.getConfig('common');
-    return this.profile ? `${commonConfig.serverUrl}/api/static/image/${this.profile.filename}?t=p&q=100&rs=jpeg` : null;
+    return this.profile ? `${commonConfig.serverUrl}/api/v1/static/image/${this.profile.filename}?type=p&quality=100&responseType=jpeg` : null;
+  }
+
+  get userProvider(): UserProvider {
+    return this.userProviders[0];
   }
 }
