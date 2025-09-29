@@ -47,99 +47,108 @@ export class AuthRepository extends BaseRepository {
   }
 
   async socialLogin(token: SocialLoginGoogleIdTokenPayload, socialProvider: SocialProvider, imageBuffer: Buffer | null) {
-    /* 사용자 계정 조회 */
-    let user = await this.orm
+    // - 이미 로컬 계정 있고, provider 없을 때 (선 로컬 로그인)
+    // - 이미 로컬 있고, provider도 통합됐을 때 (이미 통합한 경우)
+    // - 로컬 없고, provider도 없을 때 (초기 사용자)
+    // - 로컬 없고, provider 있을 때 (선 소셜 로그인)
+
+    // 1. email로 local 유형 유저가 있는지 확인
+    // 2. local이 있으면 provider 통합
+    // 3. local이 없으면 새로운 user 계정 생성
+
+    const hasAlreadyExists = {
+      local: false,
+      social: false,
+    };
+    const localUser = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.userProviders', 'up')
-      .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
+      .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: SocialProvider.Local })
       .getOne();
 
-    /* 사용자 계정 없으면 생성 */
-    if (isNil(user)) {
-      const newUser = await this.orm.getRepo(User).insert({});
-      await this.orm
-        .getRepo(UserProvider)
-        .createQueryBuilder()
-        .insert()
-        .values({
-          userId: newUser.identifiers[0].id,
+    if (localUser) {
+      // 로컬 계정 있는 경우
+      hasAlreadyExists.local = true;
+      const isProviderAlreadyExists = localUser.userProviders.some(
+        (userProvider) => userProvider.provider === socialProvider && userProvider.providerId === token.sub,
+      );
+      if (isProviderAlreadyExists) {
+        // 이미 소셜 통합된 계정 - 넘어감
+        hasAlreadyExists.social = true;
+      } else {
+        // 소셜 통합 안된 계정 - 신규 연동
+        await this.orm.getRepo(UserProvider).insert({
+          userId: localUser.id,
           providerId: token.sub,
           name: token.name,
           nickname: token.given_name,
           email: token.email,
           provider: socialProvider,
           image: token.picture,
-        })
-        .execute();
-
-      user = await this.orm
+        });
+      }
+    } else {
+      // 로컬 계정 없는 경우
+      hasAlreadyExists.social = true;
+      const socialUser = await this.orm
         .getRepo(User)
         .createQueryBuilder('u')
         .leftJoinAndSelect('u.userProviders', 'up')
         .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
         .getOne();
 
-      if (user) {
-        /* 프로필 이미지 등록 */
-        if (imageBuffer) {
-          const resizedImageBuffer = await sharp(imageBuffer)
-            .resize(100, 100, { fit: 'contain', withoutEnlargement: true })
-            .toFormat('png')
-            .toBuffer();
-          const filename = uniqueHash(80) + '.png';
-          await this.orm.getRepo(Profile).insert({
-            userId: user.id,
-            buffer: resizedImageBuffer,
-            size: resizedImageBuffer.length,
-            width: 100,
-            height: 100,
-            originalname: filename,
-            filename,
-            mimetype: 'image/png',
-          });
-        }
-
-        /* 구독 생성 & 조직 생성 */
-        const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
-          userId: user.id,
-          planId: 1,
-          name: `${user.userProvider.name}님의 개인 문서`,
-          description: null,
-          defaultRole: UserRole.Owner,
-          status: SubscriptionStatusType.Active,
-          target: SubscriptionTargetType.Individual,
-        };
-        const subscription = await this.orm.getRepo(Subscription).save(subscriptionData);
-
-        const permission = await this.orm.getRepo(Permission).findOne({
-          where: {
-            role: subscription.defaultRole,
-          },
+      if (socialUser) {
+        // 이미 소셜 계정 있는 경우 - 넘어감
+        hasAlreadyExists.social = true;
+      } else {
+        // 이미 소셜 계정 없는 경우 - 신규 연동
+        const userProvider = this.orm.getRepo(UserProvider).create({
+          providerId: token.sub,
+          name: token.name,
+          nickname: token.given_name,
+          email: token.email,
+          provider: socialProvider,
+          image: token.picture,
         });
-
-        if (isNil(permission)) {
-          throw new NotFoundPermissionExceptionDto();
-        }
-
-        /* 조직 역할 생성 */
-        await this.orm.getRepo(OrganizationRole).insert({
-          userId: user.id,
-          subscriptionId: subscription.id,
-          permissionId: permission.id,
-          status: OrganizationRoleStatusType.Joined,
-          isCurrentOrganization: true,
+        await this.orm.getRepo(User).insert({
+          userProviders: [userProvider],
         });
       }
     }
 
-    console.log('🚀 ~ AuthRepository ~ socialLogin ~ token:', token, imageBuffer);
-    if (imageBuffer) {
+    /* 무조건 있는 데이터 */
+    const newOrUpdatedUser = (await this.orm
+      .getRepo(User)
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.userProviders', 'up')
+      .where('up.email = :email AND up.provider = :provider', { email: token.email, provider: socialProvider })
+      .getOne())!;
+
+    if (isNil(newOrUpdatedUser)) {
+      throw new NotFoundUserExceptionDto(token.email);
+    }
+
+    /* 이미 소셜 계정 있으면 early return */
+    if (hasAlreadyExists.social) {
+      return newOrUpdatedUser;
+    }
+
+    /* 아래부터 소셜 계정 없는 경우 처리 */
+
+    const hasProfile = await this.orm.getRepo(Profile).exists({
+      where: {
+        userId: newOrUpdatedUser.id,
+      },
+    });
+
+    /* 프로필 이미지 등록 */
+    if (imageBuffer && !hasProfile) {
       const resizedImageBuffer = await sharp(imageBuffer).resize(100, 100, { fit: 'contain', withoutEnlargement: true }).toFormat('png').toBuffer();
       const filename = uniqueHash(80) + '.png';
       await this.orm.getRepo(Profile).insert({
-        userId: user!.id,
-        buffer: resizedImageBuffer,
+        userId: newOrUpdatedUser.id,
+        buffer: Buffer.from(resizedImageBuffer),
         size: resizedImageBuffer.length,
         width: 100,
         height: 100,
@@ -149,11 +158,43 @@ export class AuthRepository extends BaseRepository {
       });
     }
 
-    if (isNil(user)) {
-      throw new NotFoundUserExceptionDto(token.email);
+    /* 이미 로컬 계정 있으면 early return */
+    if (hasAlreadyExists.local) {
+      return newOrUpdatedUser;
     }
 
-    return user;
+    /* 구독 생성 & 조직 생성 */
+    const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
+      userId: newOrUpdatedUser.id,
+      planId: 1,
+      name: `${newOrUpdatedUser.userProvider.name}님의 개인 문서`,
+      description: null,
+      defaultRole: UserRole.Owner,
+      status: SubscriptionStatusType.Active,
+      target: SubscriptionTargetType.Individual,
+    };
+    const subscription = await this.orm.getRepo(Subscription).save(subscriptionData);
+
+    const permission = await this.orm.getRepo(Permission).findOne({
+      where: {
+        role: subscription.defaultRole,
+      },
+    });
+
+    if (isNil(permission)) {
+      throw new NotFoundPermissionExceptionDto();
+    }
+
+    /* 조직 역할 생성 */
+    await this.orm.getRepo(OrganizationRole).insert({
+      userId: newOrUpdatedUser.id,
+      subscriptionId: subscription.id,
+      permissionId: permission.id,
+      status: OrganizationRoleStatusType.Joined,
+      isCurrentOrganization: true,
+    });
+
+    return newOrUpdatedUser;
   }
 
   async findUserById(id: number, provider: SocialProvider): Promise<UserMinimumInformation> {

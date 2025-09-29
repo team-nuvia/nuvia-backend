@@ -29,24 +29,25 @@ export class UsersService {
   async create({ password, ...createUserDto }: CreateUserPayloadDto) {
     const alreadyExistUserEmail = await this.userRepository.existsBy({
       email: createUserDto.email,
-      provider: createUserDto.provider,
+      provider: SocialProvider.Local,
     });
-
+    console.log('alreadyExistUserEmail', alreadyExistUserEmail);
     if (alreadyExistUserEmail) {
       throw new AlreadyExistsUserExceptionDto('email');
     }
 
     const alreadyExistUserNickname = await this.userRepository.existsBy({
       nickname: createUserDto.nickname,
-      provider: createUserDto.provider,
+      provider: SocialProvider.Local,
     });
-
+    console.log('alreadyExistUserNickname', alreadyExistUserNickname);
     if (alreadyExistUserNickname) {
       throw new AlreadyExistsUserExceptionDto('nickname');
     }
 
     const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
-
+    console.log('hashedPassword', hashedPassword);
+    console.log('userSecret', userSecret);
     /* 유저 생성 */
     const {
       userSecret: _,
@@ -57,12 +58,12 @@ export class UsersService {
         email: createUserDto.email,
         name: createUserDto.name,
         nickname: createUserDto.nickname,
-        provider: createUserDto.provider,
+        provider: SocialProvider.Local,
         providerId: null,
       },
       userSecret: { ...userSecret, password: hashedPassword },
     });
-
+    console.log('userProvider', userProvider);
     /* 구독 생성 & 조직 생성 */
     const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
       userId: newUser.id,

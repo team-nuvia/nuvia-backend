@@ -309,7 +309,7 @@ export class SurveysRepository extends BaseRepository {
         query.andWhere('DATE(a.createdAt) <= :endDate', { endDate: searchQuery.endDate });
       }
 
-      const rawDataList = await query.groupBy('DATE(a.createdAt)').getRawMany();
+      const rawDataList = await query.groupBy('DATE_FORMAT(a.createdAt, "%Y-%m-%d")').getRawMany();
       // 데이터 맵 생성
       const dataMap = new Map<string, number>();
       rawDataList.forEach((item) => {

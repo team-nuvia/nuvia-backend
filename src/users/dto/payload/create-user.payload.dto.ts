@@ -1,7 +1,6 @@
 import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
-import { SocialProvider } from '@share/enums/social-provider.enum';
-import { IsEmail, IsEnum, IsString, IsStrongPassword } from 'class-validator';
+import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
 
 export class CreateUserPayloadDto {
   @ApiProperty({
@@ -42,12 +41,4 @@ export class CreateUserPayloadDto {
   })
   @IsString()
   password!: string;
-
-  @ApiProperty({
-    description: '공급자',
-    enum: SocialProvider,
-    example: SocialProvider.Facebook,
-  })
-  @IsEnum(SocialProvider)
-  provider!: SocialProvider;
 }

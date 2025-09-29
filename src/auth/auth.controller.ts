@@ -87,10 +87,9 @@ export class AuthController {
   async loginWithSocialProvider(
     @Ip() ipAddress: string,
     @Query() userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
-    @Param('socialProvider') socialProvider: string,
     @Res() res: Response,
   ) {
-    const url = await this.authService.loginWithSocialProvider(socialProvider as SocialProvider, ipAddress, userLoginInformationDto);
+    const url = await this.authService.loginWithSocialProvider(ipAddress, userLoginInformationDto);
     res.redirect(url.toString());
   }
 

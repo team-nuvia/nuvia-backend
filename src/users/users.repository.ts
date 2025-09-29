@@ -151,12 +151,17 @@ export class UsersRepository extends BaseRepository {
     }
 
     const newUser = await this.orm.getRepo(User).insert({});
+    console.log('newUser', newUser);
 
-    await this.orm.getRepo(UserProvider).save({ userId: newUser.identifiers[0].id, ...data.userProvider });
+    const id = newUser.identifiers[0].id;
+    console.log('id', id);
 
-    await this.orm.getRepo(UserSecret).save({ userId: newUser.identifiers[0].id, ...data.userSecret });
+    await this.orm.getRepo(UserProvider).save({ userId: id, ...data.userProvider });
 
-    const readNewUser = await this.orm.getRepo(User).findOne({ where: { id: newUser.identifiers[0].id } });
+    await this.orm.getRepo(UserSecret).save({ userId: id, ...data.userSecret });
+
+    const readNewUser = await this.orm.getRepo(User).findOne({ where: { id: id }, relations: ['userProviders', 'userSecret'] });
+    console.log('readNewUser', readNewUser);
 
     return readNewUser!;
   }

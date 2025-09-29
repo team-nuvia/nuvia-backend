@@ -80,7 +80,7 @@ export class User extends DefaultDateInterface {
 
   getProfileUrl(commonService: CommonService): string | null {
     const commonConfig = commonService.getConfig('common');
-    return this.profile ? `${commonConfig.serverUrl}/api/static/image/${this.profile.filename}?t=p&q=100&rs=jpeg` : null;
+    return this.profile ? `${commonConfig.serverUrl}/api/v1/static/image/${this.profile.filename}?type=p&quality=100&responseType=jpeg` : null;
   }
 
   get userProvider(): UserProvider {

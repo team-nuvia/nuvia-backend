@@ -38,8 +38,7 @@ export class AuthService {
     if (!url || isNil(url)) return null;
     try {
       const { data } = await firstValueFrom(this.httpService.get(url, { responseType: 'arraybuffer' }));
-      console.log('🚀 ~ AuthService ~ urlImageToBuffer ~ data:', data);
-      return Buffer.from(data, 'utf-8');
+      return Buffer.from(data, 'binary');
     } catch (error: any) {
       console.log('🚀 ~ AuthService ~ urlImageToBuffer ~ error:', error.message);
       /* 에러 무시 (프로필 이미지 없으면 없는 채로 진행되야 함) */
@@ -63,11 +62,9 @@ export class AuthService {
   }
 
   async loginWithSocialProvider(
-    socialProvider: SocialProvider,
     ipAddress: string,
     userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
   ) {
-    console.log('🚀 ~ AuthService ~ loginWithSocialProvider ~ socialProvider:', socialProvider);
     const socialProviderConfig = this.commonService.getConfig('socialProvider');
 
     const base64 = Buffer.from(JSON.stringify({ ipAddress, ...userLoginInformationDto })).toString('base64url');
@@ -96,7 +93,6 @@ export class AuthService {
       const { data } = await firstValueFrom<{ data: SocialLoginGoogleIdToken }>(
         this.httpService.post(url.toString(), undefined, { headers: { 'Content-Type': 'application/json' } }),
       );
-      console.log('🚀 ~ AuthService ~ loginWithSocialProviderCallback ~ result:', data);
 
       const idToken = data.id_token;
 
