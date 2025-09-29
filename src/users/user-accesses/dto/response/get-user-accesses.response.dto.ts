@@ -11,6 +11,5 @@ export class GetUserAccessesResponseDto extends GetResponse<GetUserAccessNestedD
 
   constructor(payload: GetUserAccessNestedDto[] = [new GetUserAccessNestedDto()]) {
     super(payload);
-    this.payload = payload;
   }
 }

@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GetUserMeNestedResponseDto } from './get-user-me.nested.response.dto';
 
 export class GetUserMeResponseDto extends GetResponse<GetUserMeNestedResponseDto> {
-  @ApiProperty({ example: ErrorMessage.SUCCESS_GET_USER_ME })
+  @ApiProperty({ description: '메시지', example: ErrorMessage.SUCCESS_GET_USER_ME })
   message: string = ErrorMessage.SUCCESS_GET_USER_ME;
 
   @ApiProperty({ description: '사용자 정보', type: () => GetUserMeNestedResponseDto })

@@ -7,12 +7,17 @@ import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.e
 import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
+import { SocialProvider } from '@share/enums/social-provider.enum';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
+import { GetUserSettingsNestedResponseDto } from './dto/response/get-user-settings.nested.response.dto';
+import { UserProvider } from './entities/user-provider.entity';
 import { User } from './entities/user.entity';
+import { UserAccess } from './user-accesses/entities/user-access.entity';
+import { UserSecret } from './user-secrets/entities/user-secret.entity';
 
 @Injectable()
 export class UsersRepository extends BaseRepository {
@@ -31,8 +36,8 @@ export class UsersRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition, withDeleted: true });
   }
 
-  existsBy(condition: FindOptionsWhere<User>): Promise<boolean> {
-    return this.orm.getRepo(User).exists({ where: condition });
+  existsBy(condition: FindOptionsWhere<UserProvider>): Promise<boolean> {
+    return this.orm.getRepo(UserProvider).exists({ where: { ...condition } });
   }
 
   async getUserOrganizationData(userId: number): Promise<GetCurrentOrganizationsNestedResponseDto> {
@@ -65,15 +70,22 @@ export class UsersRepository extends BaseRepository {
     return { currentOrganization: composedCurrentOrganization, organizations: composedOrganizations };
   }
 
-  async getMe(userId: number): Promise<GetUserMeNestedResponseDto | null> {
+  async getMe(userId: number, provider: SocialProvider): Promise<GetUserMeNestedResponseDto | null> {
     const subscription = await this.getCurrentOrganization(userId);
 
     const userMeData = await this.orm
       .getRepo(User)
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.profile', 'up')
+      .leftJoinAndSelect('u.userProviders', 'up2', 'up2.provider = :provider', { provider })
+      .leftJoinAndMapOne(
+        'u.userAccess',
+        UserAccess,
+        'ua',
+        'ua.last_access_at IS NOT NULL AND ua.id = (SELECT MAX(ua2.id) FROM user_access ua2 WHERE ua2.user_id = u.id)',
+      )
       .where('u.id = :userId', { userId })
-      .select(['u.id', 'u.email', 'u.name', 'u.createdAt', 'up.id', 'up.filename', 'up.originalname'])
+      .select(['u.id', 'up2.email', 'up2.name', 'up2.nickname', 'u.createdAt', 'up.id', 'up.filename', 'up.originalname', 'ua.id', 'ua.lastAccessAt'])
       .getOne();
 
     if (isNil(userMeData)) {
@@ -84,10 +96,11 @@ export class UsersRepository extends BaseRepository {
 
     const responseGetMeData: GetUserMeNestedResponseDto = {
       id: userMeData.id,
-      email: userMeData.email,
-      name: userMeData.name,
-      nickname: userMeData.nickname,
+      email: userMeData.userProvider.email,
+      name: userMeData.userProvider.name,
+      nickname: userMeData.userProvider.nickname,
       role: subscription.permission.role,
+      provider: userMeData.userProvider.provider,
       currentOrganization: {
         id: subscription.id,
         organizationId: subscription.organizationId,
@@ -99,29 +112,68 @@ export class UsersRepository extends BaseRepository {
         updatedAt: subscription.updatedAt,
       },
       createdAt: userMeData.createdAt,
+      lastAccessAt: (userMeData as User & { userAccess: UserAccess }).userAccess?.lastAccessAt ?? null,
       profileImageUrl,
     };
 
     return responseGetMeData;
   }
 
-  findOneByEmail(email: string): Promise<User | null> {
-    return this.orm.getRepo(User).findOne({ where: { email } });
-  }
+  async getUserSettings(userId: number, provider: SocialProvider): Promise<GetUserSettingsNestedResponseDto> {
+    const userProvider = await this.orm.getRepo(UserProvider).findOne({ where: { userId, provider }, select: ['mailing'] });
 
-  async save(data: DeepPartial<User>): Promise<User> {
-    const source = this.orm.getRepo(User);
-
-    if (isNil(data.email)) {
-      throw new BadRequestException({ reason: '이메일이 없습니다.' });
+    if (!userProvider) {
+      throw new NotFoundUserExceptionDto();
     }
 
-    const user = await this.findOneByEmail(data.email);
+    return {
+      mailing: Boolean(userProvider.mailing),
+    };
+  }
+
+  findOneByEmail(email: string, provider: SocialProvider): Promise<UserProvider | null> {
+    return this.orm
+      .getRepo(UserProvider)
+      .createQueryBuilder('up')
+      .where('up.provider = :provider', { provider })
+      .andWhere('up.email = :email', { email })
+      .getOne();
+  }
+
+  async createUserAndProvider(data: { userProvider: DeepPartial<UserProvider>; userSecret: DeepPartial<UserSecret> }): Promise<User> {
+    if (!data.userProvider.email || !data.userProvider.provider) {
+      throw new BadRequestException();
+    }
+
+    const user = await this.findOneByEmail(data.userProvider.email, data.userProvider.provider);
     if (user) {
       throw new AlreadyExistsEmailExceptionDto();
     }
 
-    return source.save(data, { reload: true, transaction: true });
+    const newUser = await this.orm.getRepo(User).insert({});
+    console.log('newUser', newUser);
+
+    const id = newUser.identifiers[0].id;
+    console.log('id', id);
+
+    await this.orm.getRepo(UserProvider).save({ userId: id, ...data.userProvider });
+
+    await this.orm.getRepo(UserSecret).save({ userId: id, ...data.userSecret });
+
+    const readNewUser = await this.orm.getRepo(User).findOne({ where: { id: id }, relations: ['userProviders', 'userSecret'] });
+    console.log('readNewUser', readNewUser);
+
+    return readNewUser!;
+  }
+
+  async saveUserProvider(id: number, userProvider: DeepPartial<UserProvider>): Promise<UserProvider> {
+    const user = await this.orm.getRepo(User).findOne({ where: { id, userProviders: { provider: userProvider.provider } } });
+
+    if (!user) {
+      throw new NotFoundUserExceptionDto();
+    }
+
+    return this.orm.getRepo(UserProvider).save({ ...userProvider, userId: user.id });
   }
 
   async updateUserCurrentOrganization(userId: number, organizationId: number): Promise<void> {
@@ -129,5 +181,9 @@ export class UsersRepository extends BaseRepository {
     await this.orm
       .getRepo(OrganizationRole)
       .update({ userId, subscriptionId: organizationId, status: OrganizationRoleStatusType.Joined }, { isCurrentOrganization: true });
+  }
+
+  async updateUserSettings(userId: number, mailing: boolean): Promise<void> {
+    await this.orm.getRepo(UserProvider).update({ userId }, { mailing });
   }
 }

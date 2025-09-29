@@ -59,3 +59,7 @@ export const SECRET_ENCRYPT_SALT = getEnvAs(String, 'SECRET_ENCRYPT_SALT');
 export const EMAIL_SERVICE = getEnvAs(String, 'EMAIL_SERVICE');
 export const EMAIL_USER = getEnvAs(String, 'EMAIL_USER');
 export const EMAIL_PASSWORD = getEnvAs(String, 'EMAIL_PASSWORD');
+
+export const GOOGLE_CLIENT_ID = getEnvAs(String, 'GOOGLE_CLIENT_ID');
+export const GOOGLE_CLIENT_SECRET = getEnvAs(String, 'GOOGLE_CLIENT_SECRET');
+export const GOOGLE_REDIRECT_URI = getEnvAs(String, 'GOOGLE_REDIRECT_URI');

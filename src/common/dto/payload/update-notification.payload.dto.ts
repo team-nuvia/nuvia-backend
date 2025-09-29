@@ -3,7 +3,7 @@ import { OrganizationRoleStatusType } from '@share/enums/organization-role-statu
 import { IsEnum } from 'class-validator';
 
 export class UpdateOrganizationRoleStatusPayloadDto {
-  @ApiProperty({ description: '상태', example: OrganizationRoleStatusType.Invited })
+  @ApiProperty({ description: '상태', enum: OrganizationRoleStatusType, example: OrganizationRoleStatusType.Invited })
   @IsEnum([OrganizationRoleStatusType.Joined, OrganizationRoleStatusType.Rejected])
   status!: OrganizationRoleStatusType;
 }

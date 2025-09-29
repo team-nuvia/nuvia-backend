@@ -7,7 +7,7 @@ export class UpdateInvitationWithNotificationPayloadDto {
   @IsNumber()
   notificationId!: number;
 
-  @ApiProperty({ description: '초대 승락 여부', enum: OrganizationRoleStatusType })
+  @ApiProperty({ description: '초대 승락 여부', enum: OrganizationRoleStatusType, example: OrganizationRoleStatusType.Joined })
   @IsEnum([OrganizationRoleStatusType.Joined, OrganizationRoleStatusType.Rejected])
   status!: OrganizationRoleStatusType;
 }

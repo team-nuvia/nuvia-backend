@@ -4,11 +4,11 @@ import { PUBLIC_KEY } from '@common/variable/globals';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiCookieAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 
-@ApiBearerAuth()
+@ApiCookieAuth('access_token')
 @Injectable()
 export class JwtGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
@@ -35,7 +35,7 @@ export class JwtGuard extends AuthGuard('jwt') {
 
     if (isPublic) {
       const request = context.switchToHttp().getRequest() as Request;
-      const accessToken = request.headers['authorization']?.split(' ')[1];
+      const accessToken = request.cookies['access_token'];
 
       if (accessToken) {
         const decoded = jwt.decode(accessToken, { json: true }) as unknown as LoginUserData;

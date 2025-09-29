@@ -8,29 +8,46 @@ import { PlanDiscountsRepository } from './plan-discounts.repository';
 export class PlanDiscountsService {
   constructor(private readonly planDiscountsRepository: PlanDiscountsRepository) {}
 
-  create(createPlanDiscountDto: CreatePlanDiscountDto) {
-    return this.planDiscountsRepository.orm.getManager().createQueryBuilder(PlanDiscount, 'pd').insert().values(createPlanDiscountDto).execute();
+  create(planId: number, createPlanDiscountDto: CreatePlanDiscountDto) {
+    return this.planDiscountsRepository.orm
+      .getManager()
+      .createQueryBuilder(PlanDiscount, 'pd')
+      .insert()
+      .values({ ...createPlanDiscountDto, planId })
+      .execute();
   }
 
-  findAll() {
-    return this.planDiscountsRepository.orm.getManager().createQueryBuilder(PlanDiscount, 'pd').getMany();
+  findAll(planId: number) {
+    return this.planDiscountsRepository.orm.getManager().createQueryBuilder(PlanDiscount, 'pd').where('pd.planId = :planId', { planId }).getMany();
   }
 
-  findOne(id: number) {
-    return this.planDiscountsRepository.orm.getManager().createQueryBuilder(PlanDiscount, 'pd').where('pd.id = :id', { id }).getOne();
+  findOne(planId: number, planDiscountId: number) {
+    return this.planDiscountsRepository.orm
+      .getManager()
+      .createQueryBuilder(PlanDiscount, 'pd')
+      .where('pd.planId = :planId', { planId })
+      .andWhere('pd.id = :planDiscountId', { planDiscountId })
+      .getOne();
   }
 
-  update(id: number, updatePlanDiscountDto: UpdatePlanDiscountDto) {
+  update(planId: number, planDiscountId: number, updatePlanDiscountDto: UpdatePlanDiscountDto) {
     return this.planDiscountsRepository.orm
       .getManager()
       .createQueryBuilder(PlanDiscount, 'pd')
       .update()
       .set(updatePlanDiscountDto)
-      .where('pd.id = :id', { id })
+      .where('pd.planId = :planId', { planId })
+      .andWhere('pd.id = :planDiscountId', { planDiscountId })
       .execute();
   }
 
-  remove(id: number) {
-    return this.planDiscountsRepository.orm.getManager().createQueryBuilder(PlanDiscount, 'pd').delete().where('pd.id = :id', { id }).execute();
+  remove(planId: number, planDiscountId: number) {
+    return this.planDiscountsRepository.orm
+      .getManager()
+      .createQueryBuilder(PlanDiscount, 'pd')
+      .delete()
+      .where('pd.planId = :planId', { planId })
+      .andWhere('pd.id = :planDiscountId', { planDiscountId })
+      .execute();
   }
 }

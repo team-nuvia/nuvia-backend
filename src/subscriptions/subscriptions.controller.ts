@@ -54,10 +54,10 @@ export class SubscriptionsController {
     const invitationEmailCallback = async (toUser: string, fromUser: User, subscription: Subscription, invitationVerificationLink: string) => {
       await this.emailsService.sendInvitationMail(toUser, {
         inviteeEmail: toUser,
-        inviterName: fromUser.name,
+        inviterName: fromUser.userProvider.name,
         organizationName: subscription.name,
         invitationUrl: invitationVerificationLink,
-        inviterEmail: fromUser.email,
+        inviterEmail: fromUser.userProvider.email,
       });
     };
 
