@@ -58,8 +58,11 @@ export class UtilService {
     };
   }
 
-  // 설문 식별 해시토큰
-  // base64 token
+  /**
+   * 해시토큰 생성
+   * @param data 해시토큰 생성 데이터
+   * @returns 해시토큰
+   */
   createHash(data: string) {
     return crypto.createHash('sha256').update(data).digest('base64');
   }

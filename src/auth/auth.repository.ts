@@ -2,6 +2,7 @@ import { NotFoundNotificationExceptionDto } from '@/notifications/dto/exception/
 import { Notification } from '@/notifications/entities/notification.entity';
 import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
+import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
@@ -14,23 +15,27 @@ import { OrganizationRoleStatusType } from '@share/enums/organization-role-statu
 import { SocialProvider } from '@share/enums/social-provider.enum';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
+import { UserAccessStatusType } from '@share/enums/user-access-status-type';
 import { UserRole } from '@share/enums/user-role';
 import { UserProvider } from '@users/entities/user-provider.entity';
 import { User } from '@users/entities/user.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
-import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
 import sharp from 'sharp';
 import { FindOptionsWhere } from 'typeorm';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
-import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
+import { BadRequestException } from '@common/dto/response';
+import { UtilService } from '@util/util.service';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
-  constructor(protected readonly orm: OrmHelper) {
+  constructor(
+    protected readonly orm: OrmHelper,
+    private readonly utilService: UtilService,
+  ) {
     super(orm);
   }
 
@@ -46,7 +51,59 @@ export class AuthRepository extends BaseRepository {
     return this.orm.getRepo(User).exists({ where: condition });
   }
 
-  async socialLogin(token: SocialLoginGoogleIdTokenPayload, socialProvider: SocialProvider, imageBuffer: Buffer | null) {
+  private createHashedProviderId(providerId: string) {
+    const signature = `${providerId}:${Date.now()}`;
+    return this.utilService.createHash(signature);
+  }
+
+  /**
+   * 소셜 프로바이더 정보 생성
+   * 소셜 프로바이더 ID를 해시토큰으로 변환하여 저장
+   * @param socialProvider 소셜 프로바이더
+   * @param userId 유저 ID
+   * @param token 소셜 토큰
+   * @returns 소셜 프로바이더 정보
+   */
+  private getProviderInformation<T extends SocialProvider>(
+    socialProvider: T,
+    userId: number,
+    token: SocialLoginGoogleIdTokenPayload | SocialLoginKakaoIdTokenPayload,
+  ) {
+    switch (socialProvider) {
+      case SocialProvider.Google: {
+        const googleToken = token as SocialLoginGoogleIdTokenPayload;
+        return {
+          userId: userId,
+          providerId: this.createHashedProviderId(googleToken.sub),
+          name: googleToken.name,
+          nickname: googleToken.given_name,
+          email: googleToken.email,
+          provider: socialProvider,
+          image: googleToken.picture,
+        };
+      }
+      case SocialProvider.Kakao: {
+        const kakaoToken = token as SocialLoginKakaoIdTokenPayload;
+        return {
+          userId: userId,
+          providerId: this.createHashedProviderId(kakaoToken.sub),
+          name: kakaoToken.nickname,
+          nickname: kakaoToken.nickname,
+          email: kakaoToken.email,
+          provider: socialProvider,
+          image: kakaoToken.picture,
+        };
+      }
+      default:
+        throw new BadRequestException({ code: 'BAD_REQUEST', reason: 'Invalid social provider' });
+    }
+  }
+
+  async socialLogin(
+    token: SocialLoginGoogleIdTokenPayload | SocialLoginKakaoIdTokenPayload,
+    socialProvider: SocialProvider,
+    imageBuffer: Buffer | null,
+  ) {
     // - 이미 로컬 계정 있고, provider 없을 때 (선 로컬 로그인)
     // - 이미 로컬 있고, provider도 통합됐을 때 (이미 통합한 경우)
     // - 로컬 없고, provider도 없을 때 (초기 사용자)
@@ -78,19 +135,11 @@ export class AuthRepository extends BaseRepository {
         hasAlreadyExists.social = true;
       } else {
         // 소셜 통합 안된 계정 - 신규 연동
-        await this.orm.getRepo(UserProvider).insert({
-          userId: localUser.id,
-          providerId: token.sub,
-          name: token.name,
-          nickname: token.given_name,
-          email: token.email,
-          provider: socialProvider,
-          image: token.picture,
-        });
+        const providerInformation = this.getProviderInformation(socialProvider, localUser.id, token);
+        await this.orm.getRepo(UserProvider).insert(providerInformation);
       }
     } else {
       // 로컬 계정 없는 경우
-      hasAlreadyExists.social = true;
       const socialUser = await this.orm
         .getRepo(User)
         .createQueryBuilder('u')
@@ -102,18 +151,13 @@ export class AuthRepository extends BaseRepository {
         // 이미 소셜 계정 있는 경우 - 넘어감
         hasAlreadyExists.social = true;
       } else {
+        hasAlreadyExists.social = false;
         // 이미 소셜 계정 없는 경우 - 신규 연동
-        const userProvider = this.orm.getRepo(UserProvider).create({
-          providerId: token.sub,
-          name: token.name,
-          nickname: token.given_name,
-          email: token.email,
-          provider: socialProvider,
-          image: token.picture,
-        });
-        await this.orm.getRepo(User).insert({
-          userProviders: [userProvider],
-        });
+        const user = await this.orm.getRepo(User).insert({});
+        const id = user.identifiers[0].id;
+        const providerInformation = this.getProviderInformation(socialProvider, id, token);
+        const userProvider = this.orm.getRepo(UserProvider).create(providerInformation);
+        await this.orm.getRepo(UserProvider).insert(userProvider);
       }
     }
 
@@ -318,7 +362,7 @@ export class AuthRepository extends BaseRepository {
       throw new NotFoundOrganizationRoleExceptionDto();
     }
 
-    /* 초대할때 중복되면 이미 지우는 로직이 있기 때문에 Join 데이터만 처리 */
+    /* 초대할때 중복되면 이미 지우는 로직이 있기 때문에 Joined 데이터만 처리 */
     await this.orm
       .getRepo(OrganizationRole)
       .update({ id: organizationRole.id }, { status: OrganizationRoleStatusType.Joined, isCurrentOrganization: false, deletedAt: null });

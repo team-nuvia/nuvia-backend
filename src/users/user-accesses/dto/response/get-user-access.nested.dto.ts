@@ -1,6 +1,6 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
+import { UserAccessStatusType } from '@share/enums/user-access-status-type';
 
 export class UserSimpleInfoNestedDto {
   @ApiProperty({ description: '유저 아이디', example: 1 })

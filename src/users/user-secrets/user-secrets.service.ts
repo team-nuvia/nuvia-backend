@@ -1,4 +1,3 @@
-import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +5,7 @@ import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { SameBeforePasswordExceptionDto } from './dto/exception/same-before-password.exception.dto';
 import { ChangePasswordFormPayloadDto } from './dto/payload/change-password-form.payload.dto';
 import { UserSecret } from './entities/user-secret.entity';
 
@@ -41,8 +41,8 @@ export class UserSecretsService {
 
     const isSamePassword = this.utilService.verifyPassword(changePasswordDto.prevPassword, verifyContent);
 
-    if (!isSamePassword) {
-      throw new NoMatchUserInformationExceptionDto();
+    if (isSamePassword) {
+      throw new SameBeforePasswordExceptionDto();
     }
 
     const updatedUserSecret = await this.userSecretRepository.update(user.id, {

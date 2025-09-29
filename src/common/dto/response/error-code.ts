@@ -106,6 +106,9 @@ export const ErrorKey = {
   SUCCESS_UPDATE_USER_SETTINGS: 'SUCCESS_UPDATE_USER_SETTINGS',
   SUCCESS_GET_USER_SETTINGS: 'SUCCESS_GET_USER_SETTINGS',
   FAILED_TO_ADD_NOTIFICATION: 'FAILED_TO_ADD_NOTIFICATION',
+  SUCCESS_UPDATE_USER_ME: 'SUCCESS_UPDATE_USER_ME',
+  SAME_BEFORE_PASSWORD: 'SAME_BEFORE_PASSWORD',
+  ALREADY_EXISTS_NICKNAME: 'ALREADY_EXISTS_NICKNAME',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -213,6 +216,9 @@ export const ErrorCode = {
   SUCCESS_UPDATE_USER_SETTINGS: HttpStatus.OK,
   SUCCESS_GET_USER_SETTINGS: HttpStatus.OK,
   FAILED_TO_ADD_NOTIFICATION: HttpStatus.BAD_REQUEST,
+  SUCCESS_UPDATE_USER_ME: HttpStatus.OK,
+  SAME_BEFORE_PASSWORD: HttpStatus.BAD_REQUEST,
+  ALREADY_EXISTS_NICKNAME: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -320,6 +326,9 @@ export const ErrorMessage = {
   SUCCESS_UPDATE_USER_SETTINGS: '사용자 설정 수정 성공',
   SUCCESS_GET_USER_SETTINGS: '사용자 설정 조회 성공',
   FAILED_TO_ADD_NOTIFICATION: '알림 추가에 실패했습니다.',
+  SUCCESS_UPDATE_USER_ME: '사용자 정보 수정 성공',
+  SAME_BEFORE_PASSWORD: '이전 비밀번호와 동일합니다.',
+  ALREADY_EXISTS_NICKNAME: '이미 존재하는 닉네임입니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

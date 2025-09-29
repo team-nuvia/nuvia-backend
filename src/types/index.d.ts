@@ -23,6 +23,15 @@ export declare global {
     refresh_token?: string;
   }
 
+  export interface SocialLoginKakaoIdToken {
+    access_token: string;
+    expires_in: number;
+    scope: string;
+    token_type: string;
+    id_token: string;
+    refresh_token: string;
+  }
+
   export interface SocialLoginGoogleIdTokenPayload extends jwt.JwtPayload {
     iss: string;
     azp: string;
@@ -37,6 +46,19 @@ export declare global {
     family_name: string;
     iat: number;
     exp: number;
+  }
+
+  export interface SocialLoginKakaoIdTokenPayload extends jwt.JwtPayload {
+    iss: string;
+    aud: string;
+    sub: string;
+    iat: number;
+    exp: number;
+    auth_time: number;
+    nonce: string;
+    nickname: string;
+    picture: string;
+    email: string;
   }
 
   export interface UserMinimumInformation {
