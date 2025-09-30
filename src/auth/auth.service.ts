@@ -4,14 +4,14 @@ import { BadRequestException } from '@common/dto/response';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { SocialProvider } from '@share/enums/social-provider.enum';
-import { UserAccessStatusType } from '@users/user-accesses/enums/user-access-status-type';
+import { UserAccessStatusType } from '@share/enums/user-access-status-type';
+import { isNil } from '@util/isNil';
 import { UtilService } from '@util/util.service';
 import jwt from 'jsonwebtoken';
 import { firstValueFrom } from 'rxjs';
 import { AuthRepository } from './auth.repository';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
-import { isNil } from '@util/isNil';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +46,11 @@ export class AuthService {
     }
   }
 
-  async socialLogin(token: SocialLoginGoogleIdTokenPayload, socialProvider: SocialProvider, query: Record<string, string>) {
+  async socialLogin(
+    token: SocialLoginGoogleIdTokenPayload | SocialLoginKakaoIdTokenPayload,
+    socialProvider: SocialProvider,
+    query: Record<string, string>,
+  ) {
     const decodedState = Buffer.from(query.state, 'base64url').toString('utf8');
     const { ipAddress, ...userLoginInformationPayloadDto } = JSON.parse(decodedState);
 
@@ -61,12 +65,11 @@ export class AuthService {
     return { ...jwtInformation, hmacSession };
   }
 
-  async loginWithSocialProvider(
+  async getGoogleLoginUrl(
     ipAddress: string,
     userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
   ) {
     const socialProviderConfig = this.commonService.getConfig('socialProvider');
-
     const base64 = Buffer.from(JSON.stringify({ ipAddress, ...userLoginInformationDto })).toString('base64url');
     const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     url.searchParams.append('client_id', socialProviderConfig.google.clientId);
@@ -76,11 +79,42 @@ export class AuthService {
     url.searchParams.append('access_type', 'offline');
     url.searchParams.append('include_granted_scopes', 'true');
     url.searchParams.append('state', base64);
-
     return url;
   }
 
-  async loginWithSocialProviderCallback(query: Record<string, string>) {
+  async getKakaoLoginUrl(
+    ipAddress: string,
+    userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
+  ) {
+    const socialProviderConfig = this.commonService.getConfig('socialProvider');
+    const base64 = Buffer.from(JSON.stringify({ ipAddress, ...userLoginInformationDto })).toString('base64url');
+    const url = new URL('https://kauth.kakao.com/oauth/authorize');
+    url.searchParams.append('client_id', socialProviderConfig.kakao.clientId);
+    url.searchParams.append('redirect_uri', socialProviderConfig.kakao.redirectUri);
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append('state', base64);
+    return url;
+  }
+
+  async loginWithSocialProvider(
+    ipAddress: string,
+    userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
+    socialProvider: SocialProvider,
+  ) {
+    let url: URL;
+    switch (socialProvider) {
+      case SocialProvider.Google:
+        url = await this.getGoogleLoginUrl(ipAddress, userLoginInformationDto);
+        return url;
+      case SocialProvider.Kakao:
+        url = await this.getKakaoLoginUrl(ipAddress, userLoginInformationDto);
+        return url;
+      default:
+        throw new BadRequestException({ code: 'BAD_REQUEST', reason: 'Invalid social provider' });
+    }
+  }
+
+  async googleLoginWithSocialProviderCallback(query: Record<string, string>) {
     const socialProviderConfig = this.commonService.getConfig('socialProvider');
     const url = new URL('https://oauth2.googleapis.com/token');
     url.searchParams.append('client_id', socialProviderConfig.google.clientId);
@@ -101,6 +135,41 @@ export class AuthService {
     } catch (error: any) {
       console.log('🚀 ~ AuthService ~ loginWithSocialProviderCallback ~ error:', error);
       throw new BadRequestException({ code: error.code, reason: error.message });
+    }
+  }
+
+  async kakaoLoginWithSocialProviderCallback(query: Record<string, string>) {
+    const socialProviderConfig = this.commonService.getConfig('socialProvider');
+    const url = new URL('https://kauth.kakao.com/oauth/token');
+    url.searchParams.append('client_id', socialProviderConfig.kakao.clientId);
+    url.searchParams.append('redirect_uri', socialProviderConfig.kakao.redirectUri);
+    url.searchParams.append('code', query.code);
+    url.searchParams.append('grant_type', 'authorization_code');
+
+    try {
+      const { data } = await firstValueFrom<{ data: SocialLoginKakaoIdToken }>(
+        this.httpService.post(url.toString(), undefined, { headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' } }),
+      );
+
+      const idToken = data.id_token;
+
+      const decodedToken = jwt.decode(idToken) as SocialLoginKakaoIdTokenPayload;
+      console.log('✨ kakao decodedToken:', decodedToken);
+      return decodedToken;
+    } catch (error: any) {
+      console.log('🚀 ~ AuthService ~ loginWithSocialProviderCallback ~ error:', error);
+      throw new BadRequestException({ code: error.code, reason: error.message });
+    }
+  }
+
+  async loginWithSocialProviderCallback(query: Record<string, string>, socialProvider: SocialProvider) {
+    switch (socialProvider) {
+      case SocialProvider.Google:
+        return this.googleLoginWithSocialProviderCallback(query);
+      case SocialProvider.Kakao:
+        return this.kakaoLoginWithSocialProviderCallback(query);
+      default:
+        throw new BadRequestException({ code: 'BAD_REQUEST', reason: 'Invalid social provider' });
     }
   }
 

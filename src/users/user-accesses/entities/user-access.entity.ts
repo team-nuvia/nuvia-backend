@@ -1,7 +1,7 @@
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { UserAccessStatusType } from '@share/enums/user-access-status-type';
 import { User } from '@users/entities/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
-import { UserAccessStatusType } from '../enums/user-access-status-type';
 
 @Entity()
 export class UserAccess extends DefaultDateInterface {
