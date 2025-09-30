@@ -68,3 +68,6 @@ export const GOOGLE_REDIRECT_URI = getEnvAs(String, 'GOOGLE_REDIRECT_URI');
 /* Kakao 관련 환경변수 */
 export const KAKAO_CLIENT_ID = getEnvAs(String, 'KAKAO_CLIENT_ID');
 export const KAKAO_REDIRECT_URI = getEnvAs(String, 'KAKAO_REDIRECT_URI');
+
+export const CERT_KEY = process.env.CERT_KEY as string;
+export const PRIV_KEY = process.env.PRIV_KEY as string;
