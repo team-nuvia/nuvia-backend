@@ -16,12 +16,21 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/guard/jwt.guard';
+import { CERT_KEY, IS_PROD, PRIV_KEY } from '@common/variable/environment';
+import fs from 'fs';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
 async function bootstrap() {
+  const key = CERT_KEY ? fs.readFileSync(CERT_KEY) : null;
+  const cert = PRIV_KEY ? fs.readFileSync(PRIV_KEY) : null;
+  const httpsOptions = {
+    key,
+    cert,
+  };
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
+    httpsOptions: IS_PROD ? httpsOptions : undefined,
   });
 
   const commonService = app.get(CommonService);
@@ -54,8 +63,8 @@ async function bootstrap() {
     origin:
       commonConfig.runMode === RunMode.Development
         ? ['http://localhost:5000', 'http://localhost:6006', 'http://127.0.0.1:5000', 'http://127.0.0.1:6006', 'http://localhost:5173']
-        : ['http://localhost:5000'],
-    methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
+        : ['https://app.nuvia.kro.kr'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
     credentials: true,
     maxAge: 86400,
   });
