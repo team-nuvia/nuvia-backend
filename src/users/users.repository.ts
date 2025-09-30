@@ -1,3 +1,4 @@
+import { Subscription } from '@/subscriptions/entities/subscription.entity';
 import { CurrentOrganizationNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/current-organization.nested.response.dto';
 import { GetCurrentOrganizationsNestedResponseDto } from '@/subscriptions/organization-roles/dto/response/get-current-organizations.nested.response.dto';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
@@ -8,14 +9,18 @@ import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { SocialProvider } from '@share/enums/social-provider.enum';
+import { UserAccessStatusType } from '@share/enums/user-access-status-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
-import { DeepPartial, FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere, Not, ObjectLiteral } from 'typeorm';
 import { AlreadyExistsEmailExceptionDto } from './dto/exception/already-exists-email.exception.dto';
+import { AlreadyExistsNicknameExceptionDto } from './dto/exception/already-exists-nickname.exception.dto';
+import { UpdateUserMePayloadDto } from './dto/payload/update-user-me.payload.dto';
 import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.response.dto';
 import { GetUserSettingsNestedResponseDto } from './dto/response/get-user-settings.nested.response.dto';
 import { UserProvider } from './entities/user-provider.entity';
 import { User } from './entities/user.entity';
+import { Profile } from './profiles/entities/profile.entity';
 import { UserAccess } from './user-accesses/entities/user-access.entity';
 import { UserSecret } from './user-secrets/entities/user-secret.entity';
 
@@ -30,6 +35,57 @@ export class UsersRepository extends BaseRepository {
 
   async softDelete(id: number): Promise<void> {
     await this.orm.getRepo(User).softDelete(id);
+  }
+
+  async softDeleteWithUserProviders(userData: LoginUserData): Promise<void> {
+    const user = await this.orm
+      .getRepo(User)
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.userProviders', 'up', 'up.deletedAt IS NULL')
+      .where('u.id = :id', { id: userData.id })
+      .getOne();
+
+    if (isNil(user)) {
+      throw new NotFoundUserExceptionDto();
+    }
+
+    const softDeleteTargets = [
+      { entity: UserProvider, data: { userId: user.id } },
+      { entity: UserSecret, data: { userId: user.id } },
+      { entity: Profile, data: { userId: user.id } },
+      { entity: UserAccess, data: { userId: user.id } },
+      { entity: User, data: { id: user.id } },
+      // { entity: Survey, userId: user.id },
+      { entity: OrganizationRole, data: { userId: user.id } },
+      { entity: Subscription, data: { userId: user.id } },
+    ];
+
+    await this.orm.getRepo(UserAccess).insert({ userId: user.id, status: UserAccessStatusType.Deleted });
+
+    await Promise.all(softDeleteTargets.map(({ entity, data }) => this.orm.getRepo(entity as new () => ObjectLiteral).softDelete(data)));
+
+    /* 마지막 유저 프로바이더일 시 유저 제거 */
+    // if (user.userProviders.length === 1) {
+    //   // TODO: 조직 제거 시 팀 조직 마스터일 경우 관리자에게 권한 이전할지 여부 확인
+    //   const subscription = await this.orm
+    //     .getRepo(Subscription)
+    //     .createQueryBuilder('s')
+    //     .where('s.userId = :userId', { userId: user.id, target: SubscriptionTargetType.Individual })
+    //     .getOne();
+
+    //   if (subscription) {
+    //     await this.orm.getRepo(Survey).softDelete({ userId: user.id, subscriptionId: subscription.id });
+    //     await this.orm.getRepo(OrganizationRole).softDelete({ userId: user.id, subscriptionId: subscription.id });
+    //     await this.orm.getRepo(Subscription).update(subscription.id, { status: SubscriptionStatusType.Deleted });
+    //   }
+
+    //   await this.orm.getRepo(User).softDelete({ id: user.id });
+    //   await this.orm.getRepo(UserAccess).softDelete({ userId: user.id });
+    //   await this.orm.getRepo(Profile).softDelete({ userId: user.id });
+    //   /* 아래는 확실히 제거하기 위함 */
+    //   await this.orm.getRepo(UserProvider).softDelete({ userId: user.id });
+    //   await this.orm.getRepo(UserSecret).softDelete({ userId: user.id });
+    // }
   }
 
   existsByWithDeleted(condition: FindOptionsWhere<User>): Promise<boolean> {
@@ -185,5 +241,15 @@ export class UsersRepository extends BaseRepository {
 
   async updateUserSettings(userId: number, mailing: boolean): Promise<void> {
     await this.orm.getRepo(UserProvider).update({ userId }, { mailing });
+  }
+
+  async updateUserMe(user: LoginUserData, updateUserMeDto: UpdateUserMePayloadDto) {
+    const hasNickname = await this.orm.getRepo(UserProvider).exists({ where: { userId: Not(user.id), nickname: updateUserMeDto.nickname } });
+
+    if (hasNickname) {
+      throw new AlreadyExistsNicknameExceptionDto();
+    }
+
+    await this.orm.getRepo(UserProvider).update({ userId: user.id, provider: user.provider }, { nickname: updateUserMeDto.nickname });
   }
 }

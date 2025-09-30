@@ -1,19 +1,18 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { Public } from '@common/decorator/public.decorator';
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, Head, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import client from 'prom-client';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
+import { GetHealthCheckResponseDto } from './util/dto/response/get-health-check.response.dto';
 
 @Public()
 @ApiTags('앱')
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @ApiOperation({ summary: '버전 조회' })
   @CombineResponses(HttpStatus.OK, GetVersionResponse)
@@ -22,6 +21,17 @@ export class AppController {
     const version = this.appService.getVersion();
 
     return new GetVersionResponse(version);
+  }
+
+  @ApiOperation({ summary: '헬스 체크' })
+  @CombineResponses(HttpStatus.OK, GetHealthCheckResponseDto)
+  @Head('health')
+  getHealthCheck(@Res({ passthrough: true }) res: Response) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    return new GetHealthCheckResponseDto('OK');
   }
 
   @Get('metrics')

@@ -87,9 +87,10 @@ export class AuthController {
   async loginWithSocialProvider(
     @Ip() ipAddress: string,
     @Query() userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
+    @Param('socialProvider') socialProvider: string,
     @Res() res: Response,
   ) {
-    const url = await this.authService.loginWithSocialProvider(ipAddress, userLoginInformationDto);
+    const url = await this.authService.loginWithSocialProvider(ipAddress, userLoginInformationDto, socialProvider as SocialProvider);
     res.redirect(url.toString());
   }
 
@@ -103,7 +104,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const secretConfig = this.commonConfig.getConfig('secret');
-    const idToken = await this.authService.loginWithSocialProviderCallback(query);
+    const idToken = await this.authService.loginWithSocialProviderCallback(query, socialProvider as SocialProvider);
 
     const token = await this.authService.socialLogin(idToken, socialProvider as SocialProvider, query);
 

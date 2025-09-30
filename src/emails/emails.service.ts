@@ -4,7 +4,13 @@ import ejs from 'ejs';
 import nodemailer, { Transporter } from 'nodemailer';
 import path from 'path';
 
-type TemplateName = 'invitation' | 'notice';
+type TemplateName = 'invitation' | 'notice' | 'changePassword';
+
+interface ChangePasswordData {
+  title: string;
+  userName: string;
+  changePasswordUrl?: string;
+}
 
 interface NoticeData {
   title: string;
@@ -51,6 +57,11 @@ export class EmailsService {
   async sendNoticeMail(to: string, { actionUrl = undefined, ...data }: NoticeData) {
     const content = await this.getTemplate('notice', { ...data, actionUrl });
     await this.sendMail(to, `[누비아 활동 알림] ${data.title}`, content);
+  }
+
+  async sendChangePasswordMail(to: string, title: string, { userName, changePasswordUrl = undefined, ...data }: ChangePasswordData) {
+    const content = await this.getTemplate('changePassword', { ...data, changePasswordUrl, userName });
+    await this.sendMail(to, `[누비아 활동 알림] ${title}`, content);
   }
 
   async sendMail(to: string, subject: string, content: string) {

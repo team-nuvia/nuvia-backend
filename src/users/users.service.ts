@@ -18,6 +18,7 @@ import { GetUserMeNestedResponseDto } from './dto/response/get-user-me.nested.re
 import { UsersRepository } from './users.repository';
 import { SocialProvider } from '@share/enums/social-provider.enum';
 import { GetUserSettingsNestedResponseDto } from './dto/response/get-user-settings.nested.response.dto';
+import { UpdateUserMePayloadDto } from './dto/payload/update-user-me.payload.dto';
 
 @Injectable()
 export class UsersService {
@@ -133,7 +134,11 @@ export class UsersService {
     return updated;
   }
 
-  async remove(id: number) {
-    await this.userRepository.softDelete(id);
+  async softDeleteWithUserProviders(userData: LoginUserData) {
+    await this.userRepository.softDeleteWithUserProviders(userData);
+  }
+
+  async updateUserMe(user: LoginUserData, updateUserMeDto: UpdateUserMePayloadDto) {
+    await this.userRepository.updateUserMe(user, updateUserMeDto);
   }
 }
