@@ -63,7 +63,7 @@ async function bootstrap() {
     origin:
       commonConfig.runMode === RunMode.Development
         ? ['http://localhost:5000', 'http://localhost:6006', 'http://127.0.0.1:5000', 'http://127.0.0.1:6006', 'http://localhost:5173']
-        : ['http://localhost:5000'],
+        : ['https://app.nuvia.kro.kr'],
     methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
     credentials: true,
     maxAge: 86400,
