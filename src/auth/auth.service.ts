@@ -1,5 +1,7 @@
+import { EmailsService } from '@/emails/emails.service';
 import { CommonService } from '@common/common.service';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
+import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { BadRequestException } from '@common/dto/response';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
@@ -10,6 +12,9 @@ import { UtilService } from '@util/util.service';
 import jwt from 'jsonwebtoken';
 import { firstValueFrom } from 'rxjs';
 import { AuthRepository } from './auth.repository';
+import { ResetPasswordSendPayloadDto } from './dto/payload/reset-password-send.payload.dto';
+import { ResetPasswordVerifyPayloadDto } from './dto/payload/reset-password-verify.payload.dto';
+import { ResetPasswordPayloadDto } from './dto/payload/reset-password.payload.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
 
@@ -20,6 +25,7 @@ export class AuthService {
     private readonly utilService: UtilService,
     private readonly commonService: CommonService,
     private readonly httpService: HttpService,
+    private readonly emailsService: EmailsService,
   ) {}
 
   async login(
@@ -216,5 +222,87 @@ export class AuthService {
     await this.authRepository.joinOrganization(inviteeId, subscriptionId);
 
     return verified;
+  }
+
+  async resetPasswordSend(resetPasswordDto: ResetPasswordSendPayloadDto) {
+    const { email, token } = resetPasswordDto;
+    console.log('🚀 ~ AuthService ~ resetPasswordSend ~ token:', token);
+
+    /* 이메일 전송 정상 요청 확인 토큰 */
+    if (!this.verifyCsrfToken(token)) throw new BadRequestException();
+
+    const user = await this.authRepository.findUserByEmail(email, SocialProvider.Local);
+    const secret = this.commonService.getConfig('secret');
+
+    if (!user) throw new NotFoundUserExceptionDto();
+
+    const otpToken = await this.emailsService.sendResetPasswordEmail(email);
+
+    const timestamp = Date.now();
+    const emailEncode = this.utilService.encodeLongToken(email);
+    const otpTokenEncode = this.utilService.encodeLongToken(otpToken.toString());
+    const brandEncode = this.utilService.encodeLongToken(secret.encrypt);
+    const timestampEncode = this.utilService.encodeLongToken(timestamp.toString());
+    const verifyToken = this.utilService.encodeLongToken(`${emailEncode}:${brandEncode}:${otpTokenEncode}:${timestampEncode}`);
+    return verifyToken;
+  }
+
+  async resetPasswordVerify(resetPasswordVerifyDto: ResetPasswordVerifyPayloadDto) {
+    const { token, otpToken } = resetPasswordVerifyDto;
+    const decodedToken = this.utilService.decodeLongToken(token);
+    const [emailEncode, brandEncode, otpTokenEncode, timestampEncode] = decodedToken.split(':');
+    const email = this.utilService.decodeLongToken(emailEncode);
+    const brandDecode = this.utilService.decodeLongToken(brandEncode);
+    const otpTokenDecode = this.utilService.decodeLongToken(otpTokenEncode);
+    const timestampDecode = this.utilService.decodeLongToken(timestampEncode);
+    const secret = this.commonService.getConfig('secret');
+
+    /* 토큰 시간 검증 - 1시간 */
+    if (Date.now() - parseInt(timestampDecode) > 1000 * 60 * 60 * 1) throw new BadRequestException();
+
+    /* 브랜드 보안 값 검증 */
+    if (brandDecode !== secret.encrypt) throw new BadRequestException();
+
+    /* OTP 토큰 검증 */
+    if (otpTokenDecode !== otpToken) throw new BadRequestException();
+
+    /* 회원 검증 */
+    return this.authRepository.findUserByEmail(email, SocialProvider.Local);
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordPayloadDto, ipAddress: string) {
+    const { email, password, token, otpToken, confirmPassword, accessDevice, accessBrowser, accessUserAgent } = resetPasswordDto;
+
+    if (password !== confirmPassword) throw new BadRequestException();
+
+    const user = await this.resetPasswordVerify({ token, otpToken });
+
+    if (!user) throw new NotFoundUserExceptionDto();
+
+    const { hashedPassword, salt, iteration } = this.utilService.hashPassword(password);
+
+    await this.authRepository.updateUserSecret(user.id, email, hashedPassword, salt, iteration, ipAddress, {
+      accessDevice,
+      accessBrowser,
+      accessUserAgent,
+    });
+  }
+
+  csrfToken() {
+    const source = this.utilService.encodeToken(this.commonService.getConfig('secret').encrypt);
+    return this.utilService.encodeToken(`nuvia:${Date.now()}:${source}`);
+  }
+
+  verifyCsrfToken(csrfToken: string) {
+    const decodedToken = this.utilService.decodeToken(csrfToken);
+    console.log('🚀 ~ AuthService ~ verifyCsrfToken ~ decodedToken:', decodedToken);
+    const [brandHash, timestamp, source] = decodedToken.split(':');
+    const sourceDecode = this.utilService.decodeToken(source);
+
+    const isExpiredTimestamp = Date.now() - parseInt(timestamp) > 1000 * 60 * 60 * 1;
+    const isAcceptSource = sourceDecode === this.commonService.getConfig('secret').encrypt;
+    const isAcceptBrand = brandHash === 'nuvia';
+
+    return isAcceptBrand && isAcceptSource && !isExpiredTimestamp;
   }
 }

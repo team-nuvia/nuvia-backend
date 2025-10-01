@@ -247,11 +247,16 @@ export default class DataSeeder implements Seeder {
       {
         name: PlanNameType.Free,
         description: 'Free plan',
-        price: 3000,
+        price: 0,
       },
       {
         name: PlanNameType.Basic,
         description: 'Basic Plan',
+        price: 3000,
+      },
+      {
+        name: PlanNameType.Pro,
+        description: 'Pro Plan',
         price: 7000,
       },
       {
@@ -432,6 +437,39 @@ export default class DataSeeder implements Seeder {
         },
         perResponseForSurvey: {
           amount: 10000,
+          isRenewable: false,
+          isAllowed: true,
+        },
+      }),
+      /* premium plan */
+      ...createPlanGrants(4, {
+        surveyCreate: {
+          amount: 100,
+          isRenewable: true,
+          isAllowed: true,
+        },
+        perQuestionForSurvey: {
+          amount: 150,
+          isRenewable: true,
+          isAllowed: true,
+        },
+        fileUpload: {
+          amount: null,
+          isRenewable: false,
+          isAllowed: true,
+        },
+        download: {
+          amount: null,
+          isRenewable: false,
+          isAllowed: true,
+        },
+        teamInvite: {
+          amount: 100,
+          isRenewable: false,
+          isAllowed: true,
+        },
+        perResponseForSurvey: {
+          amount: 100000,
           isRenewable: false,
           isAllowed: true,
         },

@@ -109,6 +109,11 @@ export const ErrorKey = {
   SUCCESS_UPDATE_USER_ME: 'SUCCESS_UPDATE_USER_ME',
   SAME_BEFORE_PASSWORD: 'SAME_BEFORE_PASSWORD',
   ALREADY_EXISTS_NICKNAME: 'ALREADY_EXISTS_NICKNAME',
+  SUCCESS_GET_PLANS: 'SUCCESS_GET_PLANS',
+  SUCCESS_RESET_PASSWORD_SEND: 'SUCCESS_RESET_PASSWORD_SEND',
+  SUCCESS_RESET_PASSWORD: 'SUCCESS_RESET_PASSWORD',
+  SUCCESS_RESET_PASSWORD_VERIFY: 'SUCCESS_RESET_PASSWORD_VERIFY',
+  SUCCESS_CREATE_CSRF_TOKEN: 'SUCCESS_CREATE_CSRF_TOKEN',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -219,6 +224,11 @@ export const ErrorCode = {
   SUCCESS_UPDATE_USER_ME: HttpStatus.OK,
   SAME_BEFORE_PASSWORD: HttpStatus.BAD_REQUEST,
   ALREADY_EXISTS_NICKNAME: HttpStatus.BAD_REQUEST,
+  SUCCESS_GET_PLANS: HttpStatus.OK,
+  SUCCESS_RESET_PASSWORD_SEND: HttpStatus.OK,
+  SUCCESS_RESET_PASSWORD: HttpStatus.OK,
+  SUCCESS_RESET_PASSWORD_VERIFY: HttpStatus.OK,
+  SUCCESS_CREATE_CSRF_TOKEN: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -329,6 +339,11 @@ export const ErrorMessage = {
   SUCCESS_UPDATE_USER_ME: '사용자 정보 수정 성공',
   SAME_BEFORE_PASSWORD: '이전 비밀번호와 동일합니다.',
   ALREADY_EXISTS_NICKNAME: '이미 존재하는 닉네임입니다.',
+  SUCCESS_GET_PLANS: '플랜 목록 조회 성공',
+  SUCCESS_RESET_PASSWORD_SEND: '비밀번호 재설정 메일 발송 성공',
+  SUCCESS_RESET_PASSWORD: '비밀번호 재설정 성공',
+  SUCCESS_RESET_PASSWORD_VERIFY: '비밀번호 재설정 인증 성공',
+  SUCCESS_CREATE_CSRF_TOKEN: 'CSRF 토큰 생성 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

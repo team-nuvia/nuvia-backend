@@ -4,12 +4,17 @@ import ejs from 'ejs';
 import nodemailer, { Transporter } from 'nodemailer';
 import path from 'path';
 
-type TemplateName = 'invitation' | 'notice' | 'changePassword';
+type TemplateName = 'invitation' | 'notice' | 'changePassword' | 'resetPassword';
 
 interface ChangePasswordData {
   title: string;
   userName: string;
   changePasswordUrl?: string;
+}
+
+interface ResetPasswordData {
+  email: string;
+  token: string;
 }
 
 interface NoticeData {
@@ -62,6 +67,19 @@ export class EmailsService {
   async sendChangePasswordMail(to: string, title: string, { userName, changePasswordUrl = undefined, ...data }: ChangePasswordData) {
     const content = await this.getTemplate('changePassword', { ...data, changePasswordUrl, userName });
     await this.sendMail(to, `[누비아 활동 알림] ${title}`, content);
+  }
+
+  async sendResetPasswordEmail(to: string) {
+    const otpToken = Math.floor(100000 + Math.random() * 900000)
+      .toString()
+      .padStart(6, '0');
+    const data = {
+      email: to,
+      token: otpToken,
+    } as ResetPasswordData;
+    const content = await this.getTemplate('resetPassword', data);
+    await this.sendMail(to, '[누비아 활동 알림] 비밀번호 재설정', content);
+    return otpToken;
   }
 
   async sendMail(to: string, subject: string, content: string) {

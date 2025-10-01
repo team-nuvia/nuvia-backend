@@ -19,12 +19,19 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SocialProvider } from '@share/enums/social-provider.enum';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
+import { ResetPasswordSendPayloadDto } from './dto/payload/reset-password-send.payload.dto';
+import { ResetPasswordVerifyPayloadDto } from './dto/payload/reset-password-verify.payload.dto';
+import { ResetPasswordPayloadDto } from './dto/payload/reset-password.payload.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { VerifyInvitationTokenPayloadDto } from './dto/payload/verify-invitation-token.payload.dto';
 import { AlreadyLoggedOutResponseDto } from './dto/response/already-logged-out.response.dto';
+import { CsrfTokenResponseDto } from './dto/response/csrf-token.response.dto';
 import { LoginResponseDto } from './dto/response/login.response.dto';
 import { LogoutResponseDto } from './dto/response/logout.response.dto';
 import { RefreshResponseDto } from './dto/response/refesh.response.dto';
+import { ResetPasswordSendResponseDto } from './dto/response/reset-password-send.response.dto';
+import { ResetPasswordVerifyResponseDto } from './dto/response/reset-password-verify.response.dto';
+import { ResetPasswordResponseDto } from './dto/response/reset-password.response.dto';
 import { VerifyInvitationTokenResponseDto } from './dto/response/verify-invitation-token.response.dto';
 import { VerifySessionResponseDto } from './dto/response/verify-session.response.dto';
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
@@ -263,5 +270,43 @@ export class AuthController {
   ): Promise<VerifyInvitationTokenResponseDto> {
     const verifyToken = await this.authService.verifyInvitationToken(verifyInvitationTokenDto.token, user.id);
     return new VerifyInvitationTokenResponseDto({ verified: verifyToken, token: verifyInvitationTokenDto.token });
+  }
+
+  @ApiOperation({ summary: 'CSRF 토큰 생성' })
+  @CombineResponses(HttpStatus.OK, CsrfTokenResponseDto)
+  @Public()
+  @Post('csrftoken')
+  async csrfToken(): Promise<CsrfTokenResponseDto> {
+    const token = this.authService.csrfToken();
+    console.log('🚀 ~ AuthController ~ csrfToken ~ token:', token);
+    return new CsrfTokenResponseDto({ token });
+  }
+
+  @ApiOperation({ summary: '비밀번호 재설정 이메일 전송' })
+  @CombineResponses(HttpStatus.OK, ResetPasswordSendResponseDto)
+  @Public()
+  @Post('reset-password/send')
+  async resetPasswordSend(@Body() resetPasswordDto: ResetPasswordSendPayloadDto): Promise<ResetPasswordSendResponseDto> {
+    console.log('🚀 ~ AuthController ~ resetPasswordSend ~ resetPasswordDto:', resetPasswordDto);
+    const verifyToken = await this.authService.resetPasswordSend(resetPasswordDto);
+    return new ResetPasswordSendResponseDto({ token: verifyToken });
+  }
+
+  @ApiOperation({ summary: '비밀번호 재설정 인증' })
+  @CombineResponses(HttpStatus.OK, ResetPasswordVerifyResponseDto)
+  @Public()
+  @Post('reset-password/verify')
+  async resetPasswordVerify(@Body() resetPasswordVerifyDto: ResetPasswordVerifyPayloadDto): Promise<ResetPasswordVerifyResponseDto> {
+    await this.authService.resetPasswordVerify(resetPasswordVerifyDto);
+    return new ResetPasswordVerifyResponseDto();
+  }
+
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @CombineResponses(HttpStatus.OK, ResetPasswordResponseDto)
+  @Public()
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordPayloadDto, @Ip() ipAddress: string): Promise<ResetPasswordResponseDto> {
+    await this.authService.resetPassword(resetPasswordDto, ipAddress);
+    return new ResetPasswordResponseDto();
   }
 }

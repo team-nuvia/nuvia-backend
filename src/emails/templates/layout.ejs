@@ -220,6 +220,32 @@
         line-height: 1.5;
       }
 
+      /* OTP 코드 스타일 */
+      .otp-container {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .otp-code {
+        display: inline-block;
+        padding: 16px 24px;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 6px;
+        color: #111827;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .otp-code:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
       /* 모바일 반응형 */
       @media only screen and (max-width: 600px) {
         .email-container {
@@ -255,6 +281,12 @@
 
         .security-tips {
           padding: 15px !important;
+        }
+
+        .otp-code {
+          font-size: 24px !important;
+          padding: 12px 20px !important;
+          letter-spacing: 4px !important;
         }
       }
     </style>

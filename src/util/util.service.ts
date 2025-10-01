@@ -213,7 +213,7 @@ export class UtilService {
 
       // base64 디코딩
       const combined = Buffer.from(token, encoding);
-      if (combined.length < 17) throw new InvalidTokenLengthExceptionDto();
+      if (combined.length <= 17) throw new InvalidTokenLengthExceptionDto();
 
       // IV 추출 (처음 16바이트)
       const iv = combined.subarray(0, 16);
@@ -228,6 +228,75 @@ export class UtilService {
       return decrypted.toString('utf8');
     } catch (error: any) {
       this.loggerService.error(`토큰 복호화 실패: ${error.message}`);
+      throw new FailDecodeTokenExceptionDto();
+    }
+  }
+
+  /**
+   * 길이 제한 없는 데이터 암호화
+   * @param data 암호화할 문자열
+   * @returns 암호화된 문자열 (base64url)
+   */
+  encodeLongToken(data: string): string {
+    try {
+      this.loggerService.debug(`🚀 ~ 길이 무제한 암호화 데이터: ${data}`);
+
+      const secretConfig = this.commonService.getConfig('secret');
+      const key = crypto.scryptSync(secretConfig.encrypt, secretConfig.encryptSalt, 32);
+
+      // 데이터를 Buffer로 변환
+      const bufferData = Buffer.from(data, 'utf8');
+      // 블록 크기(1024)로 분할
+      const blockSize = 1024;
+      const blocks: string[] = [];
+      for (let i = 0; i < bufferData.length; i += blockSize) {
+        const chunk = bufferData.subarray(i, i + blockSize);
+        // 블록마다 IV를 생성하고, IV + 암호화 데이터로 구성
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        const encrypted = Buffer.concat([cipher.update(chunk), cipher.final()]);
+        // IV(16) + 암호화 데이터
+        const block = Buffer.concat([iv, encrypted]).toString('base64url');
+        blocks.push(block);
+      }
+      // 블록을 구분자(:)로 연결
+      // 주의: 원본 데이터에 ':'가 들어가면, 복호화시 split에서 문제가 생길 수 있음
+      // base64url은 ':'를 포함하지 않으므로 안전함
+      return blocks.join(':');
+    } catch (error: any) {
+      this.loggerService.error(`길이 무제한 토큰 암호화 실패: ${error.message}`);
+      throw new FailEncodeTokenExceptionDto();
+    }
+  }
+
+  /**
+   * 길이 제한 없는 데이터 복호화
+   * @param token 암호화된 문자열 (base64url, 블록 구분자 :)
+   * @returns 복호화된 원본 문자열
+   */
+  decodeLongToken(token: string): string {
+    try {
+      const secretConfig = this.commonService.getConfig('secret');
+      const key = crypto.scryptSync(secretConfig.encrypt, secretConfig.encryptSalt, 32);
+
+      // 블록 분리
+      // 주의: encodeLongToken에서 join(':')로 합쳤으므로, split(':')로 분리
+      const blocks = token.split(':');
+      const decryptedBuffers: Buffer[] = [];
+      for (const block of blocks) {
+        if (!block) continue;
+        const combined = Buffer.from(block, 'base64url');
+        if (combined.length <= 17) throw new InvalidTokenLengthExceptionDto();
+        const iv = combined.subarray(0, 16);
+        const encrypted = combined.subarray(16);
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+        decryptedBuffers.push(decrypted);
+      }
+      // 복호화된 버퍼를 합쳐서 utf8 문자열로 반환
+      return Buffer.concat(decryptedBuffers).toString('utf8');
+    } catch (error: any) {
+      this.loggerService.error(`길이 무제한 토큰 복호화 실패: ${error.message}`);
       throw new FailDecodeTokenExceptionDto();
     }
   }

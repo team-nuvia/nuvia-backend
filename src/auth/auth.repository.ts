@@ -8,6 +8,7 @@ import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organizati
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { BaseRepository } from '@common/base.repository';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
+import { BadRequestException } from '@common/dto/response';
 import { Injectable } from '@nestjs/common';
 import { NotificationActionStatus } from '@share/enums/notification-action-status';
 import { NotificationType } from '@share/enums/notification-type';
@@ -21,14 +22,14 @@ import { UserProvider } from '@users/entities/user-provider.entity';
 import { User } from '@users/entities/user.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
+import { UserSecret } from '@users/user-secrets/entities/user-secret.entity';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
 import { uniqueHash } from '@util/uniqueHash';
+import { UtilService } from '@util/util.service';
 import sharp from 'sharp';
 import { FindOptionsWhere } from 'typeorm';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
-import { BadRequestException } from '@common/dto/response';
-import { UtilService } from '@util/util.service';
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
@@ -241,6 +242,31 @@ export class AuthRepository extends BaseRepository {
     return newOrUpdatedUser;
   }
 
+  async findUserByEmail(email: string, provider: SocialProvider): Promise<UserMinimumInformation> {
+    const user = await this.orm
+      .getRepo(User)
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.userProviders', 'up')
+      .where('up.email = :email AND up.provider = :provider', { email, provider })
+      .select(['u.id', 'up.email', 'up.name', 'up.nickname'])
+      .getOne();
+
+    if (isNil(user)) {
+      throw new NotFoundUserExceptionDto(email);
+    }
+
+    const subscription = await this.getCurrentOrganization(user.id);
+
+    return {
+      id: user.id,
+      provider,
+      email: user.userProvider.email,
+      name: user.userProvider.name,
+      nickname: user.userProvider.nickname,
+      role: subscription.permission.role,
+    };
+  }
+
   async findUserById(id: number, provider: SocialProvider): Promise<UserMinimumInformation> {
     const user = await this.orm
       .getRepo(User)
@@ -296,7 +322,7 @@ export class AuthRepository extends BaseRepository {
   async addUserAccessLog(
     id: number,
     ipAddress: string,
-    userLoginInformationPayloadDto: UserLoginInformationPayloadDto | null,
+    userLoginInformationPayloadDto: Omit<UserLoginInformationPayloadDto, 'email' | 'password'> | null,
     accessStatus: UserAccessStatusType,
   ) {
     const userAccess = new UserAccess();
@@ -377,5 +403,25 @@ export class AuthRepository extends BaseRepository {
     }
 
     await this.orm.getRepo(Notification).update({ id: notification.id }, { actionStatus: NotificationActionStatus.Joined });
+  }
+
+  async updateUserSecret(
+    userId: number,
+    email: string,
+    hashedPassword: string,
+    salt: string,
+    iteration: number,
+    ipAddress: string,
+    userLoginInformationPayloadDto: Omit<UserLoginInformationPayloadDto, 'email' | 'password'>,
+  ) {
+    const user = await this.orm.getRepo(User).findOne({ where: { userProviders: { email, provider: SocialProvider.Local } } });
+
+    if (isNil(user) || user.id !== userId) {
+      throw new NotFoundUserExceptionDto(email);
+    }
+
+    await this.addUserAccessLog(userId, ipAddress, userLoginInformationPayloadDto, UserAccessStatusType.ResetPassword);
+
+    await this.orm.getRepo(UserSecret).update(userId, { password: hashedPassword, salt, iteration });
   }
 }

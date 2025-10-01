@@ -11,7 +11,7 @@ export class UserAccess extends DefaultDateInterface {
   @Column('int', { comment: '유저 ID' })
   userId!: number;
 
-  @Column('varchar', { length: 10, comment: '접속 상태' })
+  @Column('varchar', { length: 30, comment: '접속 상태' })
   status!: UserAccessStatusType;
 
   @Column('varchar', { length: 50, comment: '접속 IP' })
