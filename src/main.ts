@@ -22,8 +22,8 @@ import fs from 'fs';
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
 async function bootstrap() {
-  const key = CERT_KEY ? fs.readFileSync(CERT_KEY) : null;
-  const cert = PRIV_KEY ? fs.readFileSync(PRIV_KEY) : null;
+  const cert = CERT_KEY ? fs.readFileSync(CERT_KEY) : null;
+  const key = PRIV_KEY ? fs.readFileSync(PRIV_KEY) : null;
   const httpsOptions = {
     key,
     cert,
