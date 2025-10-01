@@ -12,7 +12,7 @@ import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
-import { CLIENT_URL } from '@common/variable/environment';
+import { CLIENT_URL, IS_PROD } from '@common/variable/environment';
 import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
 import { Body, Controller, Get, HttpStatus, Ip, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -62,7 +62,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -70,7 +70,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -78,7 +78,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -118,7 +118,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -126,7 +126,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -134,7 +134,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.redirect(`${CLIENT_URL}/auth/login`);
@@ -152,13 +152,12 @@ export class AuthController {
     const domain = this.commonConfig.getConfig('common').domain;
     const token = await this.authService.refresh(verifiedRefreshToken);
 
-
     res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -167,7 +166,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
       // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -176,7 +175,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
       // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -199,13 +198,12 @@ export class AuthController {
     const secretConfig = this.commonConfig.getConfig('secret');
     const domain = this.commonConfig.getConfig('common').domain;
 
-
     res.clearCookie(ACCESS_COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.clearCookie(REFRESH_COOKIE_NAME, {
@@ -213,7 +211,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     res.clearCookie(SESSION_COOKIE_NAME, {
@@ -221,7 +219,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
-      domain,
+      domain: IS_PROD ? domain : undefined,
     });
 
     if (loginUserData) {
