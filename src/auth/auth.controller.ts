@@ -54,6 +54,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
+    const domain = this.commonConfig.getConfig('common').domain;
     const token = await this.authService.login(loginUserData, ipAddress, userLoginInformationDto);
 
     res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
@@ -61,6 +62,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
+      domain,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -68,6 +70,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
+      domain,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -75,6 +78,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
+      domain,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -104,6 +108,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const secretConfig = this.commonConfig.getConfig('secret');
+    const domain = this.commonConfig.getConfig('common').domain;
     const idToken = await this.authService.loginWithSocialProviderCallback(query, socialProvider as SocialProvider);
 
     const token = await this.authService.socialLogin(idToken, socialProvider as SocialProvider, query);
@@ -113,6 +118,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
+      domain,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -120,6 +126,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
+      domain,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -127,6 +134,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
+      domain,
     });
 
     res.redirect(`${CLIENT_URL}/auth/login`);
@@ -141,13 +149,16 @@ export class AuthController {
   @Post('refresh')
   async refresh(@RefreshToken() verifiedRefreshToken: string, @Res({ passthrough: true }) res: Response): Promise<RefreshResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
+    const domain = this.commonConfig.getConfig('common').domain;
     const token = await this.authService.refresh(verifiedRefreshToken);
+
 
     res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
+      domain,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
@@ -156,6 +167,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
       // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
+      domain,
     });
 
     res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
@@ -164,6 +176,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
       // jwt는 s단위, cookie는 ms단위이기 때문에 1000을 곱해줌
+      domain,
     });
 
     /* 액세스 토큰만 반환 - 프론트에서 localStorage 사용 */
@@ -184,12 +197,15 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
+    const domain = this.commonConfig.getConfig('common').domain;
+
 
     res.clearCookie(ACCESS_COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieAccessExpireTime,
+      domain,
     });
 
     res.clearCookie(REFRESH_COOKIE_NAME, {
@@ -197,6 +213,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieRefreshExpireTime,
+      domain,
     });
 
     res.clearCookie(SESSION_COOKIE_NAME, {
@@ -204,6 +221,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: secretConfig.cookieSessionExpireTime,
+      domain,
     });
 
     if (loginUserData) {

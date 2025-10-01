@@ -71,3 +71,5 @@ export const KAKAO_REDIRECT_URI = getEnvAs(String, 'KAKAO_REDIRECT_URI');
 
 export const CERT_KEY = process.env.CERT_KEY as string;
 export const PRIV_KEY = process.env.PRIV_KEY as string;
+
+export const DOMAIN = process.env.DOMAIN as string;
