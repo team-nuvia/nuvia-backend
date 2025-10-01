@@ -1,6 +1,7 @@
 import {
   CLIENT_URL,
   DEPLOY_VERSION,
+  DOMAIN,
   HOST,
   LOG_ACTIVATE,
   LOG_SAVE_ACTIVATE,
@@ -22,6 +23,7 @@ const commonConf = {
   runOn: RUN_ON,
   logActivate: LOG_ACTIVATE,
   logSaveActivate: LOG_SAVE_ACTIVATE,
+  domain: DOMAIN,
 };
 
 export default registerAs('common', () => commonConf);
