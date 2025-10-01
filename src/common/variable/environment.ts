@@ -31,7 +31,7 @@ export const IS_DEV = RUN_MODE === RunMode.Development;
 export const IS_TEST = RUN_MODE === RunMode.Test;
 
 export const CLIENT_URL = getEnvAs(String, 'CLIENT_URL', 'http://localhost:5000');
-export const SERVER_URL = getEnvAs(String, 'SERVE_HOST', 'http://localhost:3000');
+export const SERVER_URL = getEnvAs(String, 'SERVER_URL', 'http://localhost:3000');
 export const HOST = getEnvAs(String, 'HOST');
 export const PORT = getEnvAs(Number, 'PORT');
 
