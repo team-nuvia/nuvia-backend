@@ -13,6 +13,7 @@ import { Seeder, SeederFactoryManager } from 'typeorm-extension';
 
 export default class DataSeeder implements Seeder {
   public async run(dataSource: DataSource, _factoryManager: SeederFactoryManager): Promise<any> {
+    console.log('start seeding');
     const manager = dataSource.manager;
 
     /* 관계형 역순 데이터 제거 */
@@ -34,9 +35,9 @@ export default class DataSeeder implements Seeder {
     await this.seedPermissions(dataSource);
     await this.seedPermissionGrants(dataSource);
     await this.seedPlans(dataSource);
+    console.log('end seeding');
   }
 
-  //@ts-ignore
   private async seedCategories(dataSource: DataSource) {
     const manager = dataSource.manager;
 
@@ -48,7 +49,6 @@ export default class DataSeeder implements Seeder {
     await categoryRepository.insert(categories.map((name) => ({ name })));
   }
 
-  //@ts-ignore
   private async seedPermissionGrants(dataSource: DataSource) {
     const permissionGrantRepository = dataSource.getRepository(PermissionGrant);
 
@@ -202,7 +202,6 @@ export default class DataSeeder implements Seeder {
     await permissionGrantRepository.insert([...viewerPermissions, ...editorPermissions, ...adminPermissions, ...ownerPermissions]);
   }
 
-  //@ts-ignore
   private async seedPermissions(dataSource: DataSource) {
     const permissionRepository = dataSource.getRepository(Permission);
 
@@ -238,7 +237,6 @@ export default class DataSeeder implements Seeder {
     ]);
   }
 
-  //@ts-ignore
   private async seedPlans(dataSource: DataSource) {
     const planRepository = dataSource.getRepository(Plan);
     const planGrantRepository = dataSource.getRepository(PlanGrant);
