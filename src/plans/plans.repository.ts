@@ -29,7 +29,7 @@ export class PlansRepository extends BaseRepository {
     const plans = await this.orm
       .getRepo(Plan)
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.planGrants', 'pg')
+      .leftJoinAndSelect('p.planGrants', 'pg', 'pg.isAllowed = true')
       .leftJoinAndSelect(
         'p.planDiscounts',
         'pd',
@@ -46,7 +46,7 @@ export class PlansRepository extends BaseRepository {
       features: plan.planGrants.map((pg) => {
         const constraints = [PlanGrantConstraintsType.TeamInvite, PlanGrantConstraintsType.PerResponseForSurvey] as string[];
         const unit = pg.constraints && constraints.includes(pg.constraints) ? ' 명' : ' 개';
-        return `${pg.description?.replace(/수|제한/g, '').trim()}${pg.amount ? `${pg.amount} ${unit}` : ''}`.trim();
+        return `${pg.description?.replace(/수|제한/g, '').trim()}${pg.amount ? ` ${pg.amount.toLocaleString()} ${unit}` : ''}`.trim();
       }),
       planDiscounts: plan.planDiscounts.map((pd) => ({
         id: pd.id,
