@@ -1,6 +1,6 @@
 import { CommonService } from '@common/common.service';
 import { LogLevel } from '@common/variable/enums/log-level.enum';
-import { RunMode } from '@common/variable/enums/run-mode.enum';
+import { RunOn } from '@common/variable/enums/run-on.enum';
 import { Injectable } from '@nestjs/common';
 import { DateFormat } from '@util/dateFormat';
 import path from 'path';
@@ -59,7 +59,7 @@ export class LoggerService {
     };
 
     const transports: winston.transport[] = [new winstonDaily(dailyOption('info')), new winstonDaily(dailyOption('error'))];
-    if (commonConfig.runMode === RunMode.Development) {
+    if (commonConfig.runOn === RunOn.Local) {
       transports.push(new winston.transports.Console());
     }
 

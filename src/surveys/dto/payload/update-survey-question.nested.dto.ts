@@ -5,6 +5,7 @@ import { QuestionType } from '@share/enums/question-type';
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { UpdateSurveyQuestionOptionNestedDto } from './update-survey-question-option.nested.payload.dto';
+import { IsNullable } from '@common/decorator/is-nullable.decorator';
 
 export class UpdateSurveyQuestionNestedDto {
   @ApiPropertyNullable({
@@ -12,6 +13,7 @@ export class UpdateSurveyQuestionNestedDto {
     example: 1,
   })
   @IsNumber()
+  @IsNullable()
   id!: number | null;
 
   @ApiProperty({
@@ -27,6 +29,7 @@ export class UpdateSurveyQuestionNestedDto {
     example: '질문 설명',
   })
   @IsString()
+  @IsNullable()
   description!: string | null;
 
   @ApiProperty({

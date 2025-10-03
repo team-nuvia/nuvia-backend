@@ -4,6 +4,8 @@ import { GlobalExceptionFilter } from '@common/filter/global-exception.filter';
 import { ResponseInterceptor } from '@common/interceptor/response.interceptor';
 import { TransactionalInterceptor } from '@common/interceptor/transactional.interceptor';
 import { RunMode } from '@common/variable/enums/run-mode.enum';
+import { RunOn } from '@common/variable/enums/run-on.enum';
+import { CERT_KEY, IS_PROD, PRIV_KEY } from '@common/variable/environment';
 import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';
@@ -14,10 +16,9 @@ import { setupSwagger } from '@util/setupSwagger';
 import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/guard/jwt.guard';
-import { CERT_KEY, IS_PROD, PRIV_KEY } from '@common/variable/environment';
-import fs from 'fs';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
 
@@ -62,8 +63,10 @@ async function bootstrap() {
     // TODO: 운영일 때 호스트 적용
     origin:
       commonConfig.runMode === RunMode.Development
-        ? ['http://localhost:5000', 'http://localhost:6006', 'http://127.0.0.1:5000', 'http://127.0.0.1:6006', 'http://localhost:5173']
-        : ['https://app.nuvia.kro.kr'],
+        ? ['http://localhost:5000', 'https://localhost:5000']
+        : commonConfig.runOn === RunOn.Local
+          ? ['https://app.nuvia.kro.kr', 'http://localhost:5000', 'https://localhost:5000']
+          : ['https://app.nuvia.kro.kr'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
     credentials: true,
     maxAge: 86400,

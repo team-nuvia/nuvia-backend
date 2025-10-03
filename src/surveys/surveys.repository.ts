@@ -542,7 +542,9 @@ export class SurveysRepository extends BaseRepository {
       viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
-      author: survey.user ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
+      author: survey.user
+        ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) }
+        : null,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
       questions: survey.questions.map((question) => ({
@@ -641,7 +643,9 @@ export class SurveysRepository extends BaseRepository {
       viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
-      author: survey.user ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) } : null,
+      author: survey.user
+        ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) }
+        : null,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
       questions: survey.questions.map((question) => ({
@@ -797,7 +801,8 @@ export class SurveysRepository extends BaseRepository {
     }
 
     /* 질문, 질문 옵션 추가 */
-    await this.orm.getManager().save(Question, createQuestionAndOptionQueue);
+    console.log('🚀 ~ SurveysRepository ~ updateSurvey ~ createQuestionAndOptionQueue:', createQuestionAndOptionQueue);
+    await this.orm.getRepo(Question).insert(createQuestionAndOptionQueue);
 
     /* 삭제할 질문 옵션 쿼리 실행 */
     const deleteTargetOptionList = await Promise.all(deleteTargetQueryQueue);

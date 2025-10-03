@@ -39,6 +39,7 @@ import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.g
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
 import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
+
 @ApiTags('설문')
 @Controller('surveys')
 export class SurveysController {
@@ -225,13 +226,16 @@ export class SurveysController {
   @SurveyUpdateConstraintValidation()
   @Transactional()
   @RequiredLogin
-  @Put(':id')
+  @Put(':surveyId')
   async updateSurvey(
     @LoginUser() user: LoginUserData,
-    @Param('id') id: string,
+    @Param('surveyId') surveyId: string,
     @Body() updateSurveyPayloadDto: UpdateSurveyPayloadDto,
   ): Promise<UpdateSurveyResponseDto> {
-    await this.surveysService.updateSurvey(+id, user.id, updateSurveyPayloadDto);
+    console.log('🚀 ~ SurveysController ~ updateSurvey ~ user:', user);
+    console.log('🚀 ~ SurveysController ~ updateSurvey ~ surveyId:', surveyId);
+    console.log('🚀 ~ SurveysController ~ updateSurvey ~ updateSurveyPayloadDto:', updateSurveyPayloadDto);
+    await this.surveysService.updateSurvey(+surveyId, user.id, updateSurveyPayloadDto);
     return new UpdateSurveyResponseDto();
   }
 
@@ -241,9 +245,9 @@ export class SurveysController {
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @SurveyDeleteConstraintValidation()
   @RequiredLogin
-  @Delete(':id')
-  async deleteSurvey(@LoginUser() user: LoginUserData, @Param('id') id: string): Promise<DeleteSurveyResponseDto> {
-    await this.surveysService.deleteSurvey(user.id, +id);
+  @Delete(':surveyId')
+  async deleteSurvey(@LoginUser() user: LoginUserData, @Param('surveyId') surveyId: string): Promise<DeleteSurveyResponseDto> {
+    await this.surveysService.deleteSurvey(user.id, +surveyId);
     return new DeleteSurveyResponseDto();
   }
 }
