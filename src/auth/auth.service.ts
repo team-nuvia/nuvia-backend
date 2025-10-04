@@ -17,6 +17,7 @@ import { ResetPasswordVerifyPayloadDto } from './dto/payload/reset-password-veri
 import { ResetPasswordPayloadDto } from './dto/payload/reset-password.payload.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { LoginTokenNestedResponseDto } from './dto/response/login-token.nested.response.dto';
+import { SocialLoginInformationPayloadDto } from './dto/payload/social-login-information.payload.dto';
 
 @Injectable()
 export class AuthService {
@@ -71,10 +72,7 @@ export class AuthService {
     return { ...jwtInformation, hmacSession };
   }
 
-  async getGoogleLoginUrl(
-    ipAddress: string,
-    userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
-  ) {
+  async getGoogleLoginUrl(ipAddress: string, userLoginInformationDto: SocialLoginInformationPayloadDto) {
     const socialProviderConfig = this.commonService.getConfig('socialProvider');
     const base64 = Buffer.from(JSON.stringify({ ipAddress, ...userLoginInformationDto })).toString('base64url');
     const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -88,10 +86,7 @@ export class AuthService {
     return url;
   }
 
-  async getKakaoLoginUrl(
-    ipAddress: string,
-    userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
-  ) {
+  async getKakaoLoginUrl(ipAddress: string, userLoginInformationDto: SocialLoginInformationPayloadDto) {
     const socialProviderConfig = this.commonService.getConfig('socialProvider');
     const base64 = Buffer.from(JSON.stringify({ ipAddress, ...userLoginInformationDto })).toString('base64url');
     const url = new URL('https://kauth.kakao.com/oauth/authorize');
@@ -102,11 +97,7 @@ export class AuthService {
     return url;
   }
 
-  async loginWithSocialProvider(
-    ipAddress: string,
-    userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
-    socialProvider: SocialProvider,
-  ) {
+  async loginWithSocialProvider(ipAddress: string, userLoginInformationDto: SocialLoginInformationPayloadDto, socialProvider: SocialProvider) {
     let url: URL;
     switch (socialProvider) {
       case SocialProvider.Google:
@@ -160,7 +151,7 @@ export class AuthService {
       const idToken = data.id_token;
 
       const decodedToken = jwt.decode(idToken) as SocialLoginKakaoIdTokenPayload;
-      console.log('✨ kakao decodedToken:', decodedToken);
+      // console.log('✨ kakao decodedToken:', decodedToken);
       return decodedToken;
     } catch (error: any) {
       console.log('🚀 ~ AuthService ~ loginWithSocialProviderCallback ~ error:', error);

@@ -1,8 +1,9 @@
 import { Answer } from '@/surveys/entities/answer.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { Question } from '../../entities/question.entity';
 import { QuestionOption } from '../../options/entities/question-option.entity';
+import { ReferenceBuffer } from './reference-buffer.entity';
 
 @Entity()
 export class QuestionAnswer extends DefaultDateInterface {
@@ -15,10 +16,10 @@ export class QuestionAnswer extends DefaultDateInterface {
   @Column('int', { comment: '질문 PK' })
   questionId!: number;
 
-  @Column('int', { default: null, comment: '옵션 PK', nullable: true })
+  @Column('int', { default: null, nullable: true, comment: '옵션 PK' })
   questionOptionId!: number | null;
 
-  @Column('varchar', { default: null, length: 300, comment: '답변 내용', nullable: true })
+  @Column('varchar', { default: null, length: 300, nullable: true, comment: '답변 내용' })
   value!: string | null;
 
   @ManyToOne(() => Question, (question) => question.questionAnswers, {
@@ -33,4 +34,7 @@ export class QuestionAnswer extends DefaultDateInterface {
 
   @ManyToOne(() => Answer, (answer) => answer.questionAnswers, { onDelete: 'NO ACTION' })
   answer!: Relation<Answer>;
+
+  @OneToOne(() => ReferenceBuffer, (referenceBuffer) => referenceBuffer.questionAnswer)
+  referenceBuffer!: Relation<ReferenceBuffer>;
 }

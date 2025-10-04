@@ -69,7 +69,7 @@ export class SurveysRepository extends BaseRepository {
     return this.orm.getRepo(Survey).exists({ where: condition });
   }
 
-  async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto) {
+  async createSurvey(subscriptionId: number, userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<number> {
     const hashedUniqueKey = uniqueHash();
 
     const subscription = await this.getCurrentOrganization(userId);
@@ -92,7 +92,7 @@ export class SurveysRepository extends BaseRepository {
       })
       .execute();
 
-    const surveyId = survey.identifiers[0].id;
+    const surveyId = survey.identifiers[0].id as number;
 
     const questions = createSurveyPayloadDto.questions.map((question) => ({
       surveyId,
@@ -112,6 +112,8 @@ export class SurveysRepository extends BaseRepository {
     await this.orm.getManager().save(Question, questions);
 
     await this.calculateUsage(subscription.plan.id, userId);
+
+    return surveyId;
   }
 
   async restoreSurvey(surveyId: number, userId: number): Promise<void> {
@@ -617,6 +619,8 @@ export class SurveysRepository extends BaseRepository {
       throw new NotFoundSurveyExceptionDto();
     }
 
+    const userIdOrNull = userId ?? null;
+
     /* 비회원, 조직 일원이 아닌 경우 */
     if (!(userId && organizationRoles.length > 0)) {
       if (survey.realtimeStatus !== SurveyStatus.Active) {
@@ -627,6 +631,11 @@ export class SurveysRepository extends BaseRepository {
       // if (survey.isPublic === false) {
       //   throw new PrivateSurveyExceptionDto();
       // }
+    }
+
+    /* 해시 키로 조회한 설문이 유저꺼라면 userId가 없을 때 예외처리 */
+    if (!isNil(survey.userId) && isNil(userIdOrNull)) {
+      throw new NotFoundSurveyExceptionDto();
     }
 
     const answer = (survey as Survey & { answer: SurveyDetailAnswerDetailNestedResponseDto | null }).answer;

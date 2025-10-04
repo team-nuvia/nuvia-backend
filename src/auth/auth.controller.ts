@@ -37,6 +37,7 @@ import { VerifySessionResponseDto } from './dto/response/verify-session.response
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { RequiredSession } from './guard/session.guard';
+import { SocialLoginInformationPayloadDto } from './dto/payload/social-login-information.payload.dto';
 
 @ApiTags('인증/인가')
 @Controller('auth')
@@ -97,7 +98,7 @@ export class AuthController {
   @Get('login/:socialProvider')
   async loginWithSocialProvider(
     @Ip() ipAddress: string,
-    @Query() userLoginInformationDto: Pick<UserLoginInformationPayloadDto, 'accessDevice' | 'accessBrowser' | 'accessUserAgent'>,
+    @Query() userLoginInformationDto: SocialLoginInformationPayloadDto,
     @Param('socialProvider') socialProvider: string,
     @Res() res: Response,
   ) {
@@ -144,6 +145,15 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
+    if (query.state) {
+      const decodedState = Buffer.from(query.state, 'base64url').toString('utf8');
+      const { redirect, action } = JSON.parse(decodedState);
+
+      if (redirect && action === 'view') {
+        res.redirect(`${CLIENT_URL}${redirect}`);
+        return;
+      }
+    }
     res.redirect(`${CLIENT_URL}/auth/login`);
   }
 

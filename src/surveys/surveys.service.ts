@@ -26,14 +26,14 @@ import { SurveysRepository } from './surveys.repository';
 export class SurveysService {
   constructor(private readonly surveyRepository: SurveysRepository) {}
 
-  async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<void> {
+  async createSurvey(userId: number, createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<number> {
     const subscription = await this.surveyRepository.getCurrentOrganization(userId);
 
     if (!isRoleAtLeast(subscription.permission.role, UserRole.Editor)) {
       throw new ForbiddenAccessExceptionDto();
     }
 
-    await this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
+    return this.surveyRepository.createSurvey(subscription.id, userId, createSurveyPayloadDto);
   }
 
   async restoreSurvey(surveyId: number, userId: number): Promise<void> {

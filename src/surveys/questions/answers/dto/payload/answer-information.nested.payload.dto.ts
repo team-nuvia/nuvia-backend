@@ -1,6 +1,7 @@
 import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
 import { IsNullable } from '@common/decorator/is-nullable.decorator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsArray, IsNumber, IsString } from 'class-validator';
 
 export class AnswerInformationNestedPayloadDto {
@@ -20,6 +21,7 @@ export class AnswerInformationNestedPayloadDto {
   @IsNullable()
   @IsArray()
   @IsNumber({}, { each: true })
+  @Transform(({ value }) => value.map((id: number) => Number(id)))
   optionIds!: number[] | null;
 
   @ApiPropertyNullable({

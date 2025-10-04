@@ -27,7 +27,14 @@ export class AnswersService {
     return this.answersRepository.validateFirstSurveyAnswer(submissionHash, jws, surveyId, res);
   }
 
-  async createAnswer(createAnswerDto: CreateAnswerPayloadDto, surveyId: number, submissionHash: string, res: Response, userId?: number) {
-    await this.answersRepository.createAnswer(createAnswerDto, surveyId, submissionHash, res, userId);
+  async createAnswer(
+    createAnswerDto: CreateAnswerPayloadDto,
+    surveyId: number,
+    submissionHash: string,
+    res: Response,
+    userId?: number,
+    transferedFiles?: Express.Multer.File[],
+  ) {
+    await this.answersRepository.createAnswer(createAnswerDto, surveyId, submissionHash, res, userId, transferedFiles);
   }
 }
