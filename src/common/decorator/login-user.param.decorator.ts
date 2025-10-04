@@ -3,5 +3,5 @@ import { Request } from 'express';
 
 export const LoginUser = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest() as Request;
-  return request.user;
+  return request.user ?? null;
 });
