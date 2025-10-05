@@ -593,6 +593,7 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.answers', 'sas')
       .leftJoinAndMapOne('s.answer', Answer, 'sa', 'sa.surveyId = s.id AND sa.submissionHash = :submissionHash', { submissionHash })
       .leftJoinAndSelect('sa.questionAnswers', 'sqa')
+      .leftJoinAndSelect('sqa.referenceBuffer', 'srb')
       .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
 
@@ -619,7 +620,7 @@ export class SurveysRepository extends BaseRepository {
       throw new NotFoundSurveyExceptionDto();
     }
 
-    const userIdOrNull = userId ?? null;
+    // const userIdOrNull = userId ?? null;
 
     /* 비회원, 조직 일원이 아닌 경우 */
     if (!(userId && organizationRoles.length > 0)) {
@@ -634,12 +635,46 @@ export class SurveysRepository extends BaseRepository {
     }
 
     /* 해시 키로 조회한 설문이 유저꺼라면 userId가 없을 때 예외처리 */
-    if (!isNil(survey.userId) && isNil(userIdOrNull)) {
-      throw new NotFoundSurveyExceptionDto();
-    }
+    // if (!isNil(survey.userId) && isNil(userIdOrNull)) {
+    //   throw new NotFoundSurveyExceptionDto();
+    // }
 
     const answer = (survey as Survey & { answer: SurveyDetailAnswerDetailNestedResponseDto | null }).answer;
-    const questionAnswers = answer?.questionAnswers ?? [];
+    const questionAnswers = (answer?.questionAnswers ?? []).map((questionAnswer) => ({
+      id: questionAnswer.id,
+      questionId: questionAnswer.questionId,
+      questionOptionId: questionAnswer.questionOptionId,
+      value: questionAnswer.value,
+      referenceBuffer: questionAnswer.referenceBuffer
+        ? {
+            id: questionAnswer.referenceBuffer.id,
+            originalname: questionAnswer.referenceBuffer.originalname,
+            filename: questionAnswer.referenceBuffer.filename,
+            mimetype: questionAnswer.referenceBuffer.mimetype,
+            size: questionAnswer.referenceBuffer.size,
+            buffer: Buffer.from(questionAnswer.referenceBuffer.buffer),
+            createdAt: questionAnswer.referenceBuffer.createdAt,
+          }
+        : null,
+    }));
+    const questions = survey.questions.map((question) => ({
+      id: question.id,
+      title: question.title,
+      description: question.description,
+      isRequired: Boolean(question.isRequired),
+      questionType: question.questionType,
+      dataType: question.dataType,
+      questionOptions: question.questionOptions.map((option) => ({
+        id: option.id,
+        label: option.label,
+        description: option.description,
+        sequence: option.sequence,
+      })),
+      sequence: question.sequence,
+    }));
+    const author = survey.user
+      ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) }
+      : null;
 
     return {
       id: survey.id,
@@ -652,26 +687,10 @@ export class SurveysRepository extends BaseRepository {
       viewCount: survey.viewCount,
       title: survey.title,
       description: survey.description,
-      author: survey.user
-        ? { id: survey.user.id, name: survey.user.userProvider.name, profileImage: survey.user.getProfileUrl(this.commonService) }
-        : null,
+      author,
       estimatedTime: survey.estimatedTime,
       totalResponses: survey.respondentCount,
-      questions: survey.questions.map((question) => ({
-        id: question.id,
-        title: question.title,
-        description: question.description,
-        isRequired: Boolean(question.isRequired),
-        questionType: question.questionType,
-        dataType: question.dataType,
-        questionOptions: question.questionOptions.map((option) => ({
-          id: option.id,
-          label: option.label,
-          description: option.description,
-          sequence: option.sequence,
-        })),
-        sequence: question.sequence,
-      })),
+      questions,
       questionAnswers,
       isPublic: survey.isPublic,
       status: survey.realtimeStatus,

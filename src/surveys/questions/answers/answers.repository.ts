@@ -10,7 +10,7 @@ import { UtilService } from '@util/util.service';
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { ExpiredAnswerExceptionDto } from './dto/exception/expired-answer.exception.dto';
 import { ExpiredJwsExceptionDto } from './dto/exception/expired-jws.exception.dto';
 import { NoVerifyAccessTokenExceptionDto } from './dto/exception/no-verify-access-token.jws.dto';
@@ -327,6 +327,9 @@ export class AnswersRepository extends BaseRepository {
       await Promise.all(updatePromises);
     }
 
+    const questionAnswerIds = createAnswerPayloadDto.answers.map((answer) => answer.questionId);
+    const fileAnswers = await this.orm.getRepo(QuestionAnswer).find({ where: { answerId: answerEntity.id, questionId: In(questionAnswerIds) } });
+
     for (const file of transferedFiles ?? []) {
       const [_, index] = file.fieldname.match(/[^\[\]]+/g) ?? [];
 
@@ -335,14 +338,16 @@ export class AnswersRepository extends BaseRepository {
       if (!index) continue;
 
       const questionAnswerData = createAnswerPayloadDto.answers[+index];
-      if (!questionAnswerData) {
+      const answerQuestion = fileAnswers.find((fileAnswer) => fileAnswer.questionId === questionAnswerData.questionId);
+
+      if (!answerQuestion) {
         throw new NotFoundAnswerExceptionDto();
       }
 
       const newFilename = 'answer-' + uniqueHash(32) + '.' + file.filename.split('.').pop();
       await this.orm.getRepo(ReferenceBuffer).upsert(
         {
-          questionAnswerId: questionAnswerData.questionId,
+          questionAnswerId: answerQuestion.id,
           buffer: file.buffer,
           originalname: file.filename,
           filename: newFilename,
