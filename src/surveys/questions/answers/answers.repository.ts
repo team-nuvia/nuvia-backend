@@ -10,7 +10,7 @@ import { UtilService } from '@util/util.service';
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { ExpiredAnswerExceptionDto } from './dto/exception/expired-answer.exception.dto';
 import { ExpiredJwsExceptionDto } from './dto/exception/expired-jws.exception.dto';
 import { NoVerifyAccessTokenExceptionDto } from './dto/exception/no-verify-access-token.jws.dto';
@@ -21,6 +21,8 @@ import { StartAnswerPayloadDto } from './dto/payload/start-answer.payload.dto';
 import { StartAnswerNestedResponseDto } from './dto/response/start-answer.nested.response.dto';
 import { ValidateFirstSurveyAnswerNestedResponseDto } from './dto/response/validate-first-survey-answer.nested.response.dto';
 import { QuestionAnswer } from './entities/question-answer.entity';
+import { ReferenceBuffer } from './entities/reference-buffer.entity';
+import { uniqueHash } from '@util/uniqueHash';
 
 @Injectable()
 export class AnswersRepository extends BaseRepository {
@@ -207,7 +209,14 @@ export class AnswersRepository extends BaseRepository {
     return { isFirst };
   }
 
-  async createAnswer(createAnswerPayloadDto: CreateAnswerPayloadDto, surveyId: number, submissionHash: string, res: Response, userId?: number) {
+  async createAnswer(
+    createAnswerPayloadDto: CreateAnswerPayloadDto,
+    surveyId: number,
+    submissionHash: string,
+    res: Response,
+    userId?: number,
+    transferedFiles?: Express.Multer.File[],
+  ) {
     const { answers, status } = createAnswerPayloadDto;
     const answerEntity = await this.orm
       .getRepo(Answer)
@@ -316,6 +325,39 @@ export class AnswersRepository extends BaseRepository {
 
     if (updatePromises.length > 0) {
       await Promise.all(updatePromises);
+    }
+
+    const questionAnswerIds = createAnswerPayloadDto.answers.map((answer) => answer.questionId);
+    const fileAnswers = await this.orm.getRepo(QuestionAnswer).find({ where: { answerId: answerEntity.id, questionId: In(questionAnswerIds) } });
+
+    for (const file of transferedFiles ?? []) {
+      const [_, index] = file.fieldname.match(/[^\[\]]+/g) ?? [];
+
+      /* 없으면 통과 */
+      console.log('🚀 ~ AnswersRepository ~ createAnswer ~ index:', index);
+      if (!index) continue;
+
+      const questionAnswerData = createAnswerPayloadDto.answers[+index];
+      const answerQuestion = fileAnswers.find((fileAnswer) => fileAnswer.questionId === questionAnswerData.questionId);
+
+      if (!answerQuestion) {
+        throw new NotFoundAnswerExceptionDto();
+      }
+
+      const newFilename = 'answer-' + uniqueHash(32) + '.' + file.filename.split('.').pop();
+      await this.orm.getRepo(ReferenceBuffer).upsert(
+        {
+          questionAnswerId: answerQuestion.id,
+          buffer: file.buffer,
+          originalname: file.filename,
+          filename: newFilename,
+          mimetype: file.mimetype,
+          size: file.size,
+        },
+        ['questionAnswerId'],
+      );
+
+      await this.orm.getRepo(QuestionAnswer).update({ id: questionAnswerData.questionId }, { value: newFilename });
     }
 
     if (status === AnswerStatus.Saved) {

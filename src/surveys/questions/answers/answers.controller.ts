@@ -5,7 +5,8 @@ import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { BadRequestException } from '@common/dto/response';
 import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
-import { Body, Controller, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AnswersService } from './answers.service';
@@ -103,16 +104,25 @@ export class AnswersController {
     description: '설문 답변을 생성합니다.',
   })
   @CombineResponses(HttpStatus.CREATED, CreateAnswerResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundAnswerExceptionDto)
   @Public()
   @Post()
+  @UseInterceptors(AnyFilesInterceptor())
   async create(
     @LoginUser() user: LoginUserData,
     @Param('surveyId') surveyId: number,
     @Res({ passthrough: true }) res: Response,
     @ExtractSubmissionHash() submissionHash: string,
     @Body() createAnswerPayloadDto: CreateAnswerPayloadDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    await this.answersService.createAnswer(createAnswerPayloadDto, surveyId, submissionHash, res, user?.id);
+    console.log('🚀 ~ AnswersController ~ create ~ createAnswerPayloadDto:', createAnswerPayloadDto);
+    const transferedFiles = files.map((file) => ({
+      ...file,
+      filename: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+    }));
+
+    await this.answersService.createAnswer(createAnswerPayloadDto, surveyId, submissionHash, res, user?.id, transferedFiles);
     return new CreateAnswerResponseDto();
   }
 }

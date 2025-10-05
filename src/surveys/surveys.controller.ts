@@ -1,3 +1,4 @@
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { ExtractSubmissionHash } from '@common/decorator/extract-submission-hash.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
@@ -38,7 +39,6 @@ import { SurveyDeleteConstraintValidation } from './survey-delete-constraint.gua
 import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.guard';
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
-import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
 
 @ApiTags('설문')
 @Controller('surveys')
@@ -54,8 +54,8 @@ export class SurveysController {
   @RequiredLogin
   @Post()
   async createSurvey(@LoginUser() user: LoginUserData, @Body() createSurveyPayloadDto: CreateSurveyPayloadDto): Promise<CreateSurveyResponseDto> {
-    await this.surveysService.createSurvey(user.id, createSurveyPayloadDto);
-    return new CreateSurveyResponseDto();
+    const surveyId = await this.surveysService.createSurvey(user.id, createSurveyPayloadDto);
+    return new CreateSurveyResponseDto({ id: surveyId });
   }
 
   @ApiOperation({ summary: '설문 복구' })
@@ -173,6 +173,7 @@ export class SurveysController {
     @Param('hashedUniqueKey') hashedUniqueKey: string,
     @ExtractSubmissionHash() submissionHash?: string,
   ): Promise<GetSurveyDetailViewResponseDto> {
+    console.log('🚀 ~ SurveysController ~ getSurveyDetailAndViewCountUpdate ~ user:', user);
     const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, submissionHash, user?.id);
     return new GetSurveyDetailViewResponseDto(survey);
   }
