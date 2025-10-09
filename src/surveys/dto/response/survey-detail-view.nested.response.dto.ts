@@ -1,3 +1,5 @@
+import { ApiPropertyNullable } from '@common/decorator/api-property-nullable.decorator';
+import { AuthorNestedResponseDto } from '@common/dto/response/author.nested.response.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { AnswerDetailQuestionAnswerNestedResponseDto } from './answer-detail-question-answer.nested.response.dto';
@@ -23,19 +25,15 @@ export class SurveyDetailViewNestedResponseDto {
   @ApiProperty({ description: '설문조사 제목', example: '고객 만족도 조사' })
   title: string = '고객 만족도 조사';
 
-  @ApiProperty({ description: '설문조사 설명', example: '우리 서비스에 대한 만족도를 조사합니다.', required: false })
-  description: string | null = null;
+  @ApiPropertyNullable({ description: '설문조사 설명', example: '우리 서비스에 대한 만족도를 조사합니다.' })
+  description: string | null = '우리 서비스에 대한 만족도를 조사합니다.';
 
-  @ApiProperty({
+  @ApiPropertyNullable({
     description: '작성자 정보',
-    example: { id: 1, name: '홍길동', profileImage: 'https://example.com/profile.jpg' },
-    required: false,
+    type: () => AuthorNestedResponseDto,
+    example: new AuthorNestedResponseDto(),
   })
-  author: {
-    id: number;
-    name: string;
-    profileImage: string | null;
-  } | null = null;
+  author: AuthorNestedResponseDto | null = new AuthorNestedResponseDto();
 
   @ApiProperty({ description: '예상 소요 시간(분)', example: 10 })
   estimatedTime: number = 10;
@@ -74,12 +72,12 @@ export class SurveyDetailViewNestedResponseDto {
   @ApiProperty({ description: '소유자 여부', example: true })
   isOwner: boolean = true;
 
-  @ApiProperty({ description: '만료일시', example: '2024-12-31T23:59:59.000Z', required: false })
-  expiresAt: Date | null = null;
+  @ApiPropertyNullable({ description: '만료일시', example: new Date() })
+  expiresAt: Date | null = new Date();
 
-  @ApiProperty({ description: '생성일시', example: '2024-01-01T00:00:00.000Z' })
-  createdAt: Date = new Date('2024-01-01T00:00:00.000Z');
+  @ApiProperty({ description: '생성일시', example: new Date() })
+  createdAt: Date = new Date();
 
-  @ApiProperty({ description: '수정일시', example: '2024-01-01T00:00:00.000Z' })
-  updatedAt: Date = new Date('2024-01-01T00:00:00.000Z');
+  @ApiProperty({ description: '수정일시', example: new Date() })
+  updatedAt: Date = new Date();
 }

@@ -414,6 +414,9 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.questions', 'sq')
       .leftJoinAndSelect('s.answers', 'sa')
+      .leftJoinAndSelect('s.user', 'u')
+      .leftJoinAndSelect('u.userProviders', 'up2')
+      .leftJoinAndSelect('u.profile', 'up')
       .where('s.subscriptionId = :subscriptionId', { subscriptionId: subscription.id });
 
     const surveyList = await query.orderBy('s.createdAt', 'DESC').getMany();
@@ -427,6 +430,13 @@ export class SurveysRepository extends BaseRepository {
       hashedUniqueKey: survey.hashedUniqueKey,
       title: survey.title,
       description: survey.description,
+      author: survey.user
+        ? {
+            id: survey.user.id,
+            name: survey.user.userProvider.name,
+            profileImage: survey.user.getProfileUrl(this.commonService),
+          }
+        : null,
       status: survey.realtimeStatus,
       responses: survey.respondentCount,
       expiresAt: survey.expiresAt,
