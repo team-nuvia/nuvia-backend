@@ -133,6 +133,7 @@ export class UsersRepository extends BaseRepository {
       .getRepo(User)
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.profile', 'up')
+      .leftJoinAndSelect('u.userSecret', 'us')
       .leftJoinAndSelect('u.userProviders', 'up2', 'up2.provider = :provider', { provider })
       .leftJoinAndMapOne(
         'u.userAccess',
@@ -141,7 +142,23 @@ export class UsersRepository extends BaseRepository {
         'ua.last_access_at IS NOT NULL AND ua.id = (SELECT MAX(ua2.id) FROM user_access ua2 WHERE ua2.user_id = u.id)',
       )
       .where('u.id = :userId', { userId })
-      .select(['u.id', 'up2.email', 'up2.name', 'up2.nickname', 'u.createdAt', 'up.id', 'up.filename', 'up.originalname', 'ua.id', 'ua.lastAccessAt'])
+      .select([
+        'u.id',
+        'u.termsAgreed',
+        'u.createdAt',
+        'u.updatedAt',
+        'up2.email',
+        'up2.name',
+        'up2.nickname',
+        'up2.provider',
+        'up.id',
+        'up.filename',
+        'up.originalname',
+        'ua.id',
+        'ua.lastAccessAt',
+        'us.id',
+        'us.updatedAt',
+      ])
       .getOne();
 
     if (isNil(userMeData)) {
@@ -157,6 +174,7 @@ export class UsersRepository extends BaseRepository {
       nickname: userMeData.userProvider.nickname,
       role: subscription.permission.role,
       provider: userMeData.userProvider.provider,
+      termsAgreed: userMeData.termsAgreed,
       currentOrganization: {
         id: subscription.id,
         organizationId: subscription.organizationId,
@@ -168,7 +186,9 @@ export class UsersRepository extends BaseRepository {
         updatedAt: subscription.updatedAt,
       },
       createdAt: userMeData.createdAt,
+      updatedAt: userMeData.updatedAt,
       lastAccessAt: (userMeData as User & { userAccess: UserAccess }).userAccess?.lastAccessAt ?? null,
+      lastUpdatedAt: userMeData.userSecret?.updatedAt ?? null,
       profileImageUrl,
     };
 
@@ -196,7 +216,11 @@ export class UsersRepository extends BaseRepository {
       .getOne();
   }
 
-  async createUserAndProvider(data: { userProvider: DeepPartial<UserProvider>; userSecret: DeepPartial<UserSecret> }): Promise<User> {
+  async createUserAndProvider(data: {
+    userProvider: DeepPartial<UserProvider>;
+    userSecret: DeepPartial<UserSecret>;
+    termsAgreed: boolean;
+  }): Promise<User> {
     if (!data.userProvider.email || !data.userProvider.provider) {
       throw new BadRequestException();
     }
@@ -206,7 +230,7 @@ export class UsersRepository extends BaseRepository {
       throw new AlreadyExistsEmailExceptionDto();
     }
 
-    const newUser = await this.orm.getRepo(User).insert({});
+    const newUser = await this.orm.getRepo(User).insert({ termsAgreed: data.termsAgreed });
     console.log('newUser', newUser);
 
     const id = newUser.identifiers[0].id;

@@ -26,6 +26,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production RUN_ON=cloud node dist/main",
     "start:prod:local": "cross-env NODE_ENV=production RUN_ON=local nest start --watch",
+    "start:prod:cloud": "cross-env NODE_ENV=production RUN_ON=cloud nest start --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "cross-env NODE_ENV=test RUN_ON=local vitest -c ./vitest.config.mjs",
     "test:watch": "jest --watch",

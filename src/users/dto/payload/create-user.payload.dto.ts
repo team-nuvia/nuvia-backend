@@ -1,6 +1,7 @@
+import { IsTruthy } from '@common/decorator/is-truthy.decorator';
 import { fakerKO as faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 
 export class CreateUserPayloadDto {
   @ApiProperty({
@@ -41,4 +42,13 @@ export class CreateUserPayloadDto {
   })
   @IsString()
   password!: string;
+
+  @ApiProperty({
+    description: '이용약관 및 개인정보 처리방침 동의 여부',
+    example: true,
+  })
+  @IsBoolean()
+  @IsTruthy()
+  @IsNotEmpty()
+  termsAgreed!: boolean;
 }

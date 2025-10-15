@@ -10,13 +10,17 @@ import { DefaultDateInterface } from '@common/interface/default-date.interface';
 import { UserSecret } from '@user-secrets/entities/user-secret.entity';
 import { Profile } from '@users/profiles/entities/profile.entity';
 import { UserAccess } from '@users/user-accesses/entities/user-access.entity';
-import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import { UserProvider } from './user-provider.entity';
+import { BoolTinyIntTransformer } from '@common/transformer/bool.transformer';
 
 @Entity()
 export class User extends DefaultDateInterface {
   @PrimaryGeneratedColumn({ comment: '사용자 PK' })
   id!: number;
+
+  @Column('tinyint', { default: false, transformer: BoolTinyIntTransformer, comment: '이용약관 및 개인정보 처리방침 동의 여부' })
+  termsAgreed!: boolean;
 
   @OneToOne(() => Profile, (profile) => profile.user, {
     cascade: true,

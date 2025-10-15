@@ -8,6 +8,7 @@ import { typeormConfig } from '@config/typeorm.config';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UsersRepository } from '@users/users.repository';
+import { AnalysesModule } from './analyses/analyses.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -49,6 +50,7 @@ import { UtilModule } from './util/util.module';
     SubscriptionsModule,
     EmailsModule,
     NotificationsModule,
+    AnalysesModule,
   ],
   controllers: [AppController],
   providers: [AppService, UsersRepository],

@@ -5,12 +5,13 @@ import { ResponseInterceptor } from '@common/interceptor/response.interceptor';
 import { TransactionalInterceptor } from '@common/interceptor/transactional.interceptor';
 import { RunMode } from '@common/variable/enums/run-mode.enum';
 import { RunOn } from '@common/variable/enums/run-on.enum';
-import { CERT_KEY, IS_PROD, PRIV_KEY } from '@common/variable/environment';
+import { CERT_KEY, PRIV_KEY } from '@common/variable/environment';
 import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { isNil } from '@util/isNil';
 import { printRouterInfo } from '@util/printRouterInfo';
 import { setupSwagger } from '@util/setupSwagger';
 import cluster from 'cluster';
@@ -31,7 +32,7 @@ async function bootstrap() {
   };
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
-    httpsOptions: IS_PROD ? httpsOptions : undefined,
+    httpsOptions: !isNil(cert) && !isNil(key) ? httpsOptions : undefined,
   });
 
   const commonService = app.get(CommonService);
@@ -62,11 +63,9 @@ async function bootstrap() {
   app.enableCors({
     // TODO: 운영일 때 호스트 적용
     origin:
-      commonConfig.runMode === RunMode.Development
+      commonConfig.runMode === RunMode.Development || commonConfig.runOn === RunOn.Local
         ? ['http://localhost:5000', 'https://localhost:5000']
-        : commonConfig.runOn === RunOn.Local
-          ? ['https://app.nuvia.kro.kr', 'http://localhost:5000', 'https://localhost:5000']
-          : ['https://app.nuvia.kro.kr'],
+        : ['https://app.nuvia.kro.kr'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
     credentials: true,
     maxAge: 86400,
