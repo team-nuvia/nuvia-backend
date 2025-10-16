@@ -9,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { DataType } from '@share/enums/data-type';
 import { QuestionType } from '@share/enums/question-type';
 import { OrmHelper } from '@util/orm.helper';
+import { ProcessingService } from '@util/processing.service';
 import { FindOptionsWhere, ObjectLiteral } from 'typeorm';
 import { DailyTrendResponseDto } from './dto/response/daily-trend.response.dto';
 import { OverviewAnalysisNestedResponseDto } from './dto/response/overview-analysis.nested.response.response.dto';
@@ -23,7 +24,10 @@ import {
 
 @Injectable()
 export class AnalysesRepository extends BaseRepository {
-  constructor(readonly orm: OrmHelper) {
+  constructor(
+    readonly orm: OrmHelper,
+    readonly processingService: ProcessingService,
+  ) {
     super(orm);
   }
 
@@ -248,30 +252,16 @@ export class AnalysesRepository extends BaseRepository {
     return questionAnswers.reduce<SampleNestedResponseDto[]>((acc, questionAnswer) => {
       // 문자열 유사도(여기선 단순 부분일치가 아니라, 공통 접두사/편집거리 등 비교 가능)로 유사한 샘플 그룹핑
       // 여기서는 예시로 레벤슈타인 거리 기반 간단 유사도 80% 이상이면 동일 그룹으로 판단(간단 구현)
-      const SIMILARITY_THRESHOLD = 0.8;
-      function getSimilarity(a: string, b: string): number {
-        if (!a && !b) return 1;
-        if (!a || !b) return 0;
-        const lenA = a.length;
-        const lenB = b.length;
-        const dp = Array.from({ length: lenA + 1 }, () => Array(lenB + 1).fill(0));
-        for (let i = 0; i <= lenA; i++) dp[i][0] = i;
-        for (let j = 0; j <= lenB; j++) dp[0][j] = j;
-        for (let i = 1; i <= lenA; i++) {
-          for (let j = 1; j <= lenB; j++) {
-            if (a[i - 1] === b[j - 1]) {
-              dp[i][j] = dp[i - 1][j - 1];
-            } else {
-              dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + 1);
-            }
-          }
-        }
-        const distance = dp[lenA][lenB];
-        const maxLen = Math.max(lenA, lenB, 1);
-        return 1 - distance / maxLen;
-      }
+      // NOTICE: 레벤슈타인 + n-gram + 자카드 혼합 유사도 계산으로 교체
       const answerVal = questionAnswer.value ?? '';
-      const existingSample = acc.find((sample) => getSimilarity(sample.snippet, answerVal) >= SIMILARITY_THRESHOLD);
+      const existingSample = acc.find((sample) => {
+        const similarity = this.processingService.hybridSimilarity(sample.snippet, answerVal);
+        const threshold = this.processingService.pickThresholdByLen(
+          this.processingService.normalizeKo(sample.snippet),
+          this.processingService.normalizeKo(answerVal),
+        );
+        return similarity >= threshold;
+      });
       if (existingSample) {
         existingSample.count++;
       } else {

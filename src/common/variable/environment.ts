@@ -17,6 +17,7 @@ dotenv.config({
 
 /* 환경변수 체크 */
 const envFilename = `.env.${RUN_MODE}${RUN_ON ? `.${RUN_ON}` : ''}`;
+console.log('🚀 ~ envFilename:', envFilename);
 if (fs.existsSync(envFilename)) {
   dotenv.config({
     path: path.join(path.resolve(), envFilename),
