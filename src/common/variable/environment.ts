@@ -8,7 +8,7 @@ import { RunOn } from './enums/run-on.enum';
 const getOriginEnvAs = envConsumer(process.env);
 
 export const RUN_MODE = getOriginEnvAs(String, 'NODE_ENV', RunMode.Production) as RunMode;
-export const RUN_ON = getOriginEnvAs(String, 'RUN_ON', RunOn.Local);
+export const RUN_ON = process.env.RUN_ON as RunOn;
 
 /* 공통 환경변수 가져오기 */
 dotenv.config({
