@@ -14,7 +14,7 @@ export const datasourceOptions: DataSourceOptions = {
   database: IS_TEST ? ['test', DB_NAME].join('_') : DB_NAME,
   timezone: 'Z',
   logger: 'advanced-console',
-  logging: DB_LOG ? (IS_TEST || IS_DEV ? ['query', 'info', 'log', 'error'] : ['error']) : false,
+  logging: DB_LOG ? (IS_TEST || IS_DEV || IS_LOCAL ? ['query', 'info', 'log', 'error'] : ['error']) : false,
   poolSize: 20,
   entities: [
     // path.join(path.resolve(), '/src/**/*.entity.{js,ts}'),

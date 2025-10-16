@@ -32,7 +32,7 @@ export class UsersService {
       email: createUserDto.email,
       provider: SocialProvider.Local,
     });
-    console.log('alreadyExistUserEmail', alreadyExistUserEmail);
+    // console.log('alreadyExistUserEmail', alreadyExistUserEmail);
     if (alreadyExistUserEmail) {
       throw new AlreadyExistsUserExceptionDto('email');
     }
@@ -47,14 +47,15 @@ export class UsersService {
     }
 
     const { hashedPassword, ...userSecret } = this.utilService.hashPassword(password);
-    console.log('hashedPassword', hashedPassword);
-    console.log('userSecret', userSecret);
+    // console.log('hashedPassword', hashedPassword);
+    // console.log('userSecret', userSecret);
     /* 유저 생성 */
     const {
       userSecret: _,
       userProvider,
       ...newUser
     } = await this.userRepository.createUserAndProvider({
+      termsAgreed: createUserDto.termsAgreed,
       userProvider: {
         email: createUserDto.email,
         name: createUserDto.name,
@@ -64,7 +65,7 @@ export class UsersService {
       },
       userSecret: { ...userSecret, password: hashedPassword },
     });
-    console.log('userProvider', userProvider);
+    // console.log('userProvider', userProvider);
     /* 구독 생성 & 조직 생성 */
     const subscriptionData: Partial<Pick<Subscription, 'userId' | 'planId' | 'status' | 'target' | 'name' | 'description' | 'defaultRole'>> = {
       userId: newUser.id,

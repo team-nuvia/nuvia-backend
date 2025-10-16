@@ -114,6 +114,7 @@ export const ErrorKey = {
   SUCCESS_RESET_PASSWORD: 'SUCCESS_RESET_PASSWORD',
   SUCCESS_RESET_PASSWORD_VERIFY: 'SUCCESS_RESET_PASSWORD_VERIFY',
   SUCCESS_CREATE_CSRF_TOKEN: 'SUCCESS_CREATE_CSRF_TOKEN',
+  SUCCESS_GET_BASIC_ANALYSES: 'SUCCESS_GET_BASIC_ANALYSES',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -229,6 +230,7 @@ export const ErrorCode = {
   SUCCESS_RESET_PASSWORD: HttpStatus.OK,
   SUCCESS_RESET_PASSWORD_VERIFY: HttpStatus.OK,
   SUCCESS_CREATE_CSRF_TOKEN: HttpStatus.OK,
+  SUCCESS_GET_BASIC_ANALYSES: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -344,6 +346,7 @@ export const ErrorMessage = {
   SUCCESS_RESET_PASSWORD: '비밀번호 재설정 성공',
   SUCCESS_RESET_PASSWORD_VERIFY: '비밀번호 재설정 인증 성공',
   SUCCESS_CREATE_CSRF_TOKEN: 'CSRF 토큰 생성 성공',
+  SUCCESS_GET_BASIC_ANALYSES: '기본 분석 데이터 조회 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

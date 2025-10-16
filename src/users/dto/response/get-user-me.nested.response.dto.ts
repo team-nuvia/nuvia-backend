@@ -20,6 +20,9 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ enum: UserRole, description: '역할', example: UserRole.Admin })
   role: UserRole = UserRole.Admin;
 
+  @ApiProperty({ description: '이용약관 및 개인정보 처리방침 동의 여부', example: true })
+  termsAgreed: boolean = true;
+
   @ApiProperty({ description: '공급자', enum: SocialProvider, example: SocialProvider.Google })
   provider: SocialProvider = SocialProvider.Google;
 
@@ -33,8 +36,14 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ description: '생성 일시', example: new Date() })
   createdAt: Date = new Date();
 
+  @ApiProperty({ description: '수정 일시', example: new Date() })
+  updatedAt: Date = new Date();
+
   @ApiPropertyNullable({ description: '최근 로그인 일시', example: new Date() })
   lastAccessAt: Date | null = new Date();
+
+  @ApiPropertyNullable({ description: '최근 비밀번호 수정 일시', example: new Date() })
+  lastUpdatedAt: Date | null = new Date();
 
   @ApiPropertyNullable({ description: '프로필 이미지 URL', example: 'https://example.com/profile.png' })
   profileImageUrl: string | null = 'https://example.com/profile.png';
