@@ -26,31 +26,71 @@ jobs:
             --targets "Key=tag:SSMDeploy,Values=true" \
             --comment "nuvia deploy $GITHUB_SHA" \
             --parameters commands='["sudo /home/ubuntu/scripts/nuvia-deploy.sh"]' \
-            --query "Command.CommandId" \
-            --output text)
+            --query "Command.CommandId" --output text)
           echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
+          echo "SSM Command ID: $CMD_ID"
 
-      - name: Wait for SSM command to finish
+      - name: Wait for SSM command to finish (robust)
         run: |
-          INSTANCE_ID="${{ secrets.AWS_INSTANCE_ID }}"
+          set -euo pipefail
+          REGION=ap-northeast-2
           CMD_ID="${{ steps.ssm.outputs.command_id }}"
+
+          echo "Polling for invocations of $CMD_ID ..."
+          # 1) 커맨드가 실제 인보케이션을 만들 때까지 대기
           for i in {1..60}; do
-            STATUS=$(aws ssm get-command-invocation \
+            IDS=$(aws ssm list-command-invocations \
+              --region "$REGION" \
               --command-id "$CMD_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "Status" \
+              --query "CommandInvocations[].InstanceId" \
               --output text || true)
-            echo "Current status: $STATUS"
-            if [ "$STATUS" = "Success" ]; then
-              exit 0
-            elif [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
-              aws ssm get-command-invocation \
-                --command-id "$CMD_ID" \
-                --instance-id "$INSTANCE_ID" \
-                --output text
-              exit 1
+            if [ -n "$IDS" ]; then
+              break
             fi
-            sleep 5
+            sleep 3
           done
-          echo "Timed out waiting for SSM command"
-          exit 1
+          if [ -z "${IDS:-}" ]; then
+            echo "No invocations were created for $CMD_ID (target 0?)."
+            aws ssm list-commands --region "$REGION" --command-id "$CMD_ID"
+            exit 1
+          fi
+          echo "Instances: $IDS"
+
+          # 2) 각 인스턴스별 완료까지 대기
+          ALL_OK=0
+          for IID in $IDS; do
+            echo "Waiting on instance $IID ..."
+            for i in {1..120}; do
+              STATUS=$(aws ssm get-command-invocation \
+                --region "$REGION" \
+                --command-id "$CMD_ID" \
+                --instance-id "$IID" \
+                --query "Status" --output text 2>/dev/null || true)
+
+              if [ "$STATUS" = "Success" ]; then
+                echo "Instance $IID: Success"
+                break
+              elif [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
+                echo "Instance $IID: $STATUS"
+                aws ssm get-command-invocation \
+                  --region "$REGION" \
+                  --command-id "$CMD_ID" \
+                  --instance-id "$IID" \
+                  --output text || true
+                ALL_OK=1
+                break
+              elif [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Pending" ]; then
+                :
+              else
+                # 아직 인보케이션이 생성되지 않았거나 전파 중
+                :
+              fi
+              sleep 5
+            done
+          done
+
+          if [ $ALL_OK -ne 0 ]; then
+            echo "At least one instance failed."
+            exit 1
+          fi
+
