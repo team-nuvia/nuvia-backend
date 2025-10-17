@@ -7,10 +7,7 @@
 
 # 실패 지점 로그 남기기
 # exec > >(tee -a /var/log/nuvia-deploy.log) 2>&1
-echo "=== NUVIA DEPLOY START $(date -Is) ==="
 echo "whoami=$(whoami)  pwd=$(pwd)"
-aws --version || true
-aws sts get-caller-identity || true
 
 APP_DIR="/home/ubuntu/nuvia-backend"
 BRANCH="main"
