@@ -7,6 +7,7 @@ cd "$APP_DIR"
 git fetch --all --prune
 git reset --hard "origin/${BRANCH}"
 
+# node_modules 폴더가 존재하지 않으면 의존성 설치
 if ls -al | grep node_modules > /dev/null; then
   echo "node_modules 폴더가 존재합니다."
 else
@@ -14,13 +15,13 @@ else
   npm install --omit=dev
 fi
 
-# 필요시 의존성/빌드
-if command -v pnpm >/dev/null 2>&1; then
-  corepack enable || true
-  pnpm i --frozen-lockfile || true
-else
-  npm ci --omit=dev || true
-fi
+# # 필요시 의존성/빌드
+# if command -v pnpm >/dev/null 2>&1; then
+#   corepack enable || true
+#   pnpm i --frozen-lockfile || true
+# else
+#   npm ci --omit=dev || true
+# fi
 npm run build || true
 
 # PM2 재시작
