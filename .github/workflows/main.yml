@@ -20,6 +20,8 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.REMOTE_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
+          debug: true
+          timeout: 30s
           script: |
             cd /home/ubuntu/nuvia-backend
             git pull
