@@ -1,12 +1,5 @@
-#!/usr/bin/env bash
-# 디버그가 필요할 때만 주석 해제
-#set -x
+#! /usr/bin/env bash
 
-# 비대화 환경 PATH 보정
-# export PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin:$PATH
-
-# 실패 지점 로그 남기기
-# exec > >(tee -a /var/log/nuvia-deploy.log) 2>&1
 echo "whoami=$(whoami)  pwd=$(pwd)"
 
 APP_DIR="/home/ubuntu/nuvia-backend"
