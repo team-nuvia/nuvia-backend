@@ -53,6 +53,7 @@ jobs:
                 --command-id "$CMD_ID" --instance-id "$IID" \
                 --query "Status" --output text 2>/dev/null || true)
               echo "Status=$STATUS"
+              echo "ALL_OK=$ALL_OK"
               [[ "$STATUS" == "Success" ]] && break
               if [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
                 echo "----- Invocation detail (StdOut/StdErr) -----"
@@ -67,4 +68,5 @@ jobs:
             done
           done
 
+          echo "ALL_OK=$ALL_OK"
           [ $ALL_OK -ne 0 ] && { echo "At least one instance failed."; exit 1; }
