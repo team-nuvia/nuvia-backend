@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
 
 echo "whoami=$(whoami)  pwd=$(pwd)"
 
