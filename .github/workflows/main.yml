@@ -1,53 +1,57 @@
-name: Deploy to Remote Server
+name: Deploy to EC2 via SSM
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC용
+      contents: read
     steps:
-      - name: Get Github Actions IP
-        id: ip
-        uses: haythem/public-ip@v1.2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_OIDC_ROLE_NAME }}
           aws-region: ap-northeast-2
 
-      - name: Add Github Actions IP to Security group
+      - name: Trigger deploy script via SSM
+        id: ssm
         run: |
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          INSTANCE_ID="${{ secrets.AWS_INSTANCE_ID }}"    # 배포 대상 인스턴스
+          CMD_ID=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids "$INSTANCE_ID" \
+            --comment "nuvia deploy $GITHUB_SHA" \
+            --parameters commands='["sudo /home/ubuntu/scripts/nuvia-deploy.sh"]' \
+            --query "Command.CommandId" \
+            --output text)
+          echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
+          echo "SSM Command ID: $CMD_ID"
 
-      - name: SSH Commands
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.REMOTE_KEY }}
-          port: ${{ secrets.REMOTE_PORT }}
-          script_stop: true
-          script: |
-            cd /home/ubuntu/nuvia-backend
-            git pull
-            # 필요시 npm install 등 추가
-            npm run build
-
-            # 443포트 열려있고 pm2실행중인지 판별하고 없으면 start, 있으면 reload
-
-            if sudo lsof -i:443 | grep LISTEN && pm2 list | grep -q "nuvia-backend"; then
-              echo "Port 443 is open and pm2 process found, reloading..."
-              pm2 reload ecosystem.config.js --env production
-            else
-              echo "Port 443 is not open or pm2 process not found, starting..."
-              pm2 start ecosystem.config.js --env production
+      - name: Wait for SSM command to finish
+        run: |
+          INSTANCE_ID="${{ secrets.AWS_INSTANCE_ID }}"
+          CMD_ID="${{ steps.ssm.outputs.command_id }}"
+          for i in {1..60}; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "Status" \
+              --output text || true)
+            echo "Current status: $STATUS"
+            if [ "$STATUS" = "Success" ]; then
+              exit 0
+            elif [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
+              aws ssm get-command-invocation \
+                --command-id "$CMD_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --output text
+              exit 1
             fi
-
-      - name: Remove Github Actions IP From Security Group
-        run: |
-          aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            sleep 5
+          done
+          echo "Timed out waiting for SSM command"
+          exit 1
