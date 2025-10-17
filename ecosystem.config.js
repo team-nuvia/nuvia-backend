@@ -25,7 +25,7 @@ module.exports = {
       },
       env_production: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 443,
         instances: 2, // 운영환경에서는 2개 인스턴스
       },
       error_file: './logs/error/pm2-error.log',
