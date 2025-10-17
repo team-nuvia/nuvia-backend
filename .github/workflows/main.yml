@@ -13,6 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_KEY }}
+          port: ${{ secrets.REMOTE_PORT }}
+          debug: true
+          timeout: 30s
+          script: |
+            echo "SSH 연결 테스트 성공!"
+            whoami
+            pwd
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
