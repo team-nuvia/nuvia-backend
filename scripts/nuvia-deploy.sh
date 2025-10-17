@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-set -euo pipefail
 # 디버그가 필요할 때만 주석 해제
 #set -x
 
 # 비대화 환경 PATH 보정
-export PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin:$PATH
+# export PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin:$PATH
 
 # 실패 지점 로그 남기기
-exec > >(tee -a /var/log/nuvia-deploy.log) 2>&1
+# exec > >(tee -a /var/log/nuvia-deploy.log) 2>&1
 echo "=== NUVIA DEPLOY START $(date -Is) ==="
 echo "whoami=$(whoami)  pwd=$(pwd)"
 aws --version || true
