@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Check ip
+        run: |
+          ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+
       - name: Test SSH Connection
         uses: appleboy/ssh-action@v0.1.10
         with:
