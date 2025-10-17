@@ -23,6 +23,7 @@
     "strictBindCallApply": false,
     "inlineSources": true,
     "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
     "paths": {
       "@share/*": ["src/share/*"],
       "@util/*": ["src/util/*"],

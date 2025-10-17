@@ -1,4 +1,4 @@
-import { DEPLOY_VERSION, SERVER_VERSION } from '@common/variable/environment';
+import { SERVER_VERSION } from '@common/variable/environment';
 import { Injectable } from '@nestjs/common';
 import path from 'path';
 import { Worker } from 'worker_threads';
@@ -6,8 +6,8 @@ import { Worker } from 'worker_threads';
 @Injectable()
 export class AppService {
   getVersion(): string {
-    const version = [SERVER_VERSION, DEPLOY_VERSION].join('.');
-    return `V${version}`;
+    // const version = [SERVER_VERSION, DEPLOY_VERSION].join('-');
+    return `V.${SERVER_VERSION}`;
   }
 
   /* Test용 */

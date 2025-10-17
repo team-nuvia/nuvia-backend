@@ -2,6 +2,7 @@ import { envConsumer } from '@util/envConsumer';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import pkg from '../../../package.json';
 import { RunMode } from './enums/run-mode.enum';
 import { RunOn } from './enums/run-on.enum';
 
@@ -44,7 +45,7 @@ export const DB_HOST = getEnvAs(String, 'DB_HOST');
 export const DB_PORT = getEnvAs(Number, 'DB_PORT');
 export const DB_LOG = getEnvAs(Boolean, 'DB_LOG');
 
-export const SERVER_VERSION = getEnvAs(String, 'SERVER_VERSION');
+export const SERVER_VERSION = pkg.version || getEnvAs(String, 'SERVER_VERSION');
 export const DEPLOY_VERSION = getEnvAs(String, 'DEPLOY_VERSION');
 
 export const LOG_DIR = getEnvAs(String, 'LOG_DIR');
