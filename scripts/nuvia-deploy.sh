@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+set -euxo pipefail
+export PATH=/usr/local/bin:/usr/bin:/bin:/snap/bin:$PATH
+aws --version
+aws sts get-caller-identity
+
 APP_DIR="/home/ubuntu/nuvia-backend"
 BRANCH="main"
 

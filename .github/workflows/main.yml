@@ -37,59 +37,35 @@ jobs:
           CMD_ID="${{ steps.ssm.outputs.command_id }}"
 
           echo "Polling for invocations of $CMD_ID ..."
-          # 1) 커맨드가 실제 인보케이션을 만들 때까지 대기
           for i in {1..60}; do
-            IDS=$(aws ssm list-command-invocations \
-              --region "$REGION" \
-              --command-id "$CMD_ID" \
-              --query "CommandInvocations[].InstanceId" \
-              --output text || true)
-            if [ -n "$IDS" ]; then
-              break
-            fi
+            IDS=$(aws ssm list-command-invocations --region "$REGION" --command-id "$CMD_ID" \
+              --query "CommandInvocations[].InstanceId" --output text || true)
+            [ -n "$IDS" ] && break
             sleep 3
           done
-          if [ -z "${IDS:-}" ]; then
-            echo "No invocations were created for $CMD_ID (target 0?)."
-            aws ssm list-commands --region "$REGION" --command-id "$CMD_ID"
-            exit 1
-          fi
+          [ -z "${IDS:-}" ] && { echo "No invocations created"; exit 1; }
           echo "Instances: $IDS"
 
-          # 2) 각 인스턴스별 완료까지 대기
           ALL_OK=0
           for IID in $IDS; do
             echo "Waiting on instance $IID ..."
             for i in {1..120}; do
-              STATUS=$(aws ssm get-command-invocation \
-                --region "$REGION" \
-                --command-id "$CMD_ID" \
-                --instance-id "$IID" \
+              STATUS=$(aws ssm get-command-invocation --region "$REGION" \
+                --command-id "$CMD_ID" --instance-id "$IID" \
                 --query "Status" --output text 2>/dev/null || true)
-
-              if [ "$STATUS" = "Success" ]; then
-                echo "Instance $IID: Success"
-                break
-              elif [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
-                echo "Instance $IID: $STATUS"
-                aws ssm get-command-invocation \
-                  --region "$REGION" \
-                  --command-id "$CMD_ID" \
-                  --instance-id "$IID" \
-                  --output text || true
+              echo "Status=$STATUS"
+              [[ "$STATUS" == "Success" ]] && break
+              if [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
+                echo "----- Invocation detail (StdOut/StdErr) -----"
+                aws ssm get-command-invocation --region "$REGION" \
+                  --command-id "$CMD_ID" --instance-id "$IID" --plugin-name aws:runShellScript \
+                  --query '{Status:Status,ResponseCode:ResponseCode,StdOut:StandardOutputContent,StdErr:StandardErrorContent}' \
+                  --output json || true
                 ALL_OK=1
                 break
-              elif [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Pending" ]; then
-                :
-              else
-                # 아직 인보케이션이 생성되지 않았거나 전파 중
-                :
               fi
               sleep 5
             done
           done
 
-          if [ $ALL_OK -ne 0 ]; then
-            echo "At least one instance failed."
-            exit 1
-          fi
+          [ $ALL_OK -ne 0 ] && { echo "At least one instance failed."; exit 1; }
