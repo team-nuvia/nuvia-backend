@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 echo "whoami=$(whoami)  pwd=$(pwd)"
 
