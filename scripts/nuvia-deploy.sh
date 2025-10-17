@@ -3,19 +3,6 @@
 echo "whoami=$(whoami)  pwd=$(pwd)"
 
 set -eu
-# HOME/PM2_HOME 보장
-[ -n "${HOME:-}" ] || export HOME=/home/ubuntu
-export PM2_HOME="$HOME/.pm2"
-
-# nvm PATH 로드
-if [ -d /home/ubuntu/.nvm ]; then
-  export NVM_DIR=/home/ubuntu/.nvm
-  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-  if [ -d "$NVM_DIR/versions/node" ]; then
-    V=$(ls -1 "$NVM_DIR/versions/node" | sort -V | tail -1)
-    export PATH="$NVM_DIR/versions/node/$V/bin:$PATH"
-  fi
-fi
 
 APP_DIR="/home/ubuntu/nuvia-backend"
 BRANCH="main"
