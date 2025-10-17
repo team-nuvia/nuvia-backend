@@ -93,4 +93,3 @@ jobs:
             echo "At least one instance failed."
             exit 1
           fi
-
