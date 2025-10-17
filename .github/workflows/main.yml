@@ -21,11 +21,12 @@ jobs:
         id: ssm
         run: |
           CMD_ID=$(aws ssm send-command \
-          --region ap-northeast-2 \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:SSMDeploy,Values=true" \
-          --parameters commands='["whoami","pwd","date","echo SSM-OK"]' \
-          --query "Command.CommandId" --output text)
+            --region ap-northeast-2 \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:SSMDeploy,Values=true" \
+            --comment "nuvia deploy $GITHUB_SHA" \
+            --parameters commands='["sh /home/ubuntu/scripts/nuvia-deploy.sh"]' \
+            --query "Command.CommandId" --output text)
           echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
           echo "SSM Command ID: $CMD_ID"
 
