@@ -3,6 +3,7 @@ module.exports = {
     {
       name: 'nuvia-backend',
       script: 'dist/main.js',
+      instances: 2, // 기본적으로 2개 인스턴스 실행
       exec_mode: 'cluster',
       watch: false,
       max_memory_restart: '1G',
@@ -13,7 +14,6 @@ module.exports = {
       wait_ready: true, // ready 이벤트 대기
       listen_timeout: 10000, // listen 이벤트 타임아웃
       env: {
-        NODE_ENV: 'production',
         PORT: 3000,
       },
       env_development: {
@@ -26,7 +26,7 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         PORT: 443,
-        instances: 2, // 운영환경에서는 2개 인스턴스
+        instances: 2, // 운영환경에서 2개 인스턴스
       },
       error_file: './logs/error/pm2-error.log',
       out_file: './logs/info/pm2-out.log',
