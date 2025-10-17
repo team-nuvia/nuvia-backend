@@ -18,14 +18,11 @@ else
   npm install --omit=dev
 fi
 
-# # 필요시 의존성/빌드
-# if command -v pnpm >/dev/null 2>&1; then
-#   corepack enable || true
-#   pnpm i --frozen-lockfile || true
-# else
-#   npm ci --omit=dev || true
-# fi
-npm run build || true
+echo node version: $(node -v)
+echo npm version: $(npm -v)
+echo pm2 version: $(pm2 -v)
+
+npm run build
 
 # PM2 재시작
 if pm2 list | grep -q "nuvia-backend"; then
