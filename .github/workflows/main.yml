@@ -25,15 +25,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --targets "Key=tag:SSMDeploy,Values=true" \
             --comment "nuvia deploy $GITHUB_SHA" \
-            --parameters commands='["set -e", "export HOME=/root",
-            "cd /root",
-            "export NVM_DIR=/home/ubuntu/.nvm",
-            "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"",
-            "# 최신 Node bin을 PATH에 추가(백업 플랜)",
-            "if [ -d \"$NVM_DIR/versions/node\" ]; then V=$(ls -1 \"$NVM_DIR/versions/node\" | sort -V | tail -1); export PATH=\"$NVM_DIR/versions/node/$V/bin:$PATH\"; fi",
-            "# PM2 홈도 명시(루트로 돌리면 루트 홈에 저장됨; 권장: ubuntu로 돌리기)",
-            "export PM2_HOME=/root/.pm2",
-            "bash /home/ubuntu/nuvia-backend/scripts/nuvia-deploy.sh"]' \
+            --parameters commands='["set -e", "sudo -u ubuntu -H bash -lc \'bash /home/ubuntu/nuvia-backend/scripts/nuvia-deploy.sh\'"]' \
             --query "Command.CommandId" --output text)
           echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
           echo "SSM Command ID: $CMD_ID"
