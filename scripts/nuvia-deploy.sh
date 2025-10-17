@@ -2,6 +2,8 @@
 
 echo "whoami=$(whoami)  pwd=$(pwd)"
 
+source ~/.bashrc
+
 APP_DIR="/home/ubuntu/nuvia-backend"
 BRANCH="main"
 
