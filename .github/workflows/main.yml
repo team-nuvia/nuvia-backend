@@ -8,44 +8,36 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Get Github Actions IP
+        id: ip
+        uses: haythem/public-ip@v1.2
 
-      - name: Check ip
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Add Github Actions IP to Security group
         run: |
-          ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
-      - name: Test SSH Connection
+      - name: SSH Commands
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.REMOTE_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
-          debug: true
-          timeout: 30s
-          script: |
-            echo "SSH 연결 테스트 성공!"
-            whoami
-            pwd
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.REMOTE_KEY }}
-          port: ${{ secrets.REMOTE_PORT }}
-          debug: true
-          timeout: 30s
+          script_stop: true
           script: |
             cd /home/ubuntu/nuvia-backend
             git pull
             # 필요시 npm install 등 추가
             npm run build
-            
+
             # 443포트 열려있고 pm2실행중인지 판별하고 없으면 start, 있으면 reload
 
             if sudo lsof -i:443 | grep LISTEN && pm2 list | grep -q "nuvia-backend"; then
@@ -55,3 +47,7 @@ jobs:
               echo "Port 443 is not open or pm2 process not found, starting..."
               pm2 start ecosystem.config.js --env production
             fi
+
+      - name: Remove Github Actions IP From Security Group
+        run: |
+          aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
