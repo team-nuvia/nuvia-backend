@@ -21,6 +21,13 @@ import {
   QuestionDetailNestedResponseDto,
   SampleNestedResponseDto,
 } from './dto/response/question-detail.nested.response.dto';
+import { UserAllowedPermissionNestedResponseDto } from './dto/response/user-allowed-permission.nested.response.dto';
+import { PermissionGrantType } from '@/permissions/enums/permission-grant-type.enum';
+import { NotFoundOrganizationRoleExceptionDto } from '@/subscriptions/organization-roles/dto/exception/not-found-organization-role.exception.dto';
+import { isNil } from '@util/isNil';
+import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
+import { isRoleAtLeast } from '@util/isRoleAtLeast';
+import { UserRole } from '@share/enums/user-role';
 
 @Injectable()
 export class AnalysesRepository extends BaseRepository {
@@ -43,6 +50,41 @@ export class AnalysesRepository extends BaseRepository {
 
   async softDelete<T extends ObjectLiteral>(id: number, Model?: new () => T): Promise<void> {
     if (Model) this.orm.getRepo(Model).softDelete(id);
+  }
+
+  async getUserAllowedPermission(userId: number): Promise<UserAllowedPermissionNestedResponseDto> {
+    const subscription = await this.getCurrentOrganization(userId);
+
+    if (isNil(subscription)) {
+      throw new NotFoundOrganizationRoleExceptionDto();
+    }
+
+    const downloadGrant = subscription.permission.permissionGrants.find(
+      (permissionGrant) => permissionGrant.type === PermissionGrantType.DownloadReport,
+    );
+
+    const organizationRole = await this.orm
+      .getRepo(OrganizationRole)
+      .createQueryBuilder('or')
+      .leftJoinAndSelect('or.permission', 'p')
+      .where('or.userId = :userId', { userId })
+      .andWhere('or.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .getOne();
+
+    if (isNil(organizationRole)) {
+      throw new NotFoundOrganizationRoleExceptionDto();
+    }
+
+    const isAllowed = isRoleAtLeast(organizationRole.permission.role, UserRole.Editor);
+
+    const isAllowedDownload = (downloadGrant?.isAllowed ?? false) && isAllowed;
+
+    return {
+      download: {
+        excel: isAllowedDownload,
+        pdf: isAllowedDownload,
+      },
+    };
   }
 
   async getOverviewAnalysis(surveyId: number, subscriptionId: number): Promise<OverviewAnalysisNestedResponseDto> {

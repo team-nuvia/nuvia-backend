@@ -32,7 +32,7 @@ export class QuestionAnswer extends DefaultDateInterface {
   })
   questionOption!: Relation<QuestionOption>;
 
-  @ManyToOne(() => Answer, (answer) => answer.questionAnswers, { onDelete: 'NO ACTION' })
+  @ManyToOne(() => Answer, (answer) => answer.questionAnswers, { onDelete: 'CASCADE' })
   answer!: Relation<Answer>;
 
   @OneToOne(() => ReferenceBuffer, (referenceBuffer) => referenceBuffer.questionAnswer)

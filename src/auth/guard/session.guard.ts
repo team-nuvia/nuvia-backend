@@ -28,4 +28,4 @@ export class SessionGuard implements CanActivate {
   }
 }
 
-export const RequiredSession = () => applyDecorators(SetMetadata(SESSION_KEY, true), UseGuards(SessionGuard), ApiCookieAuth('session'));
+export const RequiredSession = () => applyDecorators(SetMetadata(SESSION_KEY, true), UseGuards(SessionGuard), ApiCookieAuth(SESSION_COOKIE_NAME));

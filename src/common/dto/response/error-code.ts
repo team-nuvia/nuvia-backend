@@ -116,6 +116,10 @@ export const ErrorKey = {
   SUCCESS_CREATE_CSRF_TOKEN: 'SUCCESS_CREATE_CSRF_TOKEN',
   SUCCESS_GET_BASIC_ANALYSES: 'SUCCESS_GET_BASIC_ANALYSES',
   SUCCESS_GET_SUBSCRIPTION_SETTINGS: 'SUCCESS_GET_SUBSCRIPTION_SETTINGS',
+  ALREADY_ANSWERED: 'ALREADY_ANSWERED',
+  ANSWER_OWNER_MIGRATED: 'ANSWER_OWNER_MIGRATED',
+  LOGIN_REQUIRED_FOR_ANSWER: 'LOGIN_REQUIRED_FOR_ANSWER',
+  ALREADY_ANSWER_STARTED: 'ALREADY_ANSWER_STARTED',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -233,6 +237,10 @@ export const ErrorCode = {
   SUCCESS_CREATE_CSRF_TOKEN: HttpStatus.OK,
   SUCCESS_GET_BASIC_ANALYSES: HttpStatus.OK,
   SUCCESS_GET_SUBSCRIPTION_SETTINGS: HttpStatus.OK,
+  ALREADY_ANSWERED: HttpStatus.BAD_REQUEST,
+  ANSWER_OWNER_MIGRATED: HttpStatus.BAD_REQUEST,
+  LOGIN_REQUIRED_FOR_ANSWER: HttpStatus.BAD_REQUEST,
+  ALREADY_ANSWER_STARTED: HttpStatus.BAD_REQUEST,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -350,6 +358,10 @@ export const ErrorMessage = {
   SUCCESS_CREATE_CSRF_TOKEN: 'CSRF 토큰 생성 성공',
   SUCCESS_GET_BASIC_ANALYSES: '기본 분석 데이터 조회 성공',
   SUCCESS_GET_SUBSCRIPTION_SETTINGS: '구독 설정 조회 성공',
+  ALREADY_ANSWERED: '이미 응답한 설문입니다. 하나의 설문에 한 번만 참여할 수 있습니다.',
+  ANSWER_OWNER_MIGRATED: '응답자 정보가 변경되었습니다. 다시 시작해주세요.',
+  LOGIN_REQUIRED_FOR_ANSWER: '이미 작성중인 응답이 있습니다. 로그인 후 계속 작성해주세요.',
+  ALREADY_ANSWER_STARTED: '이미 작성중인 응답이 있습니다.',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

@@ -367,8 +367,20 @@ export class UtilService {
   }
 
   validateOwnSurveyAnswer(answer: Answer, realIp: IpAddress, userId?: number) {
-    const isUserMatch = answer.userId === userId;
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ answer:', answer);
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ userId:', userId ?? null);
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ realIp:', realIp);
+    const isUserMatch = answer.userId === (userId ?? null);
     const isIpMatch = answer.realIp === realIp;
-    return isUserMatch && isIpMatch;
+    if (isNil(answer.userId)) {
+      /* 비회원 */
+      /* 동일 아이피 제한 */
+      return isIpMatch;
+    } else {
+      /* 회원 */
+      /* 동일 아이피 제한 없음 */
+      /* 단, userId로만 판별. 하나의 설문에 하나의 사람만 */
+      return isUserMatch;
+    }
   }
 }

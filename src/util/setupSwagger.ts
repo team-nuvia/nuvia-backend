@@ -1,3 +1,4 @@
+import { ACCESS_COOKIE_NAME } from '@common/variable/globals';
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -6,7 +7,7 @@ export const setupSwagger = (app: INestApplication, version: string) => {
     .setTitle('Nuvia API')
     .setDescription('Nuvia API Docs')
     .setVersion(version)
-    .addCookieAuth('access_token', {
+    .addCookieAuth(ACCESS_COOKIE_NAME, {
       type: 'apiKey',
       in: 'cookie',
       // bearerFormat: 'JWT',

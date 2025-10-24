@@ -591,10 +591,23 @@ export class SurveysRepository extends BaseRepository {
     userId?: number,
   ): Promise<SurveyDetailViewNestedResponseDto> {
     const organizationRoles = userId ? await this.orm.getRepo(OrganizationRole).find({ where: { userId }, relations: ['subscription'] }) : [];
+    const tempSurvey = await this.orm
+      .getRepo(Survey)
+      .createQueryBuilder('s')
+      .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey })
+      .getOne();
+
+    if (!tempSurvey) {
+      throw new NotFoundSurveyExceptionDto();
+    }
+
+    const isMember = isNil(userId)
+      ? false
+      : organizationRoles.some((organizationRole) => organizationRole.subscriptionId === tempSurvey.subscriptionId);
 
     const query = this.orm
-      .getManager()
-      .createQueryBuilder(Survey, 's')
+      .getRepo(Survey)
+      .createQueryBuilder('s')
       .leftJoinAndSelect('s.category', 'sc')
       .leftJoinAndSelect('s.user', 'u')
       .leftJoinAndSelect('u.profile', 'up')
@@ -607,14 +620,8 @@ export class SurveysRepository extends BaseRepository {
       .leftJoinAndSelect('u.userProviders', 'up2')
       .where('s.hashedUniqueKey = :hashedUniqueKey', { hashedUniqueKey });
 
-    if (userId && organizationRoles.length > 0) {
-      // 보려는 사용자가 해당 조직 일원이면, 공개 여부, 설문 상태 상관없이 보여야한다.
-      query
-        .andWhere('s.subscriptionId IN (:...subscriptionIds)', {
-          subscriptionIds: organizationRoles.map((organizationRole) => organizationRole.subscriptionId),
-        })
-        .withDeleted();
-    } else {
+    // 보려는 사용자가 해당 조직 일원이면, 공개 여부, 설문 상태 상관없이 보여야한다.
+    if (!isMember) {
       // 보려는 사용자가 해당 조직 일원이 아니면, 공개 여부, 설문 상태 조건을 만족해야한다.
       query.andWhere('s.isPublic = :isPublic', { isPublic: true }).andWhere('s.status != :status', { status: SurveyStatus.Draft });
     }

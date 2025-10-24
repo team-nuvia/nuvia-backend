@@ -19,8 +19,9 @@ export class AnalysesService {
       throw new NotFoundOrganizationRoleExceptionDto();
     }
 
+    const permission = await this.analysesRepository.getUserAllowedPermission(userId);
     const overview = await this.analysesRepository.getOverviewAnalysis(surveyId, subscription.id);
     const questions = await this.analysesRepository.getQuestionDetails(surveyId, subscription.id);
-    return { overview, questions };
+    return { permission, overview, questions };
   }
 }

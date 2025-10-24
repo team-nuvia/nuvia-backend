@@ -6,4 +6,10 @@ export class ValidateFirstSurveyAnswerNestedResponseDto {
     example: true,
   })
   isFirst!: boolean;
+
+  @ApiProperty({
+    description: '설문 응답 완료 여부',
+    example: true,
+  })
+  isCompleted!: boolean;
 }
