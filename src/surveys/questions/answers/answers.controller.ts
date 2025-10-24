@@ -5,10 +5,10 @@ import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
 import { BadRequestException } from '@common/dto/response';
 import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
-import { Body, Controller, HttpStatus, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Param, Post, Req, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AnswersService } from './answers.service';
 import { NotFoundAnswerExceptionDto } from './dto/exception/not-found-answer.exception.dto';
 import { CreateAnswerPayloadDto } from './dto/payload/create-answer.payload.dto';
@@ -31,6 +31,7 @@ export class AnswersController {
   @Public()
   @Post('start')
   async startAnswer(
+    @Req() req: Request,
     @LoginUser() user: LoginUserData,
     @ExtractSubmissionHash() submissionHashCookie: string,
     @ExtractJwsToken() jwsCookie: string,
@@ -38,12 +39,14 @@ export class AnswersController {
     @Res({ passthrough: true }) res: Response,
     @Body() startAnswerPayloadDto: StartAnswerPayloadDto,
   ) {
+    const realIp = req.realIp;
+
     if (jwsCookie || submissionHashCookie) {
       throw new BadRequestException();
     }
 
     /* 6시간 */
-    const { jwsToken, submissionHash } = await this.answersService.startAnswer(surveyId, startAnswerPayloadDto, user?.id);
+    const { jwsToken, submissionHash } = await this.answersService.startAnswer(surveyId, startAnswerPayloadDto, realIp, user?.id);
 
     // session 등록을 위한 쿠키 설정 (만료기간 없음)
     res.cookie('X-Client-Hash', submissionHash, {

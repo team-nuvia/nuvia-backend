@@ -122,11 +122,17 @@ export declare global {
     sequence: number;
   }
 
-  type IpAddress = '::1' | `${number}.${number}.${number}.${number}`;
+  type IpAddress =
+    | '::1'
+    | `${number}.x.x.x`
+    | `${number}.${number}.x.x`
+    | `${number}.${number}.${number}.x`
+    | `${number}.${number}.${number}.${number}`;
 }
 export declare module 'express' {
   interface Request {
     user: LoginUserData;
     token: string | null;
+    realIp: IpAddress;
   }
 }

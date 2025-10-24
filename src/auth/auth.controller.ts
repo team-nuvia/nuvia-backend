@@ -14,14 +14,15 @@ import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-mat
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { CLIENT_URL, IS_PROD } from '@common/variable/environment';
 import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
-import { Body, Controller, Get, HttpStatus, Ip, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SocialProvider } from '@share/enums/social-provider.enum';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ResetPasswordSendPayloadDto } from './dto/payload/reset-password-send.payload.dto';
 import { ResetPasswordVerifyPayloadDto } from './dto/payload/reset-password-verify.payload.dto';
 import { ResetPasswordPayloadDto } from './dto/payload/reset-password.payload.dto';
+import { SocialLoginInformationPayloadDto } from './dto/payload/social-login-information.payload.dto';
 import { UserLoginInformationPayloadDto } from './dto/payload/user-login-information.payload.dto';
 import { VerifyInvitationTokenPayloadDto } from './dto/payload/verify-invitation-token.payload.dto';
 import { AlreadyLoggedOutResponseDto } from './dto/response/already-logged-out.response.dto';
@@ -37,7 +38,6 @@ import { VerifySessionResponseDto } from './dto/response/verify-session.response
 import { VerifyTokenResponseDto } from './dto/response/verify-token.response.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { RequiredSession } from './guard/session.guard';
-import { SocialLoginInformationPayloadDto } from './dto/payload/social-login-information.payload.dto';
 
 @ApiTags('인증/인가')
 @Controller('auth')
@@ -56,14 +56,14 @@ export class AuthController {
   @Transactional()
   @Post('login')
   async login(
-    @Ip() ipAddress: string,
     @LoginUser() loginUserData: LoginUserData,
     @Body() userLoginInformationDto: UserLoginInformationPayloadDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
     const domain = this.commonConfig.getConfig('common').domain;
-    const token = await this.authService.login(loginUserData, ipAddress, userLoginInformationDto);
+    const token = await this.authService.login(loginUserData, req.realIp, userLoginInformationDto);
 
     res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
       httpOnly: true,
@@ -97,12 +97,12 @@ export class AuthController {
   @Public()
   @Get('login/:socialProvider')
   async loginWithSocialProvider(
-    @Ip() ipAddress: string,
     @Query() userLoginInformationDto: SocialLoginInformationPayloadDto,
     @Param('socialProvider') socialProvider: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    const url = await this.authService.loginWithSocialProvider(ipAddress, userLoginInformationDto, socialProvider as SocialProvider);
+    const url = await this.authService.loginWithSocialProvider(req.realIp, userLoginInformationDto, socialProvider as SocialProvider);
     res.redirect(url.toString());
   }
 
@@ -209,7 +209,7 @@ export class AuthController {
   @Post('logout')
   async logout(
     @LoginUser() loginUserData: LoginUserData,
-    @Ip() ipAddress: string,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
     const secretConfig = this.commonConfig.getConfig('secret');
@@ -240,7 +240,7 @@ export class AuthController {
     });
 
     if (loginUserData) {
-      await this.authService.logout(loginUserData, ipAddress);
+      await this.authService.logout(loginUserData, req.realIp);
     } else {
       return new AlreadyLoggedOutResponseDto();
     }
@@ -315,8 +315,8 @@ export class AuthController {
   @CombineResponses(HttpStatus.OK, ResetPasswordResponseDto)
   @Public()
   @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordPayloadDto, @Ip() ipAddress: string): Promise<ResetPasswordResponseDto> {
-    await this.authService.resetPassword(resetPasswordDto, ipAddress);
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordPayloadDto, @Req() req: Request): Promise<ResetPasswordResponseDto> {
+    await this.authService.resetPassword(resetPasswordDto, req.realIp);
     return new ResetPasswordResponseDto();
   }
 }

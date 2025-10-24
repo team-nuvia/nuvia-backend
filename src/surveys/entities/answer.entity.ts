@@ -17,6 +17,9 @@ export class Answer extends DefaultDateInterface {
   @Column('int', { nullable: true, comment: '유저(응답자) PK' })
   userId!: number | null;
 
+  @Column('varchar', { length: 50, nullable: true, default: null, comment: '실제 IP' })
+  realIp!: IpAddress;
+
   /* 응답자 쿠키, 링크 토큰 - 회원은 null */
   @Column('varchar', { length: 255, nullable: true, comment: '비회원 해시' })
   submissionHash!: string | null;

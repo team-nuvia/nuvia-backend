@@ -10,8 +10,8 @@ import { ValidateFirstSurveyAnswerNestedResponseDto } from './dto/response/valid
 export class AnswersService {
   constructor(private readonly answersRepository: AnswersRepository) {}
 
-  async startAnswer(surveyId: number, startAnswerPayloadDto: StartAnswerPayloadDto, userId?: number): Promise<StartAnswerNestedResponseDto> {
-    return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, userId);
+  async startAnswer(surveyId: number, startAnswerPayloadDto: StartAnswerPayloadDto, realIp: IpAddress, userId?: number): Promise<StartAnswerNestedResponseDto> {
+    return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, realIp, userId);
   }
 
   async refreshAnswer(surveyId: number, submissionHash: string, res: Response) {

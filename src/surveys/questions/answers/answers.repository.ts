@@ -6,6 +6,7 @@ import { AnswerStatus } from '@share/enums/answer-status';
 import { QuestionType } from '@share/enums/question-type';
 import { isNil } from '@util/isNil';
 import { OrmHelper } from '@util/orm.helper';
+import { uniqueHash } from '@util/uniqueHash';
 import { UtilService } from '@util/util.service';
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
@@ -22,7 +23,6 @@ import { StartAnswerNestedResponseDto } from './dto/response/start-answer.nested
 import { ValidateFirstSurveyAnswerNestedResponseDto } from './dto/response/validate-first-survey-answer.nested.response.dto';
 import { QuestionAnswer } from './entities/question-answer.entity';
 import { ReferenceBuffer } from './entities/reference-buffer.entity';
-import { uniqueHash } from '@util/uniqueHash';
 
 @Injectable()
 export class AnswersRepository extends BaseRepository {
@@ -45,7 +45,12 @@ export class AnswersRepository extends BaseRepository {
     return this.orm.getRepo(QuestionAnswer).exists({ where: condition });
   }
 
-  async startAnswer(surveyId: number, startAnswerPayloadDto: StartAnswerPayloadDto, userId?: number): Promise<StartAnswerNestedResponseDto> {
+  async startAnswer(
+    surveyId: number,
+    startAnswerPayloadDto: StartAnswerPayloadDto,
+    realIp: IpAddress,
+    userId?: number,
+  ): Promise<StartAnswerNestedResponseDto> {
     const randomUUID = nanoid(32);
     const hashKey = 'nuvia';
     const hashRound = Date.now();
@@ -54,6 +59,7 @@ export class AnswersRepository extends BaseRepository {
     const submissionHash = this.utilService.createHash(`${randomUUID}:${hashKey}:${hashRound}`);
 
     const answerData = {
+      realIp,
       surveyId,
       userId: userId ?? null,
       status: AnswerStatus.Started,

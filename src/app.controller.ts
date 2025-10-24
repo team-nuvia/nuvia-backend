@@ -1,8 +1,8 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { Public } from '@common/decorator/public.decorator';
-import { Controller, Get, Head, HttpStatus, Ip, Req, Res } from '@nestjs/common';
+import { Controller, Get, Head, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import client from 'prom-client';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
@@ -17,10 +17,8 @@ export class AppController {
   @ApiOperation({ summary: '버전 조회' })
   @CombineResponses(HttpStatus.OK, GetVersionResponse)
   @Get('version')
-  getVersion(@Ip() ipAddress: string, @Req() req: Request) {
+  getVersion() {
     const version = this.appService.getVersion();
-    console.log('decorator ipAddress:', ipAddress);
-    console.log('req.ip:', req.ip);
     return new GetVersionResponse(version);
   }
 

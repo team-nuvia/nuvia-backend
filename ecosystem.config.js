@@ -13,10 +13,10 @@ module.exports = {
       kill_timeout: 5000, // 프로세스 종료 대기 시간
       wait_ready: true, // ready 이벤트 대기
       listen_timeout: 10000, // listen 이벤트 타임아웃
-      env_production: {
+      env: {
         NODE_ENV: 'production',
+        RUN_ON: 'cloud',
         PORT: 443,
-        instances: 2, // 운영환경에서 2개 인스턴스
       },
       error_file: './logs/error/pm2-error.log',
       out_file: './logs/info/pm2-out.log',
@@ -28,13 +28,19 @@ module.exports = {
     {
       name: 'nuvia-backend-dev',
       script: 'dist/main.js',
+      instances: 1, // 개발환경에서는 단일 인스턴스
+      exec_mode: 'cluster',
       watch: true,
-      env_development: {
+      max_memory_restart: '1G',
+      min_uptime: '10s', // 최소 가동 시간
+      restart_delay: 4000, // 재시작 지연 시간
+      kill_timeout: 5000, // 프로세스 종료 대기 시간
+      wait_ready: true, // ready 이벤트 대기
+      listen_timeout: 10000, // listen 이벤트 타임아웃
+      env: {
         NODE_ENV: 'development',
         RUN_ON: 'local',
         PORT: 3000,
-        watch: true,
-        instances: 1, // 개발환경에서는 단일 인스턴스
       },
     },
   ],
