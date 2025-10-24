@@ -2,6 +2,7 @@ import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-t
 import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { Answer } from '@/surveys/entities/answer.entity';
 import { ExpiredInvitationTokenExceptionDto } from '@auth/dto/exception/expired-invitation-token.exception.dto';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
@@ -363,5 +364,11 @@ export class UtilService {
     if (!isInviter) throw new NotFoundUserExceptionDto('inviter');
 
     return { verified: true, subscriptionId: +subscriptionId, inviteeId: isInvitee.id };
+  }
+
+  validateOwnSurveyAnswer(answer: Answer, realIp: IpAddress, userId?: number) {
+    const isUserMatch = answer.userId === userId;
+    const isIpMatch = answer.realIp === realIp;
+    return isUserMatch && isIpMatch;
   }
 }

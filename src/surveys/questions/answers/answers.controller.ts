@@ -76,11 +76,13 @@ export class AnswersController {
   @Public()
   @Post('refresh')
   async refreshAnswer(
+    @Req() req: Request,
+    @LoginUser() user: LoginUserData,
     @Param('surveyId') surveyId: number,
     @ExtractSubmissionHash() submissionHash: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.answersService.refreshAnswer(surveyId, submissionHash, res);
+    await this.answersService.refreshAnswer(surveyId, submissionHash, req.realIp, res, user?.id);
     return new StartAnswerResponseDto();
   }
 

@@ -14,8 +14,8 @@ export class AnswersService {
     return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, realIp, userId);
   }
 
-  async refreshAnswer(surveyId: number, submissionHash: string, res: Response) {
-    return this.answersRepository.refreshAnswer(surveyId, submissionHash, res);
+  async refreshAnswer(surveyId: number, submissionHash: string, realIp: IpAddress, res: Response, userId?: number) {
+    return this.answersRepository.refreshAnswer(surveyId, submissionHash, realIp, res, userId);
   }
 
   async validateFirstSurveyAnswer(

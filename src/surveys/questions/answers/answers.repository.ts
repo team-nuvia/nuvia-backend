@@ -23,6 +23,7 @@ import { StartAnswerNestedResponseDto } from './dto/response/start-answer.nested
 import { ValidateFirstSurveyAnswerNestedResponseDto } from './dto/response/validate-first-survey-answer.nested.response.dto';
 import { QuestionAnswer } from './entities/question-answer.entity';
 import { ReferenceBuffer } from './entities/reference-buffer.entity';
+import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-access.exception.dto';
 
 @Injectable()
 export class AnswersRepository extends BaseRepository {
@@ -79,18 +80,23 @@ export class AnswersRepository extends BaseRepository {
     return { jwsToken, submissionHash };
   }
 
-  async refreshAnswer(surveyId: number, submissionHash: string, res: Response) {
+  async refreshAnswer(surveyId: number, submissionHash: string, realIp: IpAddress, res: Response, userId?: number) {
     const answer = await this.orm
       .getRepo(Answer)
       .createQueryBuilder('answer')
       .where('answer.surveyId = :surveyId', { surveyId })
       .andWhere('answer.submissionHash = :submissionHash', { submissionHash })
       .andWhere('answer.status IN (:...status)', { status: [AnswerStatus.Started, AnswerStatus.InProgress, AnswerStatus.Saved] })
+      .andWhere('answer.realIp = :realIp', { realIp })
       .andWhere('answer.expiredAt > :expiredAt', { expiredAt: new Date() })
       .getOne();
 
     if (!answer) {
       throw new NotFoundAnswerExceptionDto();
+    }
+
+    if (!this.utilService.validateOwnSurveyAnswer(answer, realIp, userId)) {
+      throw new ForbiddenAccessExceptionDto();
     }
 
     await this.orm.getRepo(Answer).update({ id: answer.id }, { expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME) });

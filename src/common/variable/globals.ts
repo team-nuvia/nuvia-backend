@@ -16,4 +16,4 @@ export const COOKIE_SESSION_EXPIRE_TIME = 1000 * 60 * 60 * 2; // 쿠키 세션 �
 export const COOKIE_ACCESS_EXPIRE_TIME = 1000 * JWT_TOKEN_EXPIRE_TIME; // 쿠키 액세스 토큰 만료시간: 30분
 export const COOKIE_REFRESH_EXPIRE_TIME = 1000 * JWT_REFRESH_EXPIRE_TIME; // 쿠키 리프레시 토큰 만료시간: 30일
 
-export const DEFAULT_BLACK_LIST_IPS: IpAddress[] = ['127.0.0.1'];
+export const DEFAULT_BLACK_LIST_IPS: IpAddress[] = ['224.x.x.x', '240.x.x.x'];
