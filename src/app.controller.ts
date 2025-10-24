@@ -19,7 +19,7 @@ export class AppController {
   @Get('version')
   getVersion(@Ip() ipAddress: string, @Req() req: Request) {
     const version = this.appService.getVersion();
-    console.log('ipAddress:', ipAddress);
+    console.log('decorator ipAddress:', ipAddress);
     console.log('req.ip:', req.ip);
     return new GetVersionResponse(version);
   }
