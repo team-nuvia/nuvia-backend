@@ -15,7 +15,6 @@ module.exports = {
       listen_timeout: 10000, // listen 이벤트 타임아웃
       env: {
         NODE_ENV: 'production',
-        RUN_ON: 'cloud',
         PORT: 443,
       },
       error_file: './logs/error/pm2-error.log',
