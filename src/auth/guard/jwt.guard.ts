@@ -1,6 +1,6 @@
 import { ExpiredTokenExceptionDto } from '@auth/dto/exception/jwt-token-expired.exception.dto';
 import { UnauthorizedException } from '@common/dto/response';
-import { PUBLIC_KEY } from '@common/variable/globals';
+import { ACCESS_COOKIE_NAME, PUBLIC_KEY } from '@common/variable/globals';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
@@ -8,7 +8,7 @@ import { ApiCookieAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 
-@ApiCookieAuth('access_token')
+@ApiCookieAuth(ACCESS_COOKIE_NAME)
 @Injectable()
 export class JwtGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
@@ -20,7 +20,7 @@ export class JwtGuard extends AuthGuard('jwt') {
 
     if (isPublic) {
       const request = context.switchToHttp().getRequest() as Request;
-      const accessToken = request.cookies['access_token'];
+      const accessToken = request.cookies[ACCESS_COOKIE_NAME];
 
       if (accessToken) {
         const decoded = jwt.decode(accessToken, { json: true }) as unknown as LoginUserData;

@@ -3,13 +3,14 @@ import { CombineResponses } from '@common/decorator/combine-responses.decorator'
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
-import { Body, Controller, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
+import { GetSubscriptionSettingsResponseDto } from './dto/response/get-subscription-settings.response.dto';
 import { SuccessInviteSubscriptionResponseDto } from './dto/response/success-invite-subscription.response.dto';
 import { UpdateInvitationWithNotificationResponseDto } from './dto/response/update-invitation-with-notification.response.dto';
 import { Subscription } from './entities/subscription.entity';
@@ -23,6 +24,18 @@ export class SubscriptionsController {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly emailsService: EmailsService,
   ) {}
+
+  @ApiOperation({ summary: '조직 설정 조회' })
+  @CombineResponses(HttpStatus.OK, GetSubscriptionSettingsResponseDto)
+  @RequiredLogin
+  @Get(':subscriptionId/settings')
+  async getSubscriptionSettings(
+    @LoginUser() user: LoginUserData,
+    @Param('subscriptionId') subscriptionId: string,
+  ): Promise<GetSubscriptionSettingsResponseDto> {
+    const settings = await this.subscriptionsService.getSubscriptionSettings(+subscriptionId, user.id);
+    return new GetSubscriptionSettingsResponseDto(settings);
+  }
 
   /**
    * 초대 메일 발송

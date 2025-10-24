@@ -17,8 +17,10 @@ import { NoSignedUserExceptionDto } from './dto/exception/no-signed-user.excepti
 import { NotFoundSubscriptionExceptionDto } from './dto/exception/not-found-subscription.exception.dto';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
+import { GetSubscriptionSettingsNestedResponseDto } from './dto/response/get-subscription-settings.nested.response.dto';
 import { Subscription } from './entities/subscription.entity';
 import { NotFoundOrganizationRoleExceptionDto } from './organization-roles/dto/exception/not-found-organization-role.exception.dto';
+import { OrganizationDataNestedResponseDto } from './organization-roles/dto/response/organization-data.nested.response.dto';
 import { OrganizationRole } from './organization-roles/entities/organization-role.entity';
 
 @Injectable()
@@ -41,6 +43,25 @@ export class SubscriptionsRepository extends BaseRepository {
 
   existsBy(condition: FindOptionsWhere<Subscription>): Promise<boolean> {
     return this.orm.getRepo(Subscription).exists({ where: condition });
+  }
+
+  async getSubscriptionSettings(subscription: OrganizationDataNestedResponseDto, userId: number): Promise<GetSubscriptionSettingsNestedResponseDto> {
+    const organizationRole = await this.orm
+      .getRepo(OrganizationRole)
+      .createQueryBuilder('or')
+      .where('or.subscriptionId = :subscriptionId', { subscriptionId: subscription.id })
+      .andWhere('or.userId = :userId', { userId })
+      .getOne();
+
+    if (!organizationRole) {
+      throw new NotFoundOrganizationRoleExceptionDto();
+    }
+
+    return {
+      teamName: subscription.name,
+      teamDescription: subscription.description ?? null,
+      teamDefaultRole: subscription.role,
+    };
   }
 
   async addInviteNotifications({

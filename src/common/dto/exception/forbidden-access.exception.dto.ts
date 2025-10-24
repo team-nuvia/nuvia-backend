@@ -7,7 +7,7 @@ export class ForbiddenAccessExceptionDto extends ForbiddenException {
   })
   declare message: string;
 
-  constructor(reason: StringOrNull = null) {
+  constructor(reason: string | null = null) {
     super({ code: ErrorKey.FORBIDDEN_ACCESS, reason });
   }
 }

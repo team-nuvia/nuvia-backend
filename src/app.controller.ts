@@ -19,7 +19,6 @@ export class AppController {
   @Get('version')
   getVersion() {
     const version = this.appService.getVersion();
-
     return new GetVersionResponse(version);
   }
 

@@ -1,14 +1,16 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch } from '@nestjs/common';
+import { Transactional } from '@common/decorator/transactional.decorator';
+import { UnauthorizedException } from '@common/dto/response';
+import { Body, Controller, Get, HttpStatus, Param, Patch } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { NotFoundOrganizationRoleExceptionDto } from './dto/exception/not-found-organization-role.exception.dto';
 import { UpdateOrganizationRolePayloadDto } from './dto/payload/update-organization-role.payload.dto';
 import { GetOrganizationRolesResponseDto } from './dto/response/get-organization-roles.response.dto';
 import { UpdateOrganizationRoleResponseDto } from './dto/response/update-organization-role.response.dto';
 import { OrganizationRoleUpdateConstraintValidation } from './organization-role-update-constraint.guard';
 import { OrganizationRolesService } from './organization-roles.service';
-import { Transactional } from '@common/decorator/transactional.decorator';
 
 @RequiredLogin
 @ApiTags('조직 역할')
@@ -25,8 +27,10 @@ export class OrganizationRolesController {
     return new GetOrganizationRolesResponseDto(roles);
   }
 
-  // TODO: 조직 역할 수정 시 권한을 수정자의 권한 이하만 가능하도록 검증 추가
+  @ApiOperation({ summary: '조직 역할 수정' })
   @CombineResponses(HttpStatus.OK, UpdateOrganizationRoleResponseDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundOrganizationRoleExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @OrganizationRoleUpdateConstraintValidation()
   @Transactional()
   @Patch(':organizationRoleId')
@@ -40,8 +44,13 @@ export class OrganizationRolesController {
     return new UpdateOrganizationRoleResponseDto();
   }
 
-  @Delete(':organizationRoleId')
-  remove(@Param('subscriptionId') subscriptionId: string, @Param('organizationRoleId') organizationRoleId: string) {
-    return this.organizationRolesService.remove(+subscriptionId, +organizationRoleId);
-  }
+  // @ApiOperation({ summary: '조직 역할 삭제' })
+  // @CombineResponses(HttpStatus.OK, DeleteOrganizationRoleResponseDto)
+  // @CombineResponses(HttpStatus.NOT_FOUND, NotFoundOrganizationRoleExceptionDto)
+  // @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  // @Transactional()
+  // @Delete(':organizationRoleId')
+  // remove(@Param('subscriptionId') subscriptionId: string, @Param('organizationRoleId') organizationRoleId: string) {
+  //   return this.organizationRolesService.remove(+subscriptionId, +organizationRoleId);
+  // }
 }

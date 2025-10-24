@@ -2,6 +2,7 @@ import { PlanGrantConstraintsType } from '@/plans/enums/plan-grant-constraints-t
 import { AlreadyJoinedUserExceptionDto } from '@/subscriptions/dto/exception/already-joined-user.exception.dto';
 import { NotFoundSubscriptionExceptionDto } from '@/subscriptions/dto/exception/not-found-subscription.exception.dto';
 import { Subscription } from '@/subscriptions/entities/subscription.entity';
+import { Answer } from '@/surveys/entities/answer.entity';
 import { ExpiredInvitationTokenExceptionDto } from '@auth/dto/exception/expired-invitation-token.exception.dto';
 import { CommonService } from '@common/common.service';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
@@ -363,5 +364,23 @@ export class UtilService {
     if (!isInviter) throw new NotFoundUserExceptionDto('inviter');
 
     return { verified: true, subscriptionId: +subscriptionId, inviteeId: isInvitee.id };
+  }
+
+  validateOwnSurveyAnswer(answer: Answer, realIp: IpAddress, userId?: number) {
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ answer:', answer);
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ userId:', userId ?? null);
+    console.log('🚀 ~ UtilService ~ validateOwnSurveyAnswer ~ realIp:', realIp);
+    const isUserMatch = answer.userId === (userId ?? null);
+    const isIpMatch = answer.realIp === realIp;
+    if (isNil(answer.userId)) {
+      /* 비회원 */
+      /* 동일 아이피 제한 */
+      return isIpMatch;
+    } else {
+      /* 회원 */
+      /* 동일 아이피 제한 없음 */
+      /* 단, userId로만 판별. 하나의 설문에 하나의 사람만 */
+      return isUserMatch;
+    }
   }
 }

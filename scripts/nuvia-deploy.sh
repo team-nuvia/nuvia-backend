@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-echo "whoami=$(whoami)  pwd=$(pwd)"
+echo "whoami=$(whoami) pwd=$(pwd)"
 
 set -eu
 
@@ -28,8 +28,8 @@ npm run build
 
 # PM2 재시작
 if pm2 list | grep -q "nuvia-backend"; then
-  pm2 reload ecosystem.config.js --env production
+  pm2 reload ecosystem.config.js
 else
-  pm2 start ecosystem.config.js --env production
+  pm2 start ecosystem.config.js
 fi
 pm2 save

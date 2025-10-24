@@ -9,6 +9,7 @@ import { BadRequestException, UnauthorizedException } from '@common/dto/response
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MetadataStatusType } from '@share/enums/metadata-status-type';
+import { Request } from 'express';
 import { ClosedSurveyExceptionDto } from './dto/exception/closed-survey.exception.dto';
 import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
@@ -39,7 +40,7 @@ import { SurveyDeleteConstraintValidation } from './survey-delete-constraint.gua
 import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.guard';
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
-import { Request } from 'express';
+import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 
 @ApiTags('설문')
 @Controller('surveys')
@@ -170,6 +171,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.OK, GetSurveyDetailViewResponseDto)
   @CombineResponses(HttpStatus.BAD_REQUEST, BadRequestException, ClosedSurveyExceptionDto)
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundSurveyExceptionDto)
   @Transactional()
   @Public()
   @Get('view/:hashedUniqueKey')
@@ -178,7 +180,6 @@ export class SurveysController {
     @Param('hashedUniqueKey') hashedUniqueKey: string,
     @ExtractSubmissionHash() submissionHash?: string,
   ): Promise<GetSurveyDetailViewResponseDto> {
-    console.log('🚀 ~ SurveysController ~ getSurveyDetailAndViewCountUpdate ~ user:', user);
     const survey = await this.surveysService.getSurveyDetailAndViewCountUpdate(hashedUniqueKey, submissionHash, user?.id);
     return new GetSurveyDetailViewResponseDto(survey);
   }

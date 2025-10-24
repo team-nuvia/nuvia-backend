@@ -10,21 +10,40 @@ import { ValidateFirstSurveyAnswerNestedResponseDto } from './dto/response/valid
 export class AnswersService {
   constructor(private readonly answersRepository: AnswersRepository) {}
 
-  async startAnswer(surveyId: number, startAnswerPayloadDto: StartAnswerPayloadDto, userId?: number): Promise<StartAnswerNestedResponseDto> {
-    return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, userId);
+  async continueAnswer(
+    surveyId: number,
+    startAnswerPayloadDto: StartAnswerPayloadDto,
+    realIp: IpAddress,
+    submissionHash: string,
+    jws: string,
+    res: Response,
+    userId?: number,
+  ) {
+    await this.answersRepository.continueAnswer(surveyId, startAnswerPayloadDto, realIp, submissionHash, jws, res, userId);
   }
 
-  async refreshAnswer(surveyId: number, submissionHash: string, res: Response) {
-    return this.answersRepository.refreshAnswer(surveyId, submissionHash, res);
+  async startAnswer(
+    surveyId: number,
+    startAnswerPayloadDto: StartAnswerPayloadDto,
+    realIp: IpAddress,
+    userId?: number,
+  ): Promise<StartAnswerNestedResponseDto> {
+    return this.answersRepository.startAnswer(surveyId, startAnswerPayloadDto, realIp, userId);
+  }
+
+  async refreshAnswer(surveyId: number, submissionHash: string, realIp: IpAddress, res: Response, userId?: number) {
+    return this.answersRepository.refreshAnswer(surveyId, submissionHash, realIp, res, userId);
   }
 
   async validateFirstSurveyAnswer(
     submissionHash: string,
     jws: string,
     surveyId: number,
+    realIp: IpAddress,
     res: Response,
+    userId?: number,
   ): Promise<ValidateFirstSurveyAnswerNestedResponseDto> {
-    return this.answersRepository.validateFirstSurveyAnswer(submissionHash, jws, surveyId, res);
+    return this.answersRepository.validateFirstSurveyAnswer(submissionHash, jws, surveyId, realIp, res, userId);
   }
 
   async createAnswer(
@@ -32,9 +51,10 @@ export class AnswersService {
     surveyId: number,
     submissionHash: string,
     res: Response,
+    realIp: IpAddress,
     userId?: number,
     transferedFiles?: Express.Multer.File[],
   ) {
-    await this.answersRepository.createAnswer(createAnswerDto, surveyId, submissionHash, res, userId, transferedFiles);
+    await this.answersRepository.createAnswer(createAnswerDto, surveyId, submissionHash, res, realIp, userId, transferedFiles);
   }
 }

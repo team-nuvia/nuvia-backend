@@ -25,7 +25,7 @@ export class ReferenceBuffer extends DefaultDateInterface {
   @Column('mediumblob', { comment: '파일 바이트' })
   buffer!: Buffer;
 
-  @OneToOne(() => QuestionAnswer, (questionAnswer) => questionAnswer.referenceBuffer)
+  @OneToOne(() => QuestionAnswer, (questionAnswer) => questionAnswer.referenceBuffer, { onDelete: 'CASCADE' })
   @JoinColumn()
   questionAnswer!: Relation<QuestionAnswer>;
 }

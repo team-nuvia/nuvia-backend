@@ -40,6 +40,7 @@ async function bootstrap() {
   const commonConfig = commonService.getConfig('common');
 
   const version = commonConfig.version;
+  const host = commonConfig.host;
   const port = commonConfig.port;
 
   app.useLogger(loggerService);
@@ -88,7 +89,7 @@ async function bootstrap() {
   // loggerService.warn('=============================================');
   // loggerService.error('=============================================');
 
-  await app.listen(port);
+  await app.listen(port, host);
 
   printRouterInfo(app);
 

@@ -1,9 +1,13 @@
+import { EmailsService } from '@/emails/emails.service';
 import { NotFoundPermissionExceptionDto } from '@/permissions/dto/exception/not-found-permission.exception.dto';
 import { Permission } from '@/permissions/entities/permission.entity';
 import { BaseRepository } from '@common/base.repository';
 import { Injectable } from '@nestjs/common';
+import { NotificationType } from '@share/enums/notification-type';
 import { OrganizationRoleStatusType } from '@share/enums/organization-role-status-type';
 import { UserRole, UserRoleList } from '@share/enums/user-role';
+import { isRoleAtLeast } from '@util/isRoleAtLeast';
+import { LocalizationManager } from '@util/LocalizationManager';
 import { OrmHelper } from '@util/orm.helper';
 import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { NotFoundSubscriptionExceptionDto } from '../dto/exception/not-found-subscription.exception.dto';
@@ -13,10 +17,6 @@ import { NotFoundOrganizationRoleExceptionDto } from './dto/exception/not-found-
 import { UpdateOrganizationRolePayloadDto } from './dto/payload/update-organization-role.payload.dto';
 import { TableOrganizationRoleNestedResponseDto } from './dto/response/table-organization-role.nested.response.dto';
 import { OrganizationRole } from './entities/organization-role.entity';
-import { NotificationType } from '@share/enums/notification-type';
-import { isRoleAtLeast } from '@util/isRoleAtLeast';
-import { EmailsService } from '@/emails/emails.service';
-import { LocalizationManager } from '@util/LocalizationManager';
 
 @Injectable()
 export class OrganizationRolesRepository extends BaseRepository {

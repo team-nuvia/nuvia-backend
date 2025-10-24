@@ -178,3 +178,7 @@ npm i --save-dev vitest unplugin-swc @swc/core @vitest/coverage-v8
     - [x] 구독 및 권한 관계 정리
   - [ ] 설문 추가,수정,삭제 권한 검증
     - [ ] 검증 로직 별도 분리 (재사용성 고려)
+
+---
+
+# 
