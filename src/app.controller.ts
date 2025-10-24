@@ -17,19 +17,17 @@ export class AppController {
   @ApiOperation({ summary: '버전 조회' })
   @CombineResponses(HttpStatus.OK, GetVersionResponse)
   @Get('version')
-  getVersion() {
+  getVersion(@Ip() ipAddress: string, @Req() req: Request) {
     const version = this.appService.getVersion();
-
+    console.log('ipAddress:', ipAddress);
+    console.log('req.ip:', req.ip);
     return new GetVersionResponse(version);
   }
 
   @ApiOperation({ summary: '헬스 체크' })
   @CombineResponses(HttpStatus.OK, GetHealthCheckResponseDto)
   @Head('health')
-  getHealthCheck(@Ip() ipAddress: string, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    console.log('ipAddress:', ipAddress);
-    console.log('req.ip:', req.ip);
-
+  getHealthCheck(@Res({ passthrough: true }) res: Response) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
