@@ -121,6 +121,8 @@ export declare global {
     label: string;
     sequence: number;
   }
+
+  type IpAddress = '::1' | `${number}.${number}.${number}.${number}`;
 }
 export declare module 'express' {
   interface Request {

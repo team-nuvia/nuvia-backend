@@ -56,8 +56,8 @@ export class AuthController {
   @Transactional()
   @Post('login')
   async login(
-    @LoginUser() loginUserData: LoginUserData,
     @Ip() ipAddress: string,
+    @LoginUser() loginUserData: LoginUserData,
     @Body() userLoginInformationDto: UserLoginInformationPayloadDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponseDto> {

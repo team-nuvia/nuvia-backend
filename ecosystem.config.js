@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'nuvia-backend',
+      name: 'nuvia-backend-prod',
       script: 'dist/main.js',
       instances: 2, // 기본적으로 2개 인스턴스 실행
       exec_mode: 'cluster',
@@ -13,16 +13,6 @@ module.exports = {
       kill_timeout: 5000, // 프로세스 종료 대기 시간
       wait_ready: true, // ready 이벤트 대기
       listen_timeout: 10000, // listen 이벤트 타임아웃
-      env: {
-        PORT: 3000,
-      },
-      env_development: {
-        NODE_ENV: 'development',
-        RUN_ON: 'local',
-        PORT: 3000,
-        watch: true,
-        instances: 1, // 개발환경에서는 단일 인스턴스
-      },
       env_production: {
         NODE_ENV: 'production',
         PORT: 443,
@@ -34,6 +24,18 @@ module.exports = {
       time: true,
       merge_logs: true, // 로그 병합
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z', // 로그 날짜 형식
+    },
+    {
+      name: 'nuvia-backend-dev',
+      script: 'dist/main.js',
+      watch: true,
+      env_development: {
+        NODE_ENV: 'development',
+        RUN_ON: 'local',
+        PORT: 3000,
+        watch: true,
+        instances: 1, // 개발환경에서는 단일 인스턴스
+      },
     },
   ],
 };

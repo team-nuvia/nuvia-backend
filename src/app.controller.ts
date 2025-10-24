@@ -1,8 +1,8 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
 import { Public } from '@common/decorator/public.decorator';
-import { Controller, Get, Head, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, Head, HttpStatus, Ip, Req, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import client from 'prom-client';
 import { AppService } from './app.service';
 import { GetVersionResponse } from './responses';
@@ -26,7 +26,10 @@ export class AppController {
   @ApiOperation({ summary: '헬스 체크' })
   @CombineResponses(HttpStatus.OK, GetHealthCheckResponseDto)
   @Head('health')
-  getHealthCheck(@Res({ passthrough: true }) res: Response) {
+  getHealthCheck(@Ip() ipAddress: string, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    console.log('ipAddress:', ipAddress);
+    console.log('req.ip:', req.ip);
+
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');

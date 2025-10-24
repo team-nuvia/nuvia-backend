@@ -116,7 +116,6 @@ export class AnswersController {
     @Body() createAnswerPayloadDto: CreateAnswerPayloadDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    console.log('🚀 ~ AnswersController ~ create ~ createAnswerPayloadDto:', createAnswerPayloadDto);
     const transferedFiles = files.map((file) => ({
       ...file,
       filename: Buffer.from(file.originalname, 'latin1').toString('utf8'),

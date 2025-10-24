@@ -22,7 +22,7 @@ export const datasourceOptions: DataSourceOptions = {
   ],
   namingStrategy: new SnakeNamingStrategy(),
   // dropSchema: IS_TEST,
-  synchronize: !IS_PROD || IS_LOCAL,
+  synchronize: !IS_PROD && IS_LOCAL,
   migrations: [path.join(__dirname + '/../migrations/*.ts')],
   migrationsTableName: 'migrations',
   migrationsTransactionMode: 'all',
