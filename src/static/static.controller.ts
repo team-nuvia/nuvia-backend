@@ -1,4 +1,5 @@
 import { CombineResponses } from '@common/decorator/combine-responses.decorator';
+import { Public } from '@common/decorator/public.decorator';
 import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { NotFoundProfileExceptionDto } from '@users/profiles/dto/exception/not-found-profile.exception.dto';
@@ -11,6 +12,7 @@ import { StaticService } from './static.service';
 
 @ApiTags('정적 리소스')
 @Controller('static')
+@Public()
 export class StaticController {
   constructor(private readonly staticService: StaticService) {}
 

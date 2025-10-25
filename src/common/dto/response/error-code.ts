@@ -120,6 +120,9 @@ export const ErrorKey = {
   ANSWER_OWNER_MIGRATED: 'ANSWER_OWNER_MIGRATED',
   LOGIN_REQUIRED_FOR_ANSWER: 'LOGIN_REQUIRED_FOR_ANSWER',
   ALREADY_ANSWER_STARTED: 'ALREADY_ANSWER_STARTED',
+  SUCCESS_UPDATE_SUBSCRIPTION_SETTINGS: 'SUCCESS_UPDATE_SUBSCRIPTION_SETTINGS',
+  CANNOT_SET_DEFAULT_ROLE_AS_OWNER: 'CANNOT_SET_DEFAULT_ROLE_AS_OWNER',
+  SUCCESS_TOGGLE_READ_ALL_NOTIFICATION: 'SUCCESS_TOGGLE_READ_ALL_NOTIFICATION',
 } as const;
 export type ErrorKey = (typeof ErrorKey)[keyof typeof ErrorKey];
 
@@ -241,6 +244,9 @@ export const ErrorCode = {
   ANSWER_OWNER_MIGRATED: HttpStatus.BAD_REQUEST,
   LOGIN_REQUIRED_FOR_ANSWER: HttpStatus.BAD_REQUEST,
   ALREADY_ANSWER_STARTED: HttpStatus.BAD_REQUEST,
+  SUCCESS_UPDATE_SUBSCRIPTION_SETTINGS: HttpStatus.OK,
+  CANNOT_SET_DEFAULT_ROLE_AS_OWNER: HttpStatus.BAD_REQUEST,
+  SUCCESS_TOGGLE_READ_ALL_NOTIFICATION: HttpStatus.OK,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
@@ -362,6 +368,9 @@ export const ErrorMessage = {
   ANSWER_OWNER_MIGRATED: '응답자 정보가 변경되었습니다. 다시 시작해주세요.',
   LOGIN_REQUIRED_FOR_ANSWER: '이미 작성중인 응답이 있습니다. 로그인 후 계속 작성해주세요.',
   ALREADY_ANSWER_STARTED: '이미 작성중인 응답이 있습니다.',
+  SUCCESS_UPDATE_SUBSCRIPTION_SETTINGS: '조직 설정 수정 성공',
+  CANNOT_SET_DEFAULT_ROLE_AS_OWNER: 'Owner 권한은 변경할 수 없습니다.',
+  SUCCESS_TOGGLE_READ_ALL_NOTIFICATION: '모든 알림 읽음 상태 변경 성공',
 } as const;
 export type ErrorMessage = (typeof ErrorMessage)[keyof typeof ErrorMessage];
 

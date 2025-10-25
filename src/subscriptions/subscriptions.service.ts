@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
-import { NotFoundSubscriptionExceptionDto } from './dto/exception/not-found-subscription.exception.dto';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
+import { UpdateSubscriptionSettingsPayloadDto } from './dto/payload/update-subscription-settings.payload.dto';
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
 import { GetSubscriptionSettingsNestedResponseDto } from './dto/response/get-subscription-settings.nested.response.dto';
 import { Subscription } from './entities/subscription.entity';
@@ -14,17 +14,15 @@ export class SubscriptionsService {
   constructor(private readonly subscriptionsRepository: SubscriptionsRepository) {}
 
   async getSubscriptionSettings(subscriptionId: number, userId: number): Promise<GetSubscriptionSettingsNestedResponseDto> {
-    const subscription = await this.subscriptionsRepository.getCurrentOrganization(userId);
+    return this.subscriptionsRepository.getSubscriptionSettings(subscriptionId, userId);
+  }
 
-    if (!subscription) {
-      throw new NotFoundSubscriptionExceptionDto();
-    }
-
-    if (subscription.id !== subscriptionId) {
-      throw new NotFoundSubscriptionExceptionDto();
-    }
-
-    return this.subscriptionsRepository.getSubscriptionSettings(subscription, userId);
+  async updateSubscriptionSettings(
+    subscriptionId: number,
+    userId: number,
+    updateSubscriptionSettingsDto: UpdateSubscriptionSettingsPayloadDto,
+  ): Promise<void> {
+    await this.subscriptionsRepository.updateSubscriptionSettings(subscriptionId, userId, updateSubscriptionSettingsDto);
   }
 
   async inviteUsers(

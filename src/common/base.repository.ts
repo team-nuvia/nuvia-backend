@@ -23,9 +23,11 @@ import { isRoleAtLeast } from '@util/isRoleAtLeast';
 import { OrmHelper } from '@util/orm.helper';
 import { FindOptionsWhere, In } from 'typeorm';
 import { ForbiddenAccessExceptionDto } from './dto/exception/forbidden-access.exception.dto';
+import { AddBroadcastNotificationPayloadDto } from './dto/payload/add-broadcast-notification.payload.dto';
 import { AddNotificationPayloadDto } from './dto/payload/add-notification.payload.dto';
 import { UpdateOrganizationRoleStatusPayloadDto } from './dto/payload/update-notification.payload.dto';
 import { ValidateActionType } from './variable/enums/validate-action-type.enum';
+import { ToggleReadAllNotificationPayloadDto } from '@/notifications/dto/payload/toggle-read-all-notification.payload.dto';
 
 export abstract class BaseRepository {
   constructor(protected readonly orm: OrmHelper) {}
@@ -483,6 +485,14 @@ export abstract class BaseRepository {
     }
   }
 
+  async addBroadcastNotification({ fromId, toSubscriptionId, type, referenceId, title, content }: AddBroadcastNotificationPayloadDto) {
+    const organizationRoles = await this.orm.getRepo(OrganizationRole).find({ where: { subscriptionId: toSubscriptionId } });
+
+    await Promise.all(
+      organizationRoles.map((organizationRole) => this.addNotification({ fromId, toId: organizationRole.userId, type, referenceId, title, content })),
+    );
+  }
+
   async addNotification({ fromId, toId, type, referenceId, title, content }: AddNotificationPayloadDto) {
     return this.orm.getRepo(Notification).save({ fromId, toId, type, referenceId, title, content });
   }
@@ -532,6 +542,19 @@ export abstract class BaseRepository {
     await this.orm
       .getRepo(Notification)
       .update(notificationId, { isRead: toggleReadNotificationDto.isRead, actionStatus: toggleReadNotificationDto.actionStatus });
+  }
+
+  async toggleReadAllNotification(toId: number, toggleReadAllNotificationDto: ToggleReadAllNotificationPayloadDto) {
+    const readData = {
+      isRead: toggleReadAllNotificationDto.isRead,
+      actionStatus: toggleReadAllNotificationDto.actionStatus,
+    };
+
+    if (toggleReadAllNotificationDto.isRead) {
+      Object.assign(readData, { readAt: new Date() });
+    }
+
+    await this.orm.getRepo(Notification).update({ toId, id: In(toggleReadAllNotificationDto.notificationIds) }, readData);
   }
 
   async updateOrganizationRoleStatus(organizationRoleId: number, updateOrganizationRoleStatusPayloadDto: UpdateOrganizationRoleStatusPayloadDto) {

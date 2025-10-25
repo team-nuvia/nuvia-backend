@@ -4,9 +4,10 @@ import { Answer } from '@/surveys/entities/answer.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
 import { BaseRepository } from '@common/base.repository';
 import { ForbiddenAccessExceptionDto } from '@common/dto/exception/forbidden-access.exception.dto';
-import { JWS_COOKIE_NAME, SUBMISSION_HASH_COOKIE_NAME, VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
+import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
 import { Injectable } from '@nestjs/common';
 import { AnswerStatus } from '@share/enums/answer-status';
+import { CookieNameType } from '@share/enums/cookie-name-type';
 import { QuestionType } from '@share/enums/question-type';
 import { SurveyStatus } from '@share/enums/survey-status';
 import { isNil } from '@util/isNil';
@@ -84,13 +85,13 @@ export class AnswersRepository extends BaseRepository {
         }
 
         /* 만료된 쿠키 제거 */
-        res.clearCookie(JWS_COOKIE_NAME, {
+        res.clearCookie(CookieNameType.Jws, {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
           path: '/',
         });
-        res.clearCookie(SUBMISSION_HASH_COOKIE_NAME, {
+        res.clearCookie(CookieNameType.SubmissionHash, {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
@@ -221,7 +222,7 @@ export class AnswersRepository extends BaseRepository {
     });
 
     /* 해시 재발급 */
-    res.cookie(SUBMISSION_HASH_COOKIE_NAME, answer.submissionHash, {
+    res.cookie(CookieNameType.SubmissionHash, answer.submissionHash, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -229,7 +230,7 @@ export class AnswersRepository extends BaseRepository {
     });
 
     /* 인증 토큰 재발급 */
-    res.cookie(JWS_COOKIE_NAME, jwsToken, {
+    res.cookie(CookieNameType.Jws, jwsToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -244,13 +245,13 @@ export class AnswersRepository extends BaseRepository {
     await this.orm.getRepo(Answer).update({ submissionHash }, { status: AnswerStatus.Aborted });
 
     /* 만료된 쿠키 제거 */
-    res.clearCookie(JWS_COOKIE_NAME, {
+    res.clearCookie(CookieNameType.Jws, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       path: '/',
     });
-    res.clearCookie(SUBMISSION_HASH_COOKIE_NAME, {
+    res.clearCookie(CookieNameType.SubmissionHash, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -343,13 +344,13 @@ export class AnswersRepository extends BaseRepository {
         }
 
         /* 만료된 쿠키 제거 */
-        res.clearCookie(JWS_COOKIE_NAME, {
+        res.clearCookie(CookieNameType.Jws, {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
           path: '/',
         });
-        res.clearCookie(SUBMISSION_HASH_COOKIE_NAME, {
+        res.clearCookie(CookieNameType.SubmissionHash, {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
@@ -539,7 +540,7 @@ export class AnswersRepository extends BaseRepository {
         .update({ id: answerEntity.id }, { status: AnswerStatus.Saved, expiredAt: new Date(Date.now() + VERIFY_JWS_EXPIRE_TIME) });
 
       /* 해시 재발급 */
-      res.cookie(SUBMISSION_HASH_COOKIE_NAME, answerEntity.submissionHash, {
+      res.cookie(CookieNameType.SubmissionHash, answerEntity.submissionHash, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
@@ -547,7 +548,7 @@ export class AnswersRepository extends BaseRepository {
       });
 
       /* 인증 토큰 재발급 */
-      res.cookie(JWS_COOKIE_NAME, jwsToken, {
+      res.cookie(CookieNameType.Jws, jwsToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
@@ -557,13 +558,13 @@ export class AnswersRepository extends BaseRepository {
     } else if (status === AnswerStatus.Completed) {
       await this.orm.getRepo(Answer).update({ id: answerEntity.id }, { status: AnswerStatus.Completed, completedAt: new Date() });
 
-      res.clearCookie(JWS_COOKIE_NAME, {
+      res.clearCookie(CookieNameType.Jws, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
         path: '/',
       });
-      res.clearCookie(SUBMISSION_HASH_COOKIE_NAME, {
+      res.clearCookie(CookieNameType.SubmissionHash, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',

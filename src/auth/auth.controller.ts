@@ -13,9 +13,9 @@ import { Transactional } from '@common/decorator/transactional.decorator';
 import { NoMatchUserInformationExceptionDto } from '@common/dto/exception/no-match-user-info.exception.dto';
 import { NotFoundUserExceptionDto } from '@common/dto/exception/not-found-user.exception.dto';
 import { CLIENT_URL, IS_PROD } from '@common/variable/environment';
-import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from '@common/variable/globals';
 import { Body, Controller, Get, HttpStatus, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CookieNameType } from '@share/enums/cookie-name-type';
 import { SocialProvider } from '@share/enums/social-provider.enum';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -65,7 +65,7 @@ export class AuthController {
     const domain = this.commonConfig.getConfig('common').domain;
     const token = await this.authService.login(loginUserData, req.realIp, userLoginInformationDto);
 
-    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+    res.cookie(CookieNameType.Access, token.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -73,7 +73,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
+    res.cookie(CookieNameType.Refresh, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -81,7 +81,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+    res.cookie(CookieNameType.Session, token.hmacSession, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -121,7 +121,7 @@ export class AuthController {
 
     const token = await this.authService.socialLogin(idToken, socialProvider as SocialProvider, query);
 
-    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+    res.cookie(CookieNameType.Access, token.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -129,7 +129,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
+    res.cookie(CookieNameType.Refresh, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -137,7 +137,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+    res.cookie(CookieNameType.Session, token.hmacSession, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -169,7 +169,7 @@ export class AuthController {
     const domain = this.commonConfig.getConfig('common').domain;
     const token = await this.authService.refresh(verifiedRefreshToken);
 
-    res.cookie(ACCESS_COOKIE_NAME, token.accessToken, {
+    res.cookie(CookieNameType.Access, token.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -177,7 +177,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(REFRESH_COOKIE_NAME, token.refreshToken, {
+    res.cookie(CookieNameType.Refresh, token.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -186,7 +186,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.cookie(SESSION_COOKIE_NAME, token.hmacSession, {
+    res.cookie(CookieNameType.Session, token.hmacSession, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -215,7 +215,7 @@ export class AuthController {
     const secretConfig = this.commonConfig.getConfig('secret');
     const domain = this.commonConfig.getConfig('common').domain;
 
-    res.clearCookie(ACCESS_COOKIE_NAME, {
+    res.clearCookie(CookieNameType.Access, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -223,7 +223,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.clearCookie(REFRESH_COOKIE_NAME, {
+    res.clearCookie(CookieNameType.Refresh, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -231,7 +231,7 @@ export class AuthController {
       domain: IS_PROD ? domain : undefined,
     });
 
-    res.clearCookie(SESSION_COOKIE_NAME, {
+    res.clearCookie(CookieNameType.Session, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

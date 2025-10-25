@@ -97,3 +97,9 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// pm2 graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  process.exit(0);
+});

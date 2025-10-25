@@ -11,7 +11,7 @@ export const datasourceOptions: DataSourceOptions = {
   port: DB_PORT,
   username: DB_USERNAME,
   password: DB_PASSWORD,
-  database: IS_TEST ? ['test', DB_NAME].join('_') : DB_NAME,
+  database: DB_NAME,
   timezone: 'Z',
   logger: 'advanced-console',
   logging: DB_LOG ? (IS_TEST || IS_DEV || IS_LOCAL ? ['query', 'info', 'log', 'error'] : ['error']) : false,
@@ -22,11 +22,11 @@ export const datasourceOptions: DataSourceOptions = {
   ],
   namingStrategy: new SnakeNamingStrategy(),
   // dropSchema: IS_TEST,
-  synchronize: !IS_PROD && IS_LOCAL,
+  synchronize: IS_TEST,
   migrations: [path.join(__dirname + '/../migrations/*.ts')],
   migrationsTableName: 'migrations',
   migrationsTransactionMode: 'all',
-  migrationsRun: true,
+  migrationsRun: IS_PROD,
 };
 
 export const typeormConfig = registerAs('database', () => ({ ...datasourceOptions, autoLoadEntities: true }) as TypeOrmModuleOptions);

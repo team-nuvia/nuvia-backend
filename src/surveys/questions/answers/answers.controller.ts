@@ -5,10 +5,11 @@ import { ExtractJwsToken } from '@common/decorator/extract-jws.decorator';
 import { ExtractSubmissionHash } from '@common/decorator/extract-submission-hash.decorator';
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { Public } from '@common/decorator/public.decorator';
-import { JWS_COOKIE_NAME, SUBMISSION_HASH_COOKIE_NAME, VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
+import { VERIFY_JWS_EXPIRE_TIME } from '@common/variable/globals';
 import { Body, Controller, HttpStatus, Param, Post, Req, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CookieNameType } from '@share/enums/cookie-name-type';
 import { Request, Response } from 'express';
 import { AnswersService } from './answers.service';
 import { AlreadyAnswerStartedExceptionDto } from './dto/exception/already-answer-started.exception.dto';
@@ -67,7 +68,7 @@ export class AnswersController {
     }
 
     // session 등록을 위한 쿠키 설정 (만료기간 없음)
-    res.cookie(SUBMISSION_HASH_COOKIE_NAME, submissionHash, {
+    res.cookie(CookieNameType.SubmissionHash, submissionHash, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -75,7 +76,7 @@ export class AnswersController {
     });
 
     // expired at 3days
-    res.cookie(JWS_COOKIE_NAME, jwsToken, {
+    res.cookie(CookieNameType.Jws, jwsToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
