@@ -29,7 +29,7 @@ module.exports = {
       script: 'dist/main.js',
       instances: 1, // 개발환경에서는 단일 인스턴스
       exec_mode: 'cluster',
-      watch: true,
+      watch: false,
       max_memory_restart: '1G',
       min_uptime: '10s', // 최소 가동 시간
       restart_delay: 4000, // 재시작 지연 시간
