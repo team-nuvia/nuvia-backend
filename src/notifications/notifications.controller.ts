@@ -9,6 +9,8 @@ import { ToggleReadNotificationPayloadDto } from './dto/payload/toggle-read-noti
 import { GetNotificationResponseDto } from './dto/response/get-notification.response.dto';
 import { ToggleReadNotificationResponseDto } from './dto/response/toggle-read-notification.response.dto';
 import { NotificationsService } from './notifications.service';
+import { ToggleReadAllNotificationPayloadDto } from './dto/payload/toggle-read-all-notification.payload.dto';
+import { ToggleReadAllNotificationResponseDto } from './dto/response/toggle-read-all-notification.response.dto';
 
 @ApiTags('알림')
 @Controller('notifications')
@@ -37,5 +39,12 @@ export class NotificationsController {
   ) {
     await this.notificationsService.toggleReadNotification(user.id, id, toggleReadNotificationDto);
     return new ToggleReadNotificationResponseDto();
+  }
+
+  @CombineResponses(HttpStatus.OK, ToggleReadAllNotificationResponseDto)
+  @Patch('read-all')
+  async toggleReadAllNotification(@LoginUser() user: LoginUserData, @Body() toggleReadAllNotificationDto: ToggleReadAllNotificationPayloadDto) {
+    await this.notificationsService.toggleReadAllNotification(user.id, toggleReadAllNotificationDto);
+    return new ToggleReadAllNotificationResponseDto();
   }
 }

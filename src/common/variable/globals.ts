@@ -4,14 +4,6 @@ export const SESSION_KEY = 'session';
 export const TX_META_KEY = 'useTx';
 export const DEFAULT_ORGANIZATION_NAME = 'Default Organization';
 
-/* Cookie Name */
-export const SESSION_COOKIE_NAME = 'x-session';
-export const ACCESS_COOKIE_NAME = 'x-access-token';
-export const REFRESH_COOKIE_NAME = 'x-refresh-token';
-
-export const SUBMISSION_HASH_COOKIE_NAME = 'x-submission-hash';
-export const JWS_COOKIE_NAME = 'x-jws-token';
-
 export const JWT_TOKEN_EXPIRE_TIME = 30 * 60; // 30분
 export const JWT_REFRESH_EXPIRE_TIME = 30 * 24 * 60 * 60; // 30일
 export const VERIFY_JWS_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 1; // 인증 토큰 만료시간: 1일

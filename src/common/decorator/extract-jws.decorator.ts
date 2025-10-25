@@ -1,7 +1,7 @@
-import { JWS_COOKIE_NAME } from '@common/variable/globals';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { CookieNameType } from '@share/enums/cookie-name-type';
 
 export const ExtractJwsToken = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
-  return request.cookies[JWS_COOKIE_NAME];
+  return request.cookies[CookieNameType.Jws];
 });

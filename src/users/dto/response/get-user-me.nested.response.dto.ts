@@ -17,7 +17,7 @@ export class GetUserMeNestedResponseDto {
   @ApiProperty({ description: '닉네임', example: 'nickname' })
   nickname: string = 'nickname';
 
-  @ApiProperty({ enum: UserRole, description: '역할', example: UserRole.Admin })
+  @ApiProperty({ enum: UserRole, description: '현재 조직 역할', example: UserRole.Admin })
   role: UserRole = UserRole.Admin;
 
   @ApiProperty({ description: '이용약관 및 개인정보 처리방침 동의 여부', example: true })

@@ -3,17 +3,23 @@ import { CombineResponses } from '@common/decorator/combine-responses.decorator'
 import { LoginUser } from '@common/decorator/login-user.param.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
+import { UnauthorizedException } from '@common/dto/response';
 import { Body, Controller, Get, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { NotificationType } from '@share/enums/notification-type';
 import { User } from '@users/entities/user.entity';
+import { NotFoundSubscriptionExceptionDto } from './dto/exception/not-found-subscription.exception.dto';
 import { InviteSubscriptionPayloadDto } from './dto/payload/invite-subscription.payload.dto';
 import { UpdateInvitationWithNotificationPayloadDto } from './dto/payload/update-invitation-with-notification.payload.dto';
+import { UpdateSubscriptionSettingsPayloadDto } from './dto/payload/update-subscription-settings.payload.dto';
 import { UpdateSubscriptionDto } from './dto/payload/update-subscription.dto';
 import { GetSubscriptionSettingsResponseDto } from './dto/response/get-subscription-settings.response.dto';
 import { SuccessInviteSubscriptionResponseDto } from './dto/response/success-invite-subscription.response.dto';
 import { UpdateInvitationWithNotificationResponseDto } from './dto/response/update-invitation-with-notification.response.dto';
+import { UpdateSubscriptionSettingsResponseDto } from './dto/response/update-subscription-settings.response.dto';
 import { Subscription } from './entities/subscription.entity';
+import { CannotSetDefaultRoleAsOwnerExceptionDto } from './organization-roles/dto/exception/cannot-set-default-role-as-owner.exception.dto';
+import { NotFoundOrganizationRoleExceptionDto } from './organization-roles/dto/exception/not-found-organization-role.exception.dto';
 import { SubscriptionsInvitationConstraintValidation } from './subscriptions-invitation-constraint.guard';
 import { SubscriptionsService } from './subscriptions.service';
 
@@ -24,18 +30,6 @@ export class SubscriptionsController {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly emailsService: EmailsService,
   ) {}
-
-  @ApiOperation({ summary: '조직 설정 조회' })
-  @CombineResponses(HttpStatus.OK, GetSubscriptionSettingsResponseDto)
-  @RequiredLogin
-  @Get(':subscriptionId/settings')
-  async getSubscriptionSettings(
-    @LoginUser() user: LoginUserData,
-    @Param('subscriptionId') subscriptionId: string,
-  ): Promise<GetSubscriptionSettingsResponseDto> {
-    const settings = await this.subscriptionsService.getSubscriptionSettings(+subscriptionId, user.id);
-    return new GetSubscriptionSettingsResponseDto(settings);
-  }
 
   /**
    * 초대 메일 발송
@@ -84,6 +78,35 @@ export class SubscriptionsController {
     });
 
     return new SuccessInviteSubscriptionResponseDto();
+  }
+
+  @ApiOperation({ summary: '조직 설정 수정' })
+  @CombineResponses(HttpStatus.OK, UpdateSubscriptionSettingsResponseDto)
+  @CombineResponses(HttpStatus.BAD_REQUEST, CannotSetDefaultRoleAsOwnerExceptionDto)
+  @CombineResponses(HttpStatus.NOT_FOUND, NotFoundSubscriptionExceptionDto, NotFoundOrganizationRoleExceptionDto)
+  @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
+  @RequiredLogin
+  @Transactional()
+  @Patch(':subscriptionId/settings')
+  async updateSubscriptionSettings(
+    @LoginUser() user: LoginUserData,
+    @Param('subscriptionId') subscriptionId: string,
+    @Body() updateSubscriptionSettingsDto: UpdateSubscriptionSettingsPayloadDto,
+  ): Promise<UpdateSubscriptionSettingsResponseDto> {
+    await this.subscriptionsService.updateSubscriptionSettings(+subscriptionId, user.id, updateSubscriptionSettingsDto);
+    return new UpdateSubscriptionSettingsResponseDto();
+  }
+
+  @ApiOperation({ summary: '조직 설정 조회' })
+  @CombineResponses(HttpStatus.OK, GetSubscriptionSettingsResponseDto)
+  @RequiredLogin
+  @Get(':subscriptionId/settings')
+  async getSubscriptionSettings(
+    @LoginUser() user: LoginUserData,
+    @Param('subscriptionId') subscriptionId: string,
+  ): Promise<GetSubscriptionSettingsResponseDto> {
+    const settings = await this.subscriptionsService.getSubscriptionSettings(+subscriptionId, user.id);
+    return new GetSubscriptionSettingsResponseDto(settings);
   }
 
   @ApiOperation({ summary: '초대 승락 여부 수정' })

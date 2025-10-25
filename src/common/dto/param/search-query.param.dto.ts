@@ -16,7 +16,7 @@ export class SearchQueryParamDto {
   })
   @IsOptional()
   @IsNumber()
-  @Min(1)
+  @Min(1, { message: '페이지는 최소 1까지 가능합니다.' })
   page: number = 1;
 
   @ApiProperty({
@@ -25,7 +25,7 @@ export class SearchQueryParamDto {
   })
   @IsOptional()
   @IsNumber()
-  @Min(5)
-  @Max(20)
+  @Min(5, { message: '페이지 크기는 최소 5까지 가능합니다.' })
+  @Max(20, { message: '페이지 크기는 최대 20까지 가능합니다.' })
   limit: number = 10;
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NotificationSearchParamDto } from './dto/param/notification-search.param.dto';
 import { CreateNotificationPayloadDto } from './dto/payload/create-notification.payload.dto';
+import { ToggleReadAllNotificationPayloadDto } from './dto/payload/toggle-read-all-notification.payload.dto';
 import { ToggleReadNotificationPayloadDto } from './dto/payload/toggle-read-notification.payload.dto';
 import { GetNotificationPaginatedNestedResponseDto } from './dto/response/get-notification-paginated.nested.response.dto';
 import { NotificationsRepository } from './notifications.repository';
@@ -19,5 +20,9 @@ export class NotificationsService {
 
   async toggleReadNotification(userId: number, id: number, toggleReadNotificationDto: ToggleReadNotificationPayloadDto) {
     await this.notificationsRepository.toggleReadNotification(userId, id, toggleReadNotificationDto);
+  }
+
+  async toggleReadAllNotification(userId: number, toggleReadAllNotificationDto: ToggleReadAllNotificationPayloadDto) {
+    await this.notificationsRepository.toggleReadAllNotification(userId, toggleReadAllNotificationDto);
   }
 }

@@ -2,6 +2,7 @@ import { Plan } from '@/plans/entities/plan.entity';
 import { OrganizationRole } from '@/subscriptions/organization-roles/entities/organization-role.entity';
 import { Survey } from '@/surveys/entities/survey.entity';
 import { DefaultDateInterface } from '@common/interface/default-date.interface';
+import { ResponseFormat } from '@share/enums/response-format';
 import { SubscriptionStatusType } from '@share/enums/subscription-status-type';
 import { SubscriptionTargetType } from '@share/enums/subscription-target-type';
 import { UserRole } from '@share/enums/user-role';
@@ -34,6 +35,9 @@ export class Subscription extends DefaultDateInterface {
 
   @Column('varchar', { length: 45, comment: '상태' })
   status!: SubscriptionStatusType;
+
+  @Column('varchar', { length: 45, default: ResponseFormat.Slide, comment: '응답 렌더 타입' })
+  responseFormat!: ResponseFormat;
 
   @ManyToOne(() => User, (user) => user.subscriptions, {
     onDelete: 'NO ACTION',
