@@ -1,4 +1,4 @@
-name: Deploy to EC2 via SSM
+name: Deploy to NCP Server
 
 on:
   push:
@@ -7,72 +7,25 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # OIDC용
-      contents: read
     steps:
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_OIDC_ROLE_NAME }}
-          aws-region: ap-northeast-2
+          ssh-private-key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
 
-      - name: Trigger deploy script via SSM
-        id: ssm
+      - name: Run deploy script on NCP server via SSH
+        env:
+          GIT_USER: ${{ secrets.GIT_USER }}
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
-          CMD_ID=$(aws ssm send-command \
-            --region ap-northeast-2 \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:SSMDeploy,Values=true" \
-            --comment "nuvia deploy $GITHUB_SHA" \
-            --parameters commands='["set -e", "HOME=/root cd /root && GIT_USER=${{ secrets.GIT_USER }} GIT_TOKEN=${{ secrets.GIT_TOKEN }} sudo -u root -H bash /home/ubuntu/nuvia-backend/scripts/nuvia-deploy.sh"]' \
-            --query "Command.CommandId" --output text)
-          echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
-          echo "SSM Command ID: $CMD_ID"
-
-      - name: Wait for SSM command to finish (robust)
-        run: |
-          REGION=ap-northeast-2
-          CMD_ID="${{ steps.ssm.outputs.command_id }}"
-
-          echo "Polling for invocations of $CMD_ID ..."
-          for i in {1..60}; do
-            IDS=$(aws ssm list-command-invocations --region "$REGION" --command-id "$CMD_ID" \
-              --query "CommandInvocations[].InstanceId" --output text || true)
-            [ -n "$IDS" ] && break
-            sleep 3
-          done
-          [ -z "${IDS:-}" ] && { echo "No invocations created"; exit 1; }
-          echo "Instances: $IDS"
-
-          ALL_OK=0
-          for IID in $IDS; do
-            echo "Waiting on instance $IID ..."
-            for i in {1..120}; do
-              STATUS=$(aws ssm get-command-invocation --region "$REGION" \
-                --command-id "$CMD_ID" --instance-id "$IID" \
-                --query "Status" --output text 2>/dev/null || true)
-              echo "Status=$STATUS"
-              echo "ALL_OK=$ALL_OK"
-              if [[ "$STATUS" == "Success" ]]; then
-                echo "✅ SSM command succeeded ($CMD_ID)"
-                aws ssm get-command-invocation \
-                  --command-id "$CMD_ID" --instance-id "$IID" \
-                  --query 'StandardOutputContent' --output text || true
-                exit 0
-              fi
-              if [[ "$STATUS" =~ ^(Failed|Cancelled|TimedOut)$ ]]; then
-                echo "----- Invocation detail (StdOut/StdErr) -----"
-                aws ssm get-command-invocation --region "$REGION" \
-                  --command-id "$CMD_ID" --instance-id "$IID" --plugin-name aws:runShellScript \
-                  --query '{Status:Status,ResponseCode:ResponseCode,StdOut:StandardOutputContent,StdErr:StandardErrorContent}' \
-                  --output json || true
-                ALL_OK=1
-                break
-              fi
-              sleep 5
-            done
-          done
-
-          echo "ALL_OK=$ALL_OK"
-          [ $ALL_OK -ne 0 ] && { echo "At least one instance failed."; exit 1; }
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NCP_SERVER_USER }}@${{ secrets.NCP_SERVER_IP }} "
+            set -e
+            export HOME=/root
+            cd /root
+            export GIT_USER='$GIT_USER'
+            export GIT_TOKEN='$GIT_TOKEN'
+            sudo -u root -H bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
+          "

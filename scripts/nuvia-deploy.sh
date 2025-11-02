@@ -6,7 +6,7 @@ set -eu
 
 GIT_USER=${GIT_USER:-}
 GIT_TOKEN=${GIT_TOKEN:-}
-APP_DIR="/home/ubuntu/nuvia-backend"
+APP_DIR="/home/nuvia/nuvia-backend"
 BRANCH="main"
 
 cd "$APP_DIR"
