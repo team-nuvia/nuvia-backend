@@ -11,12 +11,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Deploy over SSH (key auth)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
           username: ${{ secrets.NCP_USERNAME }}
-          password: ${{ secrets.NCP_PASSWORD }}
+          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           port: ${{ secrets.NCP_PORT }}
           script: |
-            export GIT_USER='${{ secrets.GIT_USER }}'; export GIT_TOKEN='${{ secrets.GIT_TOKEN }}'; bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
+            export GIT_USER='${{ secrets.GIT_USER }}'
+            export GIT_TOKEN='${{ secrets.GIT_TOKEN }}'
+            bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
