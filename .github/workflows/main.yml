@@ -12,20 +12,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.8.0
+        uses: appleboy/ssh-action@master
         with:
-          ssh-private-key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-
-      - name: Run deploy script on NCP server via SSH
-        env:
-          GIT_USER: ${{ secrets.GIT_USER }}
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.NCP_SERVER_USER }}@${{ secrets.NCP_SERVER_IP }} "
-            set -e
-            export HOME=/root
-            cd /root
-            export GIT_USER='$GIT_USER'
-            export GIT_TOKEN='$GIT_TOKEN'
-            sudo -u root -H bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
-          "
+          host: ${{ secrets.NCP_HOST }}
+          username: ${{ secrets.NCP_USERNAME }}
+          password: ${{ secrets.NCP_PASSWORD }}
+          port: ${{ secrets.NCP_PORT }}
+          script: |
+            export GIT_USER='${{ secrets.GIT_USER }}'; export GIT_TOKEN='${{ secrets.GIT_TOKEN }}'; bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
