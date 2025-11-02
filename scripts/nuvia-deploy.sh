@@ -9,7 +9,7 @@ GIT_TOKEN=${GIT_TOKEN:-}
 APP_DIR="/home/nuvia/nuvia-backend"
 BRANCH="main"
 
-cd "$APP_DIR"
+cd "/home/nuvia/nuvia-backend"
 
 
 new_url="https://${GIT_USER}:${GIT_TOKEN}@github.com/team-nuvia/nuvia-share.git"
