@@ -24,7 +24,7 @@ module.exports = {
       merge_logs: true, // 로그 병합
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z', // 로그 날짜 형식
     },
-    {
+    /* {
       name: 'nuvia-backend-dev',
       script: 'dist/main.js',
       instances: 1, // 개발환경에서는 단일 인스턴스
@@ -41,6 +41,6 @@ module.exports = {
         RUN_ON: 'local',
         PORT: 3000,
       },
-    },
+    }, */
   ],
 };
