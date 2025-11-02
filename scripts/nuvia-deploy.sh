@@ -4,6 +4,10 @@ echo "whoami=$(whoami) pwd=$(pwd)"
 
 set -eu
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
 GIT_USER=${GIT_USER:-}
 GIT_TOKEN=${GIT_TOKEN:-}
 APP_DIR="/home/nuvia/nuvia-backend"

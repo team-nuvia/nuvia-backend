@@ -22,7 +22,4 @@ jobs:
           script: |
             export GIT_USER='${{ secrets.GIT_USER }}'
             export GIT_TOKEN='${{ secrets.GIT_TOKEN }}'
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
             sudo -u root -H bash /home/nuvia/nuvia-backend/scripts/nuvia-deploy.sh
