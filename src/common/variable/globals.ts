@@ -13,3 +13,5 @@ export const COOKIE_ACCESS_EXPIRE_TIME = 1000 * JWT_TOKEN_EXPIRE_TIME; // 쿠키
 export const COOKIE_REFRESH_EXPIRE_TIME = 1000 * JWT_REFRESH_EXPIRE_TIME; // 쿠키 리프레시 토큰 만료시간: 30일
 
 export const DEFAULT_BLACK_LIST_IPS: IpAddress[] = ['224.x.x.x', '240.x.x.x'];
+
+export const SWAGGER_AUTH_COOKIE_NAME = '_nc_PWTUQDBU61HVLSVPXVFDLA';

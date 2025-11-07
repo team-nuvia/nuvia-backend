@@ -632,6 +632,7 @@ export class SurveysRepository extends BaseRepository {
       .addOrderBy('sqo.id', 'ASC')
       .addOrderBy('sqo.sequence', 'ASC')
       .getOne();
+    console.log('🚀 ~ SurveysRepository ~ getSurveyDetailByHashedUniqueKey ~ survey:', survey);
 
     if (isNil(survey)) {
       throw new NotFoundSurveyExceptionDto();

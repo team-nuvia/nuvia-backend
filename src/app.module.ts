@@ -1,3 +1,4 @@
+import { BlackListMiddleware } from '@common/middleware/black.list.middleware';
 import { LoggerMiddleware } from '@common/middleware/logger.middleware';
 import { PrometheusMiddleware } from '@common/middleware/prometheus.middleware';
 import commonConfig from '@config/common.config';
@@ -27,7 +28,6 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { UsersModule } from './users/users.module';
 import { UtilModule } from './util/util.module';
-import { BlackListMiddleware } from '@common/middleware/black.list.middleware';
 
 @Module({
   imports: [
@@ -58,8 +58,8 @@ import { BlackListMiddleware } from '@common/middleware/black.list.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(BlackListMiddleware).forRoutes('/*api');
-    consumer.apply(LoggerMiddleware).forRoutes('/*api');
-    consumer.apply(PrometheusMiddleware).forRoutes('/*api');
+    consumer.apply(BlackListMiddleware).forRoutes('/{*routes}');
+    consumer.apply(LoggerMiddleware).forRoutes('/{*routes}');
+    consumer.apply(PrometheusMiddleware).forRoutes('/{*routes}');
   }
 }

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>로그인 필요</title>
+    <style>
+      :root {
+        --background-main: #181a20;
+        --background-panel: #23272e;
+        --border-color: #373b47;
+        --text-color: #e4e7ec;
+        --heading-color: #89b4fa;
+        --input-bg: #23272e;
+        --input-border: #515871;
+        --input-placeholder: #94a3b8;
+        --button-bg: #1976d2;
+        --button-bg-hover: #155fa0;
+        --button-text: #fff;
+        --container-shadow: 0 4px 24px rgba(25, 31, 56, 0.25);
+        --info-text: #b0b4c1;
+      }
+      html, body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+        background: var(--background-main);
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .login-container {
+        background: var(--background-panel);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        box-shadow: var(--container-shadow);
+        color: var(--text-color);
+        padding: 32px 24px 24px 24px;
+        min-width: 320px;
+        text-align: center;
+        transition: box-shadow 0.2s, background 0.2s;
+      }
+      .login-container h1 {
+        margin-top: 0;
+        font-size: 1.5em;
+        color: var(--heading-color);
+        font-weight: 500;
+        letter-spacing: 0.03em;
+      }
+      .login-container form {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .login-container input[type='text'],
+      .login-container input[type='password'] {
+        background: var(--input-bg);
+        color: var(--text-color);
+        border: 1px solid var(--input-border);
+        padding: 10px 13px;
+        border-radius: 5px;
+        font-size: 1em;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .login-container input[type='text']:focus,
+      .login-container input[type='password']:focus {
+        border-color: #2572f9;
+      }
+      .login-container input[type='text']::placeholder,
+      .login-container input[type='password']::placeholder {
+        color: var(--input-placeholder);
+        opacity: 1;
+      }
+      .login-container button {
+        background: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 0;
+        font-size: 1em;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.2s;
+        box-shadow: 0 2px 6px rgba(30, 30, 90, 0.10);
+      }
+      .login-container button:hover {
+        background: var(--button-bg-hover);
+      }
+      .login-container .info {
+        font-size: 0.93em;
+        color: var(--info-text);
+        margin-top: 14px;
+        letter-spacing: 0.01em;
+      }
+    </style>
+  </head>
+  <body>
+    <% if (typeof userIpCount !== "undefined" && userIpCount.count >= 5) { %>
+      <div class="login-container">
+        <h1>Access Denied</h1>
+        <div class="info">
+          <span style="color: #e55353;">You have failed to login 5 times. <br/> Your access has been temporarily suspended.<br/>Please try again in 3 minutes.</span>
+        </div>
+      </div>
+      </body>
+    </html>
+    <% } else { %>
+    <div class="login-container">
+      <h1>Authentication Required</h1>
+      <form method="POST" action="/api/v1/api-docs" autocomplete="off" spellcheck="false">
+        <input type="hidden" name="originalUrl">
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          required
+          autocomplete="off"
+          autofocus
+          <% if (userIpCount.count > 0) { %> class="invalid" <% } %>
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+          autocomplete="off"
+          <% if (userIpCount.count > 0) { %> class="invalid" <% } %>
+        />
+        <button type="submit">Sign In</button>
+      </form>
+      <div class="info">
+        <% if (userIpCount.count > 0) { %>
+          <span style="color: #e55353;">Login failed <%= userIpCount.count %> time<%= userIpCount.count > 1 ? 's' : '' %>. Please try again.</span>
+        <% } else { %>
+          Please sign in to access this resource.
+        <% } %>
+      </div>
+      <style>
+        .login-container input.invalid {
+          border-color: #e55353;
+        }
+      </style>
+    </div>
+    <script>
+      document.querySelector('form').addEventListener('submit', (e) => {
+        document.querySelector('input[name="originalUrl"]').value = location.pathname;
+      });
+    </script>
+    <% } %>
+  </body>
+</html>
