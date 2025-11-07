@@ -6,11 +6,11 @@ import { Public } from '@common/decorator/public.decorator';
 import { RequiredLogin } from '@common/decorator/required-login.decorator';
 import { Transactional } from '@common/decorator/transactional.decorator';
 import { BadRequestException, UnauthorizedException } from '@common/dto/response';
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MetadataStatusType } from '@share/enums/metadata-status-type';
-import { Request } from 'express';
 import { ClosedSurveyExceptionDto } from './dto/exception/closed-survey.exception.dto';
+import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 import { SurveyGraphSearchQueryParamDto } from './dto/param/survey-graph-search-query.param.dto';
 import { SurveyMetadataQueryParamDto } from './dto/param/survey-metadata-query.param.dto';
 import { SurveySearchQueryParamDto } from './dto/param/survey-search-query.param.dto';
@@ -40,7 +40,6 @@ import { SurveyDeleteConstraintValidation } from './survey-delete-constraint.gua
 import { SurveyRestoreConstraintValidation } from './survey-restore-constraint.guard';
 import { SurveyUpdateConstraintValidation } from './survey-update-constraint.guard';
 import { SurveysService } from './surveys.service';
-import { NotFoundSurveyExceptionDto } from './dto/exception/not-found-survey.exception.dto';
 
 @ApiTags('설문')
 @Controller('surveys')
@@ -145,11 +144,7 @@ export class SurveysController {
   @CombineResponses(HttpStatus.UNAUTHORIZED, UnauthorizedException)
   @RequiredLogin
   @Get()
-  async getSurveyList(
-    @LoginUser() user: LoginUserData,
-    @Query() searchQuery: SurveySearchQueryParamDto,
-    @Req() req: Request,
-  ): Promise<GetSurveyListResponseDto> {
+  async getSurveyList(@LoginUser() user: LoginUserData, @Query() searchQuery: SurveySearchQueryParamDto): Promise<GetSurveyListResponseDto> {
     const survey = await this.surveysService.getSurveyList(user.id, searchQuery);
     return new GetSurveyListResponseDto(survey);
   }
