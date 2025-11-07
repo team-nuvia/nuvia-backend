@@ -6,22 +6,35 @@ import { TransactionalInterceptor } from '@common/interceptor/transactional.inte
 import { RunMode } from '@common/variable/enums/run-mode.enum';
 import { RunOn } from '@common/variable/enums/run-on.enum';
 import { CERT_KEY, PRIV_KEY } from '@common/variable/environment';
+import { SWAGGER_AUTH_COOKIE_NAME } from '@common/variable/globals';
 import { TxRunner } from '@database/tx.runner';
 import { LoggerService } from '@logger/logger.service';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { decryptSwagger } from '@util/encrypt';
 import { isNil } from '@util/isNil';
 import { printRouterInfo } from '@util/printRouterInfo';
 import { setupSwagger } from '@util/setupSwagger';
 import cluster from 'cluster';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import ejs from 'ejs';
+import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { AppModule } from './app.module';
 import { JwtGuard } from './auth/guard/jwt.guard';
 
 cluster.schedulingPolicy = cluster.SCHED_RR; // Round Robin
+
+const swaggerMap = new Map<
+  string,
+  {
+    count: number;
+    lastFailedLogin: Date;
+  }
+>();
 
 async function bootstrap() {
   const cert = CERT_KEY ? fs.readFileSync(CERT_KEY) : null;
@@ -70,6 +83,47 @@ async function bootstrap() {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
     credentials: true,
     maxAge: 86400,
+  });
+
+  /* 스웨거 페이지 보호 */
+  /* 5회 입력 오류 시 로그인 제한 */
+  /* 3분 후 입력 재시도 허용 */
+  app.use('/api-docs', async (req: Request, res: Response, next: NextFunction) => {
+    const origin = process.env.SWAGGER_BASIC_AUTH_USER + ':' + process.env.SWAGGER_BASIC_AUTH_PASS;
+
+    const validateIp = swaggerMap.get(req.ip as string);
+    if (validateIp && validateIp.count >= 5 && validateIp.lastFailedLogin.getTime() + 1000 * 60 * 3 < Date.now()) {
+      swaggerMap.set(req.ip as string, { count: 0, lastFailedLogin: new Date() });
+    }
+
+    // if (req.originalUrl !== '/api-docs') {
+    //   return next();
+    // }
+
+    const auth = req.cookies[SWAGGER_AUTH_COOKIE_NAME];
+    if (!auth) {
+      const userIpCount = swaggerMap.get(req.ip as string) ?? { count: 0, lastFailedLogin: new Date() };
+      const content = await ejs.renderFile(path.join(path.resolve(), 'src', 'util', 'template', 'login-required.ejs'), {
+        invalidLogin: userIpCount.count > 0,
+        userIpCount,
+      });
+      res.clearCookie(SWAGGER_AUTH_COOKIE_NAME);
+      return res.status(401).send(content);
+    }
+
+    if (decryptSwagger(auth) === origin) {
+      swaggerMap.set(req.ip as string, { count: 0, lastFailedLogin: new Date() });
+      return next();
+    }
+
+    const userIpCount = swaggerMap.get(req.ip as string) ?? { count: 0, lastFailedLogin: new Date() };
+    swaggerMap.set(req.ip as string, { count: userIpCount.count + 1, lastFailedLogin: new Date() });
+    const content = await ejs.renderFile(path.join(path.resolve(), 'src', 'util', 'template', 'login-required.ejs'), {
+      invalidLogin: userIpCount.count > 0,
+      userIpCount: swaggerMap.get(req.ip as string) ?? { count: 0, lastFailedLogin: new Date() },
+    });
+    res.clearCookie(SWAGGER_AUTH_COOKIE_NAME);
+    return res.status(401).send(content);
   });
 
   /* Swagger 설정 */

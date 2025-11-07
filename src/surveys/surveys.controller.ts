@@ -150,7 +150,6 @@ export class SurveysController {
     @Query() searchQuery: SurveySearchQueryParamDto,
     @Req() req: Request,
   ): Promise<GetSurveyListResponseDto> {
-    console.log(req.cookies);
     const survey = await this.surveysService.getSurveyList(user.id, searchQuery);
     return new GetSurveyListResponseDto(survey);
   }
@@ -239,9 +238,6 @@ export class SurveysController {
     @Param('surveyId') surveyId: string,
     @Body() updateSurveyPayloadDto: UpdateSurveyPayloadDto,
   ): Promise<UpdateSurveyResponseDto> {
-    console.log('🚀 ~ SurveysController ~ updateSurvey ~ user:', user);
-    console.log('🚀 ~ SurveysController ~ updateSurvey ~ surveyId:', surveyId);
-    console.log('🚀 ~ SurveysController ~ updateSurvey ~ updateSurveyPayloadDto:', updateSurveyPayloadDto);
     await this.surveysService.updateSurvey(+surveyId, user.id, updateSurveyPayloadDto);
     return new UpdateSurveyResponseDto();
   }
